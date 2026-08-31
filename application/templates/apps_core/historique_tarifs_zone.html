@@ -1,0 +1,100 @@
+{% extends 'navigateur/base_dashboard.html' %}
+
+{% block title %}Historique tarifs — {{ zone.nom }} – SwiftDrop{% endblock %}
+{% block page_title %}Historique des tarifs{% endblock %}
+{% block user_initiales %}AD{% endblock %}
+{% block user_nom %}Administration{% endblock %}
+{% block user_role %}Administrateur{% endblock %}
+
+{% block sidebar_menu %}
+    <div class="sd-nav-section">Général</div>
+    <a href="{% url 'apps_core:dashboard_admin' %}" class="sd-nav-link"><i class="bi bi-grid-1x2"></i>Tableau de bord</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-chat-dots"></i>Messagerie</a>
+
+    <div class="sd-nav-section">Acteurs</div>
+    <a href="#" class="sd-nav-link"><i class="bi bi-building"></i>Entreprises</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-bicycle"></i>Livreurs</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-person-heart"></i>Clients</a>
+
+    <div class="sd-nav-section">Opérations</div>
+    <a href="#" class="sd-nav-link"><i class="bi bi-box-seam"></i>Livraisons B2B</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-signpost-2"></i>Livraisons directes</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-building-gear"></i>Entrepôts</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-boxes"></i>Produits</a>
+
+    <div class="sd-nav-section">Finance</div>
+    <a href="#" class="sd-nav-link"><i class="bi bi-cash-stack"></i>Lots de paiement</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-gift"></i>Bonus</a>
+
+    <div class="sd-nav-section">Système</div>
+    <a href="{% url 'apps_core:configuration_geographie' %}" class="sd-nav-link active"><i class="bi bi-geo"></i>Zones géographiques</a>
+    <a href="{% url 'apps_core:gerer_coefficients_vehicule' %}" class="sd-nav-link"><i class="bi bi-truck-front"></i>Coefficients véhicule</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-sliders"></i>Paramètres</a>
+{% endblock %}
+
+{% block extra_css %}
+    .sd-back-link { color: var(--sd-gris); font-size: .88rem; }
+    .sd-back-link:hover { color: var(--sd-orange); }
+    .sd-timeline-item {
+        border-left: 2px solid #EDEFF4;
+        padding: 0 0 1.5rem 1.5rem;
+        position: relative;
+    }
+    .sd-timeline-item:last-child { padding-bottom: 0; }
+    .sd-timeline-item::before {
+        content: "";
+        position: absolute;
+        left: -7px; top: 2px;
+        width: 12px; height: 12px;
+        border-radius: 50%;
+        background: var(--sd-orange);
+        border: 2px solid #fff;
+        box-shadow: 0 0 0 2px var(--sd-orange);
+    }
+    .sd-prix-variation { font-weight: 700; font-size: 1rem; }
+    .sd-prix-variation .bi-arrow-right { color: var(--sd-gris); margin: 0 .4rem; }
+{% endblock %}
+
+{% block dashboard_content %}
+
+<a href="{% url 'apps_core:configuration_geographie' %}" class="sd-back-link d-inline-flex align-items-center gap-1 mb-3">
+    <i class="bi bi-arrow-left"></i> Retour à la configuration géographique
+</a>
+
+<div class="sd-panel">
+    <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-4">
+        <div>
+            <div class="sd-panel-title mb-1">Historique des tarifs — {{ zone.nom }}</div>
+            <p class="text-muted small mb-0">{{ zone.ville.nom }} · Prix actuel : <strong>{{ zone.prix_livraison }} FCFA</strong></p>
+        </div>
+        <a href="{% url 'apps_core:modifier_tarif_zone' zone.pk %}" class="btn btn-sd-primary btn-sm">
+            <i class="bi bi-cash-coin me-1"></i>Changer le tarif
+        </a>
+    </div>
+
+    {% if historique %}
+        <div class="mt-2">
+            {% for entree in historique %}
+                <div class="sd-timeline-item">
+                    <div class="sd-prix-variation">
+                        {{ entree.ancien_prix }} FCFA
+                        <i class="bi bi-arrow-right"></i>
+                        {{ entree.nouveau_prix }} FCFA
+                    </div>
+                    {% if entree.raison %}
+                        <p class="text-muted small mb-1">{{ entree.raison }}</p>
+                    {% endif %}
+                    <div class="text-muted" style="font-size:.78rem;">
+                        <i class="bi bi-person me-1"></i>{{ entree.modifie_par.nom|default:"Système" }}
+                        <span class="mx-1">·</span>
+                        <i class="bi bi-calendar3 me-1"></i>{{ entree.date|date:"d/m/Y à H:i" }}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p class="text-muted small mb-0">Aucun changement de tarif enregistré pour cette zone pour le moment.</p>
+    {% endif %}
+</div>
+
+{% endblock %}

@@ -1,0 +1,286 @@
+{% extends 'navigateur/base.html' %}
+
+{% block title %}Conditions Générales d'Utilisation – SwiftDrop{% endblock %}
+{% block meta_description %}Conditions générales d'utilisation de la plateforme SwiftDrop : entreprises, livreurs partenaires et clients.{% endblock %}
+
+{% block extra_css %}
+    /* ── Bannière de page (plus sobre que le hero de l'accueil) ─── */
+    .sd-page-header {
+        background: linear-gradient(135deg, var(--sd-navy) 0%, var(--sd-navy-light) 100%);
+        color: #fff;
+    }
+    .sd-breadcrumb a { color: #C9CFDD; }
+    .sd-breadcrumb a:hover { color: var(--sd-orange); }
+    .sd-breadcrumb .active { color: #fff; }
+    .sd-maj-badge {
+        background: rgba(255,255,255,0.1);
+        border: 1px solid rgba(255,255,255,0.2);
+        border-radius: 50px;
+        padding: 5px 14px;
+        font-size: .82rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    /* ── Sommaire sticky ───────────────────────────────────────── */
+    .sd-toc {
+        position: sticky;
+        top: 100px;
+    }
+    .sd-toc .list-group-item {
+        border: none;
+        border-left: 3px solid transparent;
+        padding: .55rem .9rem;
+        color: var(--sd-gris);
+        font-weight: 500;
+        font-size: .92rem;
+        background: transparent;
+    }
+    .sd-toc .list-group-item:hover { color: var(--sd-navy); }
+    .sd-toc .list-group-item.active-link {
+        color: var(--sd-orange);
+        border-left-color: var(--sd-orange);
+        background: rgba(255,107,53,0.06);
+        font-weight: 600;
+    }
+
+    /* ── Sections CGU ──────────────────────────────────────────── */
+    .sd-cgu-section {
+        scroll-margin-top: 110px; /* pour ne pas passer sous la navbar sticky au clic d'ancre */
+        padding-bottom: 2.5rem;
+        margin-bottom: 2.5rem;
+        border-bottom: 1px solid #EDEFF4;
+    }
+    .sd-cgu-section:last-of-type { border-bottom: none; margin-bottom: 0; }
+    .sd-cgu-number {
+        width: 40px; height: 40px;
+        border-radius: 10px;
+        background: rgba(255,107,53,0.12);
+        color: var(--sd-orange);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+        flex-shrink: 0;
+    }
+    .sd-cgu-section p, .sd-cgu-section li { color: var(--sd-gris); }
+    .sd-cgu-section ul { padding-left: 1.1rem; }
+    .sd-cgu-highlight {
+        background: var(--sd-fond);
+        border: 1px solid #EDEFF4;
+        border-radius: 12px;
+        padding: 1rem 1.25rem;
+    }
+{% endblock %}
+
+{% block content %}
+
+<!-- ═══════════════════════ BANNIÈRE DE PAGE ═══════════════════════ -->
+<section class="sd-page-header py-5">
+    <div class="container py-3">
+        <nav class="sd-breadcrumb small mb-3">
+            <a href="{% url 'apps_core:accueil' %}">Accueil</a>
+            <span class="mx-2" style="color:#5A6690;">/</span>
+            <span class="active">Conditions Générales d'Utilisation</span>
+        </nav>
+        <h1 class="fw-brand mb-3">Conditions Générales d'Utilisation</h1>
+        <span class="sd-maj-badge"><i class="bi bi-clock-history"></i> Dernière mise à jour : {{ date_maj }}</span>
+    </div>
+</section>
+
+<!-- ═══════════════════════ CONTENU CGU ═══════════════════════ -->
+<section class="py-5">
+    <div class="container py-3">
+        <div class="row gy-5">
+
+            <!-- ── Sommaire ────────────────────────────────────── -->
+            <div class="col-lg-3">
+                <div class="sd-toc">
+                    <h6 class="text-uppercase fw-semibold small mb-3" style="color: var(--sd-navy); letter-spacing:.06em;">
+                        Sommaire
+                    </h6>
+                    <div class="list-group" id="sd-toc-list">
+                        <a class="list-group-item" href="#objet">1. Objet</a>
+                        <a class="list-group-item" href="#definitions">2. Définitions</a>
+                        <a class="list-group-item" href="#comptes">3. Création & gestion de compte</a>
+                        <a class="list-group-item" href="#entreprises">4. Obligations des entreprises</a>
+                        <a class="list-group-item" href="#livreurs">5. Obligations des livreurs</a>
+                        <a class="list-group-item" href="#clients">6. Utilisation par les clients</a>
+                        <a class="list-group-item" href="#tarification">7. Tarification & paiement</a>
+                        <a class="list-group-item" href="#inactivite">8. Inactivité & gardiennage</a>
+                        <a class="list-group-item" href="#responsabilite">9. Responsabilité</a>
+                        <a class="list-group-item" href="#suspension">10. Suspension & résiliation</a>
+                        <a class="list-group-item" href="#propriete">11. Propriété intellectuelle</a>
+                        <a class="list-group-item" href="#donnees">12. Données personnelles</a>
+                        <a class="list-group-item" href="#modification">13. Modification des CGU</a>
+                        <a class="list-group-item" href="#droit">14. Droit applicable & litiges</a>
+                        <a class="list-group-item" href="#contact">15. Contact</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Texte des CGU ───────────────────────────────── -->
+            <div class="col-lg-9">
+
+                <div class="sd-cgu-section" id="objet">
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        <span class="sd-cgu-number">1</span>
+                        <h3 class="fw-brand mb-0">Objet</h3>
+                    </div>
+                    <p>Les présentes Conditions Générales d'Utilisation (« CGU ») définissent les règles d'accès et d'utilisation de la plateforme SwiftDrop, qui met en relation des entreprises souhaitant faire livrer leurs produits, des livreurs partenaires assurant le transport, et des clients destinataires des livraisons. Toute création de compte ou utilisation de la plateforme implique l'acceptation pleine et entière des présentes CGU.</p>
+                </div>
+
+                <div class="sd-cgu-section" id="definitions">
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        <span class="sd-cgu-number">2</span>
+                        <h3 class="fw-brand mb-0">Définitions</h3>
+                    </div>
+                    <ul>
+                        <li><strong>Entreprise</strong> : personne morale ou physique enregistrée sur SwiftDrop pour faire stocker et livrer ses produits.</li>
+                        <li><strong>Livreur</strong> : partenaire indépendant assurant le transport des colis avec son propre véhicule.</li>
+                        <li><strong>Client</strong> : destinataire d'une livraison, avec ou sans compte SwiftDrop.</li>
+                        <li><strong>Livraison B2B</strong> : commande de produits enregistrés par une entreprise et stockés dans un entrepôt SwiftDrop.</li>
+                        <li><strong>Livraison directe</strong> : envoi de colis initié par un particulier ou une entreprise, sans passage par le circuit produits/stock.</li>
+                        <li><strong>Entrepôt</strong> : espace de stockage géré par la plateforme, dans lequel les entreprises affectées peuvent stocker leurs produits.</li>
+                    </ul>
+                </div>
+
+                <div class="sd-cgu-section" id="comptes">
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        <span class="sd-cgu-number">3</span>
+                        <h3 class="fw-brand mb-0">Création & gestion de compte</h3>
+                    </div>
+                    <p>L'accès aux fonctionnalités de la plateforme nécessite la création d'un compte, avec une adresse email valide et, selon le profil, des documents justificatifs (registre de commerce, numéro contribuable, pièce d'identité). Les comptes entreprise et livreur sont soumis à validation par l'administration avant activation. Toute information inexacte ou frauduleuse peut entraîner le refus ou la suspension du compte.</p>
+                    <div class="sd-cgu-highlight small">
+                        <i class="bi bi-info-circle me-1" style="color: var(--sd-orange);"></i>
+                        La vérification et l'activation d'un compte entreprise ou livreur peuvent prendre jusqu'à 72h ouvrées après soumission complète des documents.
+                    </div>
+                </div>
+
+                <div class="sd-cgu-section" id="entreprises">
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        <span class="sd-cgu-number">4</span>
+                        <h3 class="fw-brand mb-0">Obligations des entreprises</h3>
+                    </div>
+                    <p>L'entreprise s'engage à fournir des informations exactes sur ses produits (poids, fragilité, qualité, véhicule requis) et à maintenir un stock cohérent avec les mouvements enregistrés dans chaque entrepôt affecté. Elle est seule responsable de la conformité des produits proposés à la livraison et du respect de la réglementation applicable à son secteur d'activité.</p>
+                </div>
+
+                <div class="sd-cgu-section" id="livreurs">
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        <span class="sd-cgu-number">5</span>
+                        <h3 class="fw-brand mb-0">Obligations des livreurs</h3>
+                    </div>
+                    <p>Le livreur s'engage à disposer d'un véhicule conforme et adapté à la nature des produits transportés, à respecter les délais associés à la priorité de chaque commande, et à confirmer chaque étape de la livraison (prise en charge, livraison, échec) via la plateforme. Toute constatation de paiement des frais de livraison par le client doit être déclarée fidèlement.</p>
+                </div>
+
+                <div class="sd-cgu-section" id="clients">
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        <span class="sd-cgu-number">6</span>
+                        <h3 class="fw-brand mb-0">Utilisation par les clients</h3>
+                    </div>
+                    <p>Un client peut recevoir une livraison B2B initiée par une entreprise, ou initier lui-même une livraison directe, avec ou sans compte SwiftDrop. Le suivi d'une livraison directe se fait via un lien de suivi personnel, qui ne doit pas être partagé avec des tiers non autorisés à consulter les informations de la course.</p>
+                </div>
+
+                <div class="sd-cgu-section" id="tarification">
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        <span class="sd-cgu-number">7</span>
+                        <h3 class="fw-brand mb-0">Tarification & paiement</h3>
+                    </div>
+                    <p>Les frais de livraison sont calculés selon la zone de destination et le véhicule requis, sauf pour les produits vendus en ligne via Yopishop, pour lesquels la livraison est gratuite pour le client et une commission est prélevée sur le montant du produit. Les gains des entreprises sont réglés par lot selon le cycle de paiement choisi (quotidien, hebdomadaire ou mensuel), après déduction des frais et commissions applicables.</p>
+                </div>
+
+                <div class="sd-cgu-section" id="inactivite">
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        <span class="sd-cgu-number">8</span>
+                        <h3 class="fw-brand mb-0">Inactivité & gardiennage</h3>
+                    </div>
+                    <p>Toute entreprise n'ayant enregistré aucune activité de livraison pendant 30 jours consécutifs voit son compte automatiquement désactivé, et les produits encore en stock lui sont retournés. L'entreprise peut réactiver son compte, avec ou sans retour des produits, en réglant les frais de gardiennage applicables, selon la politique commerciale en vigueur.</p>
+                </div>
+
+                <div class="sd-cgu-section" id="responsabilite">
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        <span class="sd-cgu-number">9</span>
+                        <h3 class="fw-brand mb-0">Responsabilité</h3>
+                    </div>
+                    <p>SwiftDrop met en œuvre les moyens raisonnables pour assurer la fiabilité du service (suivi, entrepôts sécurisés, sélection des livreurs partenaires) mais ne peut garantir l'absence totale d'incident. En cas de perte, casse ou retard, les mécanismes de mouvement de stock, d'historique de statut et de preuve de livraison permettent d'établir les responsabilités entre les parties concernées.</p>
+                </div>
+
+                <div class="sd-cgu-section" id="suspension">
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        <span class="sd-cgu-number">10</span>
+                        <h3 class="fw-brand mb-0">Suspension & résiliation</h3>
+                    </div>
+                    <p>SwiftDrop se réserve le droit de suspendre ou de refuser un compte en cas de non-respect des présentes CGU, de fraude avérée, ou de comportement mettant en danger la fiabilité de la plateforme ou la sécurité des autres utilisateurs. Un motif est systématiquement communiqué à l'utilisateur concerné.</p>
+                </div>
+
+                <div class="sd-cgu-section" id="propriete">
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        <span class="sd-cgu-number">11</span>
+                        <h3 class="fw-brand mb-0">Propriété intellectuelle</h3>
+                    </div>
+                    <p>La marque SwiftDrop, son logo et l'ensemble des éléments graphiques et logiciels de la plateforme sont la propriété exclusive de SwiftDrop ou de ses partenaires. Toute reproduction ou utilisation non autorisée est interdite.</p>
+                </div>
+
+                <div class="sd-cgu-section" id="donnees">
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        <span class="sd-cgu-number">12</span>
+                        <h3 class="fw-brand mb-0">Données personnelles</h3>
+                    </div>
+                    <p>Les données transmises lors de la création de compte et de l'utilisation de la plateforme (identité, coordonnées, position GPS pour les livreurs) sont traitées dans le respect de la réglementation applicable et uniquement dans le cadre du fonctionnement du service. Pour plus de détails, consultez notre politique de confidentialité.</p>
+                </div>
+
+                <div class="sd-cgu-section" id="modification">
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        <span class="sd-cgu-number">13</span>
+                        <h3 class="fw-brand mb-0">Modification des CGU</h3>
+                    </div>
+                    <p>SwiftDrop peut modifier les présentes CGU à tout moment, notamment pour refléter une évolution du service ou de la réglementation. La date de dernière mise à jour est indiquée en haut de cette page ; les utilisateurs sont invités à la consulter régulièrement.</p>
+                </div>
+
+                <div class="sd-cgu-section" id="droit">
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        <span class="sd-cgu-number">14</span>
+                        <h3 class="fw-brand mb-0">Droit applicable & litiges</h3>
+                    </div>
+                    <p>Les présentes CGU sont soumises au droit camerounais. Tout litige relatif à leur interprétation ou leur exécution sera, à défaut de résolution amiable, soumis aux juridictions compétentes.</p>
+                </div>
+
+                <div class="sd-cgu-section" id="contact">
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        <span class="sd-cgu-number">15</span>
+                        <h3 class="fw-brand mb-0">Contact</h3>
+                    </div>
+                    <p>Pour toute question relative aux présentes CGU, l'équipe SwiftDrop reste joignable via les coordonnées indiquées en bas de page.</p>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</section>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Mise en surbrillance de la section active dans le sommaire au scroll
+    document.addEventListener('DOMContentLoaded', function () {
+        const liens = document.querySelectorAll('#sd-toc-list a');
+        const sections = Array.from(liens).map(lien => document.querySelector(lien.getAttribute('href')));
+
+        function activerLienVisible() {
+            let indexActif = 0;
+            sections.forEach((section, i) => {
+                if (section && section.getBoundingClientRect().top - 130 <= 0) {
+                    indexActif = i;
+                }
+            });
+            liens.forEach(l => l.classList.remove('active-link'));
+            if (liens[indexActif]) liens[indexActif].classList.add('active-link');
+        }
+
+        activerLienVisible();
+        window.addEventListener('scroll', activerLienVisible, { passive: true });
+    });
+</script>
+{% endblock %}

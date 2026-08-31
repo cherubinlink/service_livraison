@@ -1,0 +1,152 @@
+{% extends 'navigateur/base_dashboard.html' %}
+
+{% block title %}Tableau de bord Entreprise – SwiftDrop{% endblock %}
+{% block page_title %}Tableau de bord{% endblock %}
+{% block user_initiales %}{{ entreprise.nom_affichage|default:"EN"|slice:":2"|upper }}{% endblock %}
+{% block user_nom %}{{ entreprise.nom_affichage|default:"Mon entreprise" }}{% endblock %}
+{% block user_role %}Entreprise{% endblock %}
+
+{% block sidebar_menu %}
+    <div class="sd-nav-section">Général</div>
+    <a href="{% url 'apps_entreprise:dashboard' %}" class="sd-nav-link active"><i class="bi bi-grid-1x2"></i>Tableau de bord</a>
+
+    <div class="sd-nav-section">Catalogue</div>
+    <a href="#" class="sd-nav-link"><i class="bi bi-boxes"></i>Mes produits
+        {% if nb_produits_stock_bas %}<span class="sd-nav-badge">{{ nb_produits_stock_bas }}</span>{% endif %}
+    </a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-building-gear"></i>Mes entrepôts & stocks</a>
+
+    <div class="sd-nav-section">Livraisons</div>
+    <a href="#" class="sd-nav-link"><i class="bi bi-truck"></i>Mes livraisons</a>
+
+    <div class="sd-nav-section">Finance</div>
+    <a href="#" class="sd-nav-link"><i class="bi bi-cash-stack"></i>Paiements & lots</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-gift"></i>Mes bonus</a>
+
+    <div class="sd-nav-section">Compte</div>
+    <a href="#" class="sd-nav-link"><i class="bi bi-chat-dots"></i>Messagerie</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-gear"></i>Paramètres</a>
+{% endblock %}
+
+{% block dashboard_content %}
+
+{% if not entreprise %}
+    <div class="alert alert-warning">Aucune entreprise n'est encore liée à ce compte.</div>
+{% endif %}
+
+<!-- ═══════════════════ KPIs ═══════════════════ -->
+<div class="row g-3 mb-4">
+    <div class="col-6 col-lg-3">
+        <div class="sd-kpi-card">
+            <div class="sd-kpi-icon" style="background:#E8F0FF; color:#2D6CDF;"><i class="bi bi-boxes"></i></div>
+            <div class="sd-kpi-value">{{ nb_produits }}</div>
+            <div class="sd-kpi-label">Produits enregistrés</div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="sd-kpi-card">
+            <div class="sd-kpi-icon" style="background:#FFF4E5; color:#E88A00;"><i class="bi bi-exclamation-triangle"></i></div>
+            <div class="sd-kpi-value">{{ nb_produits_stock_bas }}</div>
+            <div class="sd-kpi-label">Alertes stock actives</div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="sd-kpi-card">
+            <div class="sd-kpi-icon" style="background:#E5F7EC; color:#1FAA59;"><i class="bi bi-truck"></i></div>
+            <div class="sd-kpi-value">{{ nb_livraisons_cours }}</div>
+            <div class="sd-kpi-label">Livraisons en cours</div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="sd-kpi-card">
+            <div class="sd-kpi-icon" style="background:#FDEBEA; color:#E23D32;"><i class="bi bi-cash-coin"></i></div>
+            <div class="sd-kpi-value">{{ gain_du_mois }} F</div>
+            <div class="sd-kpi-label">Gain (livraisons livrées)</div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+    <!-- Alertes stock -->
+    <div class="col-lg-5">
+        <div class="sd-panel h-100">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div class="sd-panel-title mb-0"><i class="bi bi-exclamation-triangle me-2 text-warning"></i>Alertes de stock</div>
+                <a href="#" class="small">Tout voir</a>
+            </div>
+            {% if alertes_stock %}
+                <ul class="list-unstyled mb-0">
+                    {% for alerte in alertes_stock %}
+                        <li class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                            <div>
+                                <div class="fw-semibold small">{{ alerte.stock_entrepot.produit.nom }}</div>
+                                <div class="text-muted" style="font-size:.78rem;">{{ alerte.stock_entrepot.entrepot.nom }}</div>
+                            </div>
+                            {% if alerte.type_alerte == 'RUPTURE' %}
+                                <span class="sd-badge-statut echec">Rupture</span>
+                            {% else %}
+                                <span class="sd-badge-statut attente">Stock bas</span>
+                            {% endif %}
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p class="text-muted small mb-0">Aucune alerte active. Vos stocks sont sous contrôle.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Livraisons récentes -->
+    <div class="col-lg-7">
+        <div class="sd-panel h-100">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div class="sd-panel-title mb-0">Livraisons récentes</div>
+                <a href="#" class="small">Tout voir</a>
+            </div>
+            <div class="table-responsive">
+                <table class="table sd-table mb-0">
+                    <thead><tr><th>Numéro</th><th>Client</th><th>Statut</th></tr></thead>
+                    <tbody>
+                        {% for l in livraisons_recentes %}
+                            <tr>
+                                <td class="fw-semibold">{{ l.numero }}</td>
+                                <td>{{ l.nom_client }}</td>
+                                <td>
+                                    {% if l.statut == 'LIVREE' %}
+                                        <span class="sd-badge-statut succes">Livrée</span>
+                                    {% elif l.statut == 'EN_COURS' %}
+                                        <span class="sd-badge-statut cours">En cours</span>
+                                    {% elif l.statut == 'ECHEC' or l.statut == 'REFUSEE' %}
+                                        <span class="sd-badge-statut echec">{{ l.get_statut_display }}</span>
+                                    {% else %}
+                                        <span class="sd-badge-statut attente">{{ l.get_statut_display }}</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr><td colspan="3" class="text-muted small text-center py-3">Aucune livraison pour le moment.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════ Prochain paiement ═══════════════════ -->
+<div class="sd-panel mt-3">
+    <div class="sd-panel-title"><i class="bi bi-cash-stack me-2" style="color: var(--sd-orange);"></i>Prochain paiement</div>
+    {% if prochain_lot %}
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
+            <div>
+                <div class="fw-semibold">{{ prochain_lot.reference }} — {{ prochain_lot.montant_net_a_payer }} F</div>
+                <div class="text-muted small">Période : {{ prochain_lot.periode_debut }} → {{ prochain_lot.periode_fin }}</div>
+            </div>
+            <span class="sd-badge-statut {% if prochain_lot.statut == 'ENVOYE' %}cours{% else %}attente{% endif %}">{{ prochain_lot.get_statut_display }}</span>
+        </div>
+    {% else %}
+        <p class="text-muted small mb-0">Aucun lot de paiement en préparation pour le moment.</p>
+    {% endif %}
+</div>
+
+{% endblock %}

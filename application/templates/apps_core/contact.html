@@ -1,0 +1,186 @@
+{% extends 'navigateur/base.html' %}
+
+{% block title %}Contact – SwiftDrop{% endblock %}
+{% block meta_description %}Contactez l'équipe SwiftDrop : questions entreprise, candidature livreur, suivi de livraison ou partenariat.{% endblock %}
+
+{% block extra_css %}
+    /* ── Bannière de page (identique aux autres pages légales) ─── */
+    .sd-page-header {
+        background: linear-gradient(135deg, var(--sd-navy) 0%, var(--sd-navy-light) 100%);
+        color: #fff;
+    }
+    .sd-breadcrumb a { color: #C9CFDD; }
+    .sd-breadcrumb a:hover { color: var(--sd-orange); }
+    .sd-breadcrumb .active { color: #fff; }
+
+    /* ── Carte formulaire ─────────────────────────────────────── */
+    .sd-contact-card {
+        border: 1px solid #EDEFF4;
+        border-radius: 20px;
+    }
+    .sd-contact-card .form-label { font-weight: 600; color: var(--sd-navy); }
+    .sd-contact-card .form-control,
+    .sd-contact-card .form-select {
+        border-radius: 10px;
+        border: 1.5px solid #E4E7F0;
+        padding: .65rem .9rem;
+    }
+    .sd-contact-card .form-control:focus,
+    .sd-contact-card .form-select:focus {
+        border-color: var(--sd-orange);
+        box-shadow: 0 0 0 .2rem rgba(255,107,53,0.15);
+    }
+    .invalid-feedback { font-size: .85rem; }
+
+    /* ── Sidebar infos ────────────────────────────────────────── */
+    .sd-info-item {
+        display: flex;
+        gap: 1rem;
+        align-items: flex-start;
+    }
+    .sd-info-icon {
+        width: 46px; height: 46px;
+        border-radius: 12px;
+        background: rgba(255,107,53,0.12);
+        color: var(--sd-orange);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.15rem;
+        flex-shrink: 0;
+    }
+    .sd-hours-row { display: flex; justify-content: space-between; padding: .35rem 0; border-bottom: 1px dashed #EDEFF4; }
+    .sd-hours-row:last-child { border-bottom: none; }
+{% endblock %}
+
+{% block content %}
+
+<!-- ═══════════════════════ BANNIÈRE DE PAGE ═══════════════════════ -->
+<section class="sd-page-header py-5">
+    <div class="container py-3">
+        <nav class="sd-breadcrumb small mb-3">
+            <a href="{% url 'apps_core:accueil' %}">Accueil</a>
+            <span class="mx-2" style="color:#5A6690;">/</span>
+            <span class="active">Contact</span>
+        </nav>
+        <h1 class="fw-brand mb-3">Contactez-nous</h1>
+        <p class="mb-0" style="color:#C9CFDD; max-width:640px;">
+            Une question sur votre compte entreprise, une candidature livreur, ou simplement envie d'en savoir plus ? Écrivez-nous, notre équipe vous répond rapidement.
+        </p>
+    </div>
+</section>
+
+<!-- ═══════════════════════ FORMULAIRE + INFOS ═══════════════════════ -->
+<section class="py-5">
+    <div class="container py-3">
+        <div class="row gy-4">
+
+            <!-- ── Formulaire de contact ──────────────────────── -->
+            <div class="col-lg-7">
+                <div class="sd-contact-card p-4 p-lg-5">
+                    <h4 class="fw-brand mb-4">Envoyez-nous un message</h4>
+
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="{{ form.nom.id_for_label }}" class="form-label">{{ form.nom.label }}</label>
+                                {{ form.nom }}
+                                {% for erreur in form.nom.errors %}
+                                    <div class="invalid-feedback d-block">{{ erreur }}</div>
+                                {% endfor %}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form.email.id_for_label }}" class="form-label">{{ form.email.label }}</label>
+                                {{ form.email }}
+                                {% for erreur in form.email.errors %}
+                                    <div class="invalid-feedback d-block">{{ erreur }}</div>
+                                {% endfor %}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form.telephone.id_for_label }}" class="form-label">{{ form.telephone.label }}</label>
+                                {{ form.telephone }}
+                                {% for erreur in form.telephone.errors %}
+                                    <div class="invalid-feedback d-block">{{ erreur }}</div>
+                                {% endfor %}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form.sujet.id_for_label }}" class="form-label">{{ form.sujet.label }}</label>
+                                {{ form.sujet }}
+                                {% for erreur in form.sujet.errors %}
+                                    <div class="invalid-feedback d-block">{{ erreur }}</div>
+                                {% endfor %}
+                            </div>
+                            <div class="col-12">
+                                <label for="{{ form.message.id_for_label }}" class="form-label">{{ form.message.label }}</label>
+                                {{ form.message }}
+                                {% for erreur in form.message.errors %}
+                                    <div class="invalid-feedback d-block">{{ erreur }}</div>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-sd-primary btn-lg mt-4 px-4">
+                            <i class="bi bi-send me-2"></i>Envoyer le message
+                        </button>
+                        <p class="text-muted small mt-3 mb-0">
+                            En envoyant ce formulaire, vous acceptez que vos informations soient utilisées pour traiter votre demande, conformément à notre
+                            <a href="{% url 'apps_core:politique_confidentialite' %}">politique de confidentialité</a>.
+                        </p>
+                    </form>
+                </div>
+            </div>
+
+            <!-- ── Sidebar coordonnées ────────────────────────── -->
+            <div class="col-lg-5">
+                <div class="d-flex flex-column gap-4">
+
+                    <div class="sd-info-item">
+                        <div class="sd-info-icon"><i class="bi bi-geo-alt"></i></div>
+                        <div>
+                            <h6 class="fw-semibold mb-1">Adresse</h6>
+                            <p class="text-muted small mb-0">Douala, Cameroun</p>
+                        </div>
+                    </div>
+
+                    <div class="sd-info-item">
+                        <div class="sd-info-icon"><i class="bi bi-telephone"></i></div>
+                        <div>
+                            <h6 class="fw-semibold mb-1">Téléphone / WhatsApp</h6>
+                            <p class="text-muted small mb-0">+237 6XX XXX XXX</p>
+                        </div>
+                    </div>
+
+                    <div class="sd-info-item">
+                        <div class="sd-info-icon"><i class="bi bi-envelope"></i></div>
+                        <div>
+                            <h6 class="fw-semibold mb-1">Email</h6>
+                            <p class="text-muted small mb-0">contact@swiftdrop.cm</p>
+                        </div>
+                    </div>
+
+                    <div class="sd-info-item">
+                        <div class="sd-info-icon"><i class="bi bi-clock"></i></div>
+                        <div class="w-100">
+                            <h6 class="fw-semibold mb-2">Horaires du support</h6>
+                            <div class="sd-hours-row small"><span class="text-muted">Lundi – Vendredi</span><span class="fw-semibold">7h30 – 19h00</span></div>
+                            <div class="sd-hours-row small"><span class="text-muted">Samedi</span><span class="fw-semibold">8h00 – 16h00</span></div>
+                            <div class="sd-hours-row small"><span class="text-muted">Dimanche</span><span class="fw-semibold">Fermé</span></div>
+                        </div>
+                    </div>
+
+                    <div class="pt-2">
+                        <h6 class="fw-semibold mb-2">Suivez-nous</h6>
+                        <a href="#" class="sd-social-icon" style="background: rgba(22,33,62,0.06); color: var(--sd-navy);"><i class="bi bi-facebook"></i></a>
+                        <a href="#" class="sd-social-icon" style="background: rgba(22,33,62,0.06); color: var(--sd-navy);"><i class="bi bi-instagram"></i></a>
+                        <a href="#" class="sd-social-icon" style="background: rgba(22,33,62,0.06); color: var(--sd-navy);"><i class="bi bi-whatsapp"></i></a>
+                        <a href="#" class="sd-social-icon" style="background: rgba(22,33,62,0.06); color: var(--sd-navy);"><i class="bi bi-linkedin"></i></a>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+{% endblock %}

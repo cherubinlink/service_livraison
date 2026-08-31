@@ -1,0 +1,116 @@
+{% extends 'navigateur/base_dashboard.html' %}
+
+{% block title %}Tableau de bord Livreur – SwiftDrop{% endblock %}
+{% block page_title %}Tableau de bord{% endblock %}
+{% block user_initiales %}{{ request.user.nom|default:"LV"|slice:":2"|upper }}{% endblock %}
+{% block user_nom %}{{ request.user.nom|default:"Livreur" }}{% endblock %}
+{% block user_role %}Livreur{% if livreur %} · {{ livreur.get_type_vehicule_display }}{% endif %}{% endblock %}
+
+{% block sidebar_menu %}
+    <div class="sd-nav-section">Général</div>
+    <a href="{% url 'apps_livreur:dashboard' %}" class="sd-nav-link active"><i class="bi bi-grid-1x2"></i>Tableau de bord</a>
+
+    <div class="sd-nav-section">Courses</div>
+    <a href="#" class="sd-nav-link"><i class="bi bi-truck"></i>Mes courses
+        {% if nb_courses_jour %}<span class="sd-nav-badge">{{ nb_courses_jour }}</span>{% endif %}
+    </a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-clock-history"></i>Historique</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-geo-alt"></i>Ma position</a>
+
+    <div class="sd-nav-section">Compte</div>
+    <a href="#" class="sd-nav-link"><i class="bi bi-cash-coin"></i>Mes revenus</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-chat-dots"></i>Messagerie</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-person"></i>Mon profil</a>
+{% endblock %}
+
+{% block dashboard_content %}
+
+{% if not livreur %}
+    <div class="alert alert-warning">Aucun profil livreur n'est encore lié à ce compte.</div>
+{% endif %}
+
+<!-- ═══════════════════ Statut actuel ═══════════════════ -->
+<div class="sd-panel mb-4 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+    <div class="d-flex align-items-center gap-3">
+        <div class="sd-kpi-icon" style="background:#E5F7EC; color:#1FAA59;"><i class="bi bi-power"></i></div>
+        <div>
+            <div class="fw-semibold">Statut actuel : {{ livreur.get_statut_display|default:"Hors ligne" }}</div>
+            <div class="text-muted small">Véhicule : {{ livreur.get_type_vehicule_display|default:"—" }}</div>
+        </div>
+    </div>
+    <div class="d-flex gap-2">
+        <button class="btn btn-sd-primary px-4"><i class="bi bi-play-fill me-1"></i>Passer actif</button>
+        <button class="btn btn-sd-outline px-4"><i class="bi bi-pause-fill me-1"></i>Pause</button>
+    </div>
+</div>
+
+<!-- ═══════════════════ KPIs ═══════════════════ -->
+<div class="row g-3 mb-4">
+    <div class="col-6 col-lg-3">
+        <div class="sd-kpi-card">
+            <div class="sd-kpi-icon" style="background:#E8F0FF; color:#2D6CDF;"><i class="bi bi-calendar-day"></i></div>
+            <div class="sd-kpi-value">{{ nb_courses_jour }}</div>
+            <div class="sd-kpi-label">Courses aujourd'hui</div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="sd-kpi-card">
+            <div class="sd-kpi-icon" style="background:#FFF4E5; color:#E88A00;"><i class="bi bi-star-fill"></i></div>
+            <div class="sd-kpi-value">{{ note_moyenne }}/5</div>
+            <div class="sd-kpi-label">Note moyenne</div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-6">
+        <div class="sd-kpi-card">
+            <div class="sd-kpi-icon" style="background:#E5F7EC; color:#1FAA59;"><i class="bi bi-truck"></i></div>
+            <div class="sd-kpi-value">{{ nb_courses_total }}</div>
+            <div class="sd-kpi-label">Livraisons totales</div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-6">
+        <div class="sd-kpi-card">
+            <div class="sd-kpi-icon" style="background:#FDEBEA; color:#E23D32;"><i class="bi bi-signpost-split"></i></div>
+            <div class="sd-kpi-value">{{ courses_assignees|length }}</div>
+            <div class="sd-kpi-label">Courses assignées</div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════ Courses assignées ═══════════════════ -->
+<div class="sd-panel">
+    <div class="sd-panel-title">Mes courses assignées</div>
+    <div class="table-responsive">
+        <table class="table sd-table mb-0">
+            <thead>
+                <tr><th>Numéro</th><th>Client</th><th>Zone</th><th>Statut</th><th></th></tr>
+            </thead>
+            <tbody>
+                {% for course in courses_assignees %}
+                    <tr>
+                        <td class="fw-semibold">{{ course.numero }}</td>
+                        <td>{{ course.nom_client }}</td>
+                        <td class="text-muted">{{ course.zone_livraison }}</td>
+                        <td>
+                            {% if course.statut == 'EN_COURS' %}
+                                <span class="sd-badge-statut cours">En cours</span>
+                            {% else %}
+                                <span class="sd-badge-statut attente">{{ course.get_statut_display }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            {% if course.statut == 'VALIDEE' %}
+                                <a href="#" class="btn btn-sm btn-sd-primary">Démarrer</a>
+                            {% else %}
+                                <a href="#" class="btn btn-sm btn-sd-outline">Terminer</a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr><td colspan="5" class="text-muted small text-center py-4">Aucune course assignée pour le moment.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,74 @@
+{% extends 'navigateur/base.html' %}
+
+{% block title %}Vérification – SwiftDrop{% endblock %}
+
+{% block extra_css %}
+    .sd-auth-section { background: var(--sd-fond); padding: 5.5rem 0; }
+    .sd-auth-card {
+        background: #fff;
+        border-radius: 20px;
+        box-shadow: 0 20px 50px rgba(22,33,62,0.08);
+        padding: 2.5rem;
+        max-width: 440px;
+        margin: 0 auto;
+        text-align: center;
+    }
+    .sd-auth-icon {
+        width: 56px; height: 56px; border-radius: 14px;
+        background: rgba(255,107,53,0.12); color: var(--sd-orange);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.4rem; margin: 0 auto 1rem;
+    }
+    .sd-auth-title { font-weight: 800; color: var(--sd-navy); }
+    .sd-auth-sub { color: var(--sd-gris); }
+    .sd-otp-input {
+        font-size: 1.6rem;
+        letter-spacing: .5rem;
+        text-align: center;
+        border-radius: 12px;
+        border: 1.5px solid #EDEFF4;
+        padding: .8rem;
+    }
+    .sd-otp-input:focus {
+        border-color: var(--sd-orange); box-shadow: 0 0 0 .2rem rgba(255,107,53,0.15);
+    }
+    .sd-auth-footer-link { color: var(--sd-gris); font-size: .9rem; }
+    .sd-auth-footer-link a { color: var(--sd-orange); font-weight: 600; }
+{% endblock %}
+
+{% block content %}
+<section class="sd-auth-section">
+    <div class="container">
+        <div class="sd-auth-card">
+            <div class="sd-auth-icon"><i class="bi bi-shield-check"></i></div>
+            <h1 class="sd-auth-title h3 mb-1">Vérifiez votre numéro</h1>
+            <p class="sd-auth-sub mb-4">Entrez le code à 6 chiffres envoyé à votre téléphone.</p>
+
+            {% if form.non_field_errors %}
+                <div class="alert alert-danger">
+                    {% for erreur in form.non_field_errors %}{{ erreur }}{% endfor %}
+                </div>
+            {% endif %}
+
+            <form method="post" novalidate>
+                {% csrf_token %}
+
+                <div class="mb-4">
+                    {{ form.code }}
+                    {% if form.code.errors %}<div class="text-danger small mt-2">{{ form.code.errors.0 }}</div>{% endif %}
+                </div>
+
+                <button type="submit" class="btn btn-sd-primary w-100 py-2 mb-3">Vérifier</button>
+            </form>
+
+            <p class="sd-auth-footer-link mb-2">
+                Vous n'avez rien reçu ?
+                <a href="{% url 'apps_core:renvoyer_otp' %}">Renvoyer le code</a>
+            </p>
+            <p class="sd-auth-footer-link mb-0">
+                <a href="{% url 'apps_core:accueil' %}">Passer cette étape pour l'instant</a>
+            </p>
+        </div>
+    </div>
+</section>
+{% endblock %}

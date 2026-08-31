@@ -1,0 +1,109 @@
+{% extends 'navigateur/base_dashboard.html' %}
+
+{% block title %}Tarif — {{ zone.nom }} – SwiftDrop{% endblock %}
+{% block page_title %}Modifier le tarif{% endblock %}
+{% block user_initiales %}AD{% endblock %}
+{% block user_nom %}Administration{% endblock %}
+{% block user_role %}Administrateur{% endblock %}
+
+{% block sidebar_menu %}
+    <div class="sd-nav-section">Général</div>
+    <a href="{% url 'apps_core:dashboard_admin' %}" class="sd-nav-link"><i class="bi bi-grid-1x2"></i>Tableau de bord</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-chat-dots"></i>Messagerie</a>
+
+    <div class="sd-nav-section">Acteurs</div>
+    <a href="#" class="sd-nav-link"><i class="bi bi-building"></i>Entreprises</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-bicycle"></i>Livreurs</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-person-heart"></i>Clients</a>
+
+    <div class="sd-nav-section">Opérations</div>
+    <a href="#" class="sd-nav-link"><i class="bi bi-box-seam"></i>Livraisons B2B</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-signpost-2"></i>Livraisons directes</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-building-gear"></i>Entrepôts</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-boxes"></i>Produits</a>
+
+    <div class="sd-nav-section">Finance</div>
+    <a href="#" class="sd-nav-link"><i class="bi bi-cash-stack"></i>Lots de paiement</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-gift"></i>Bonus</a>
+
+    <div class="sd-nav-section">Système</div>
+    <a href="{% url 'apps_core:configuration_geographie' %}" class="sd-nav-link active"><i class="bi bi-geo"></i>Zones géographiques</a>
+    <a href="{% url 'apps_core:gerer_coefficients_vehicule' %}" class="sd-nav-link"><i class="bi bi-truck-front"></i>Coefficients véhicule</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-sliders"></i>Paramètres</a>
+{% endblock %}
+
+{% block extra_css %}
+    .sd-form-card {
+        background: #fff;
+        border: 1px solid #EDEFF4;
+        border-radius: 16px;
+        padding: 2rem;
+        max-width: 640px;
+    }
+    .sd-form-card .form-label { font-weight: 600; color: var(--sd-navy); font-size: .9rem; }
+    .sd-form-card .form-control {
+        border-radius: 10px; padding: .6rem .85rem; border: 1.5px solid #EDEFF4;
+    }
+    .sd-form-card .form-control:focus {
+        border-color: var(--sd-orange); box-shadow: 0 0 0 .2rem rgba(255,107,53,0.15);
+    }
+    .sd-back-link { color: var(--sd-gris); font-size: .88rem; }
+    .sd-back-link:hover { color: var(--sd-orange); }
+    .sd-prix-actuel {
+        background: var(--sd-fond);
+        border: 1px solid #EDEFF4;
+        border-radius: 12px;
+        padding: 1.1rem 1.25rem;
+        display: flex; justify-content: space-between; align-items: center;
+    }
+{% endblock %}
+
+{% block dashboard_content %}
+
+<a href="{% url 'apps_core:configuration_geographie' %}" class="sd-back-link d-inline-flex align-items-center gap-1 mb-3">
+    <i class="bi bi-arrow-left"></i> Retour à la configuration géographique
+</a>
+
+<div class="sd-form-card">
+    <h5 class="fw-bold mb-1" style="color: var(--sd-navy);">Tarif — {{ zone.nom }}</h5>
+    <p class="text-muted small mb-4">{{ zone.ville.nom }} · Chaque changement est journalisé dans l'historique des tarifs.</p>
+
+    <div class="sd-prix-actuel mb-4">
+        <div>
+            <div class="small text-muted mb-1">Prix actuel (véhicule MOTO)</div>
+            <div class="fw-bold" style="color: var(--sd-navy); font-size:1.3rem;">{{ zone.prix_livraison }} FCFA</div>
+        </div>
+        <a href="{% url 'apps_core:historique_tarifs_zone' zone.pk %}" class="btn btn-sd-outline btn-sm">
+            <i class="bi bi-clock-history me-1"></i>Voir l'historique
+        </a>
+    </div>
+
+    {% if form.non_field_errors %}
+        <div class="alert alert-danger">
+            {% for erreur in form.non_field_errors %}{{ erreur }}{% endfor %}
+        </div>
+    {% endif %}
+
+    <form method="post" novalidate>
+        {% csrf_token %}
+
+        <div class="mb-3">
+            <label for="{{ form.nouveau_prix.id_for_label }}" class="form-label">{{ form.nouveau_prix.label }}</label>
+            {{ form.nouveau_prix }}
+            {% if form.nouveau_prix.errors %}<div class="text-danger small mt-1">{{ form.nouveau_prix.errors.0 }}</div>{% endif %}
+        </div>
+
+        <div class="mb-4">
+            <label for="{{ form.raison.id_for_label }}" class="form-label">{{ form.raison.label }}</label>
+            {{ form.raison }}
+            {% if form.raison.errors %}<div class="text-danger small mt-1">{{ form.raison.errors.0 }}</div>{% endif %}
+        </div>
+
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-sd-primary px-4"><i class="bi bi-check2 me-1"></i>Enregistrer le nouveau tarif</button>
+            <a href="{% url 'apps_core:configuration_geographie' %}" class="btn btn-sd-outline px-4">Annuler</a>
+        </div>
+    </form>
+</div>
+
+{% endblock %}

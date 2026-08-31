@@ -1,0 +1,142 @@
+{% extends 'navigateur/base_dashboard.html' %}
+
+{% block title %}Paramètres système – SwiftDrop{% endblock %}
+{% block page_title %}Paramètres système{% endblock %}
+{% block user_initiales %}AD{% endblock %}
+{% block user_nom %}Administration{% endblock %}
+{% block user_role %}Administrateur{% endblock %}
+
+{% block sidebar_menu %}
+    <div class="sd-nav-section">Général</div>
+    <a href="{% url 'apps_core:dashboard_admin' %}" class="sd-nav-link"><i class="bi bi-grid-1x2"></i>Tableau de bord</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-chat-dots"></i>Messagerie</a>
+
+    <div class="sd-nav-section">Acteurs</div>
+    <a href="#" class="sd-nav-link"><i class="bi bi-building"></i>Entreprises</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-bicycle"></i>Livreurs</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-person-heart"></i>Clients</a>
+
+    <div class="sd-nav-section">Opérations</div>
+    <a href="#" class="sd-nav-link"><i class="bi bi-box-seam"></i>Livraisons B2B</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-signpost-2"></i>Livraisons directes</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-building-gear"></i>Entrepôts</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-boxes"></i>Produits</a>
+
+    <div class="sd-nav-section">Finance</div>
+    <a href="#" class="sd-nav-link"><i class="bi bi-cash-stack"></i>Lots de paiement</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-gift"></i>Bonus</a>
+
+    <div class="sd-nav-section">Système</div>
+    <a href="{% url 'apps_core:configuration_geographie' %}" class="sd-nav-link"><i class="bi bi-sliders"></i>Paramètres</a>
+    <a href="{% url 'apps_core:gerer_coefficients_vehicule' %}" class="sd-nav-link"><i class="bi bi-truck"></i>Coefficients véhicule</a>
+    <a href="{% url 'apps_core:gerer_tarifs_intervilles' %}" class="sd-nav-link"><i class="bi bi-signpost-split"></i>Tarifs inter-villes</a>
+    <a href="{% url 'apps_core:gerer_parametres_systeme' %}" class="sd-nav-link active"><i class="bi bi-gear"></i>Paramètres système</a>
+{% endblock %}
+
+{% block dashboard_content %}
+
+{% if messages %}
+    {% for message in messages %}
+        <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    {% endfor %}
+{% endif %}
+
+<div class="row g-3">
+    <!-- Formulaire d'ajout / édition -->
+    <div class="col-lg-4">
+        <div class="sd-panel h-100">
+            <div class="sd-panel-title mb-3">
+                <i class="bi bi-gear me-2"></i>
+                {% if parametre_a_editer %}Modifier le paramètre{% else %}Nouveau paramètre{% endif %}
+            </div>
+
+            <form method="post">
+                {% csrf_token %}
+                {% if parametre_a_editer %}
+                    <input type="hidden" name="param_id" value="{{ parametre_a_editer.id }}">
+                {% endif %}
+
+                {% for field in form %}
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.help_text %}<div class="form-text small">{{ field.help_text }}</div>{% endif %}
+                        {% if field.errors %}<div class="text-danger small mt-1">{{ field.errors|join:", " }}</div>{% endif %}
+                    </div>
+                {% endfor %}
+
+                {% if form.non_field_errors %}
+                    <div class="text-danger small mb-3">{{ form.non_field_errors|join:", " }}</div>
+                {% endif %}
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-sd-primary flex-grow-1">
+                        {% if parametre_a_editer %}Mettre à jour{% else %}Enregistrer{% endif %}
+                    </button>
+                    {% if parametre_a_editer %}
+                        <a href="{% url 'apps_core:gerer_parametres_systeme' %}" class="btn btn-sd-outline">Annuler</a>
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Liste des paramètres configurés -->
+    <div class="col-lg-8">
+        <div class="sd-panel h-100">
+            <div class="sd-panel-title mb-3"><i class="bi bi-list-ul me-2"></i>Paramètres configurés</div>
+
+            {% if parametres %}
+                <div class="table-responsive">
+                    <table class="table sd-table align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Clé</th>
+                                <th>Valeur</th>
+                                <th>Type</th>
+                                <th>Dernière modification</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for parametre in parametres %}
+                                <tr>
+                                    <td class="fw-semibold">
+                                        <code>{{ parametre.cle }}</code>
+                                        {% if parametre.description %}
+                                            <i class="bi bi-info-circle text-muted ms-1" title="{{ parametre.description }}"></i>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ parametre.valeur|truncatechars:60 }}</td>
+                                    <td><span class="badge bg-light text-dark border">{{ parametre.get_type_valeur_display }}</span></td>
+                                    <td class="text-muted small">
+                                        {{ parametre.date_modification|date:"d/m/Y H:i" }}
+                                        {% if parametre.modifie_par %}<br>par {{ parametre.modifie_par }}{% endif %}
+                                    </td>
+                                    <td class="text-end">
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="{% url 'apps_core:gerer_parametres_systeme' %}?param={{ parametre.id }}"
+                                               class="btn btn-light" title="Modifier"><i class="bi bi-pencil"></i></a>
+                                            <form method="post" action="{% url 'apps_core:supprimer_parametre_systeme' pk=parametre.id %}"
+                                                  onsubmit="return confirm('Supprimer le paramètre « {{ parametre.cle|escapejs }} » ? Vérifiez qu\'il n\'est plus utilisé dans le code avant de continuer.');">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-light text-danger" title="Supprimer"><i class="bi bi-trash"></i></button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p class="text-muted small mb-0">Aucun paramètre système configuré pour le moment.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% endblock %}

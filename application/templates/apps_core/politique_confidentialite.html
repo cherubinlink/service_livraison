@@ -1,0 +1,333 @@
+{% extends 'navigateur/base.html' %}
+
+{% block title %}Politique de Confidentialité – SwiftDrop{% endblock %}
+{% block meta_description %}Politique de confidentialité de SwiftDrop : quelles données sont collectées auprès des entreprises, livreurs et clients, et comment elles sont utilisées.{% endblock %}
+
+{% block extra_css %}
+    /* ── Bannière de page (identique à conditions_utilisation.html) ─── */
+    .sd-page-header {
+        background: linear-gradient(135deg, var(--sd-navy) 0%, var(--sd-navy-light) 100%);
+        color: #fff;
+    }
+    .sd-breadcrumb a { color: #C9CFDD; }
+    .sd-breadcrumb a:hover { color: var(--sd-orange); }
+    .sd-breadcrumb .active { color: #fff; }
+    .sd-maj-badge {
+        background: rgba(255,255,255,0.1);
+        border: 1px solid rgba(255,255,255,0.2);
+        border-radius: 50px;
+        padding: 5px 14px;
+        font-size: .82rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    /* ── Sommaire sticky ───────────────────────────────────────── */
+    .sd-toc {
+        position: sticky;
+        top: 100px;
+    }
+    .sd-toc .list-group-item {
+        border: none;
+        border-left: 3px solid transparent;
+        padding: .55rem .9rem;
+        color: var(--sd-gris);
+        font-weight: 500;
+        font-size: .92rem;
+        background: transparent;
+    }
+    .sd-toc .list-group-item:hover { color: var(--sd-navy); }
+    .sd-toc .list-group-item.active-link {
+        color: var(--sd-orange);
+        border-left-color: var(--sd-orange);
+        background: rgba(255,107,53,0.06);
+        font-weight: 600;
+    }
+
+    /* ── Sections politique ────────────────────────────────────── */
+    .sd-cgu-section {
+        scroll-margin-top: 110px;
+        padding-bottom: 2.5rem;
+        margin-bottom: 2.5rem;
+        border-bottom: 1px solid #EDEFF4;
+    }
+    .sd-cgu-section:last-of-type { border-bottom: none; margin-bottom: 0; }
+    .sd-cgu-number {
+        width: 40px; height: 40px;
+        border-radius: 10px;
+        background: rgba(255,107,53,0.12);
+        color: var(--sd-orange);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+        flex-shrink: 0;
+    }
+    .sd-cgu-section p, .sd-cgu-section li { color: var(--sd-gris); }
+    .sd-cgu-section ul { padding-left: 1.1rem; }
+    .sd-cgu-highlight {
+        background: var(--sd-fond);
+        border: 1px solid #EDEFF4;
+        border-radius: 12px;
+        padding: 1rem 1.25rem;
+    }
+
+    /* ── Tableau des données collectées ──────────────────────────── */
+    .sd-donnees-table th {
+        text-transform: uppercase;
+        font-size: .75rem;
+        letter-spacing: .04em;
+        color: var(--sd-gris);
+        border-top: none;
+    }
+    .sd-donnees-table td { vertical-align: middle; }
+    .sd-profil-badge {
+        font-size: .75rem;
+        font-weight: 700;
+        padding: .25rem .65rem;
+        border-radius: 50px;
+        display: inline-block;
+    }
+    .sd-profil-badge.entreprise { background: rgba(255,107,53,0.12); color: var(--sd-orange); }
+    .sd-profil-badge.livreur     { background: rgba(22,33,62,0.08); color: var(--sd-navy); }
+    .sd-profil-badge.client       { background: #EAF7EF; color: #1FAA59; }
+{% endblock %}
+
+{% block content %}
+
+<!-- ═══════════════════════ BANNIÈRE DE PAGE ═══════════════════════ -->
+<section class="sd-page-header py-5">
+    <div class="container py-3">
+        <nav class="sd-breadcrumb small mb-3">
+            <a href="{% url 'apps_core:accueil' %}">Accueil</a>
+            <span class="mx-2" style="color:#5A6690;">/</span>
+            <span class="active">Politique de Confidentialité</span>
+        </nav>
+        <h1 class="fw-brand mb-3">Politique de Confidentialité</h1>
+        <span class="sd-maj-badge"><i class="bi bi-clock-history"></i> Dernière mise à jour : {{ date_maj }}</span>
+    </div>
+</section>
+
+<!-- ═══════════════════════ CONTENU ═══════════════════════ -->
+<section class="py-5">
+    <div class="container py-3">
+        <div class="row gy-5">
+
+            <!-- ── Sommaire ────────────────────────────────────── -->
+            <div class="col-lg-3">
+                <div class="sd-toc">
+                    <h6 class="text-uppercase fw-semibold small mb-3" style="color: var(--sd-navy); letter-spacing:.06em;">
+                        Sommaire
+                    </h6>
+                    <div class="list-group" id="sd-toc-list">
+                        <a class="list-group-item" href="#objet">1. Objet</a>
+                        <a class="list-group-item" href="#responsable">2. Responsable du traitement</a>
+                        <a class="list-group-item" href="#donnees-collectees">3. Données collectées</a>
+                        <a class="list-group-item" href="#finalites">4. Finalités du traitement</a>
+                        <a class="list-group-item" href="#base-legale">5. Base légale</a>
+                        <a class="list-group-item" href="#partage">6. Partage des données</a>
+                        <a class="list-group-item" href="#conservation">7. Durée de conservation</a>
+                        <a class="list-group-item" href="#securite">8. Sécurité des données</a>
+                        <a class="list-group-item" href="#cookies">9. Cookies & traceurs</a>
+                        <a class="list-group-item" href="#droits">10. Vos droits</a>
+                        <a class="list-group-item" href="#transfert">11. Transfert de données</a>
+                        <a class="list-group-item" href="#mineurs">12. Mineurs</a>
+                        <a class="list-group-item" href="#modification">13. Modification de la politique</a>
+                        <a class="list-group-item" href="#contact">14. Contact</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Texte de la politique ───────────────────────── -->
+            <div class="col-lg-9">
+
+                <div class="sd-cgu-section" id="objet">
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        <span class="sd-cgu-number">1</span>
+                        <h3 class="fw-brand mb-0">Objet</h3>
+                    </div>
+                    <p>SwiftDrop attache une grande importance à la protection des données personnelles de ses utilisateurs — entreprises, livreurs et clients. La présente politique explique quelles données sont collectées, pourquoi, comment elles sont utilisées, et quels droits vous pouvez exercer sur ces données.</p>
+                </div>
+
+                <div class="sd-cgu-section" id="responsable">
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        <span class="sd-cgu-number">2</span>
+                        <h3 class="fw-brand mb-0">Responsable du traitement</h3>
+                    </div>
+                    <p>Le responsable du traitement des données collectées sur la plateforme SwiftDrop est l'entité exploitant SwiftDrop, dont les coordonnées figurent à la section « Contact » ci-dessous. Toute question relative à vos données personnelles peut lui être adressée directement.</p>
+                </div>
+
+                <div class="sd-cgu-section" id="donnees-collectees">
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        <span class="sd-cgu-number">3</span>
+                        <h3 class="fw-brand mb-0">Données collectées</h3>
+                    </div>
+                    <p>La nature des données collectées dépend du profil de l'utilisateur :</p>
+                    <div class="table-responsive">
+                        <table class="table sd-donnees-table">
+                            <thead>
+                                <tr>
+                                    <th>Profil</th>
+                                    <th>Données collectées</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><span class="sd-profil-badge entreprise">Tous les comptes</span></td>
+                                    <td class="small">Nom, email, téléphone, mot de passe (chiffré), photo de profil, langue préférée, historique de connexion (date, IP), code de vérification (OTP) temporaire.</td>
+                                </tr>
+                                <tr>
+                                    <td><span class="sd-profil-badge entreprise">Entreprise</span></td>
+                                    <td class="small">Raison sociale, secteur d'activité, adresse du siège, registre de commerce, numéro contribuable (NIU), documents justificatifs (CNI du gérant, statuts, attestation de domicile), numéro Mobile Money.</td>
+                                </tr>
+                                <tr>
+                                    <td><span class="sd-profil-badge livreur">Livreur</span></td>
+                                    <td class="small">Numéro de CNI, photo de la CNI, type et immatriculation du véhicule, zones de travail, <strong>position GPS en temps réel et historique de position</strong> pendant les courses.</td>
+                                </tr>
+                                <tr>
+                                    <td><span class="sd-profil-badge client">Client</span></td>
+                                    <td class="small">Nom, téléphone, adresse de livraison, et le cas échéant signature ou photo prise comme preuve de livraison.</td>
+                                </tr>
+                                <tr>
+                                    <td><span class="sd-profil-badge entreprise">Technique</span></td>
+                                    <td class="small">Token d'appareil mobile (pour les notifications push), device et navigateur utilisés lors de la connexion.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="sd-cgu-highlight small">
+                        <i class="bi bi-geo-alt me-1" style="color: var(--sd-orange);"></i>
+                        La position GPS des livreurs n'est collectée que pendant leurs missions actives, pour permettre le suivi des livraisons par l'entreprise et le client concernés.
+                    </div>
+                </div>
+
+                <div class="sd-cgu-section" id="finalites">
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        <span class="sd-cgu-number">4</span>
+                        <h3 class="fw-brand mb-0">Finalités du traitement</h3>
+                    </div>
+                    <ul>
+                        <li>Créer et gérer votre compte, et vérifier votre identité (email, OTP, documents).</li>
+                        <li>Attribuer les livraisons au livreur le plus adapté et suivre leur exécution en temps réel.</li>
+                        <li>Calculer les frais de livraison, les commissions, les gains des entreprises et effectuer les paiements par lot.</li>
+                        <li>Vous envoyer des notifications utiles au bon déroulement du service (SMS, WhatsApp, email, notifications push).</li>
+                        <li>Assurer la sécurité de la plateforme, prévenir la fraude et répondre à nos obligations légales.</li>
+                        <li>Améliorer la qualité du service à partir des évaluations et des statistiques d'utilisation.</li>
+                    </ul>
+                </div>
+
+                <div class="sd-cgu-section" id="base-legale">
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        <span class="sd-cgu-number">5</span>
+                        <h3 class="fw-brand mb-0">Base légale</h3>
+                    </div>
+                    <p>Les traitements réalisés reposent selon les cas sur : l'exécution du contrat qui vous lie à SwiftDrop (livraison, paiement), le respect d'obligations légales (documents d'identification des entreprises et livreurs), votre consentement (notifications marketing, cookies non essentiels), et l'intérêt légitime de SwiftDrop à assurer la sécurité et la qualité de son service.</p>
+                </div>
+
+                <div class="sd-cgu-section" id="partage">
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        <span class="sd-cgu-number">6</span>
+                        <h3 class="fw-brand mb-0">Partage des données</h3>
+                    </div>
+                    <p>Vos données ne sont partagées qu'avec les personnes strictement nécessaires au bon déroulement d'une livraison : l'entreprise expéditrice, le livreur attribué et le client destinataire n'accèdent qu'aux informations utiles à leur propre transaction (nom, téléphone, adresse). SwiftDrop ne vend aucune donnée personnelle à des tiers. Certaines données peuvent être transmises à des prestataires techniques (hébergement, paiement Mobile Money, envoi de SMS) dans la stricte mesure nécessaire à leur mission, ou aux autorités compétentes si la loi l'exige.</p>
+                </div>
+
+                <div class="sd-cgu-section" id="conservation">
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        <span class="sd-cgu-number">7</span>
+                        <h3 class="fw-brand mb-0">Durée de conservation</h3>
+                    </div>
+                    <p>Les données de compte sont conservées pendant toute la durée d'utilisation de la plateforme, puis archivées ou supprimées dans un délai raisonnable après la clôture du compte, sauf obligation légale de conservation plus longue (documents comptables, pièces justificatives). L'historique de position GPS des livreurs est conservé uniquement le temps nécessaire au suivi et à l'audit des livraisons concernées.</p>
+                </div>
+
+                <div class="sd-cgu-section" id="securite">
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        <span class="sd-cgu-number">8</span>
+                        <h3 class="fw-brand mb-0">Sécurité des données</h3>
+                    </div>
+                    <p>SwiftDrop met en œuvre des mesures techniques et organisationnelles raisonnables pour protéger vos données contre l'accès non autorisé, la perte ou l'altération : mots de passe chiffrés, accès restreint aux seuls comptes autorisés (administrateurs, entreprise, livreur concernés), et journalisation des connexions.</p>
+                </div>
+
+                <div class="sd-cgu-section" id="cookies">
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        <span class="sd-cgu-number">9</span>
+                        <h3 class="fw-brand mb-0">Cookies & traceurs</h3>
+                    </div>
+                    <p>La plateforme utilise des cookies strictement nécessaires à son fonctionnement (maintien de la session de connexion) ainsi que, le cas échéant, des cookies de mesure d'audience pour améliorer le service. Vous pouvez configurer votre navigateur pour refuser les cookies non essentiels, sachant que cela peut limiter certaines fonctionnalités.</p>
+                </div>
+
+                <div class="sd-cgu-section" id="droits">
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        <span class="sd-cgu-number">10</span>
+                        <h3 class="fw-brand mb-0">Vos droits</h3>
+                    </div>
+                    <p>Vous disposez, sur vos données personnelles, d'un droit d'accès, de rectification, de suppression, de limitation et d'opposition, ainsi que du droit de retirer votre consentement lorsque le traitement en dépend. Vous pouvez exercer ces droits directement depuis votre profil ou en contactant SwiftDrop via les coordonnées indiquées ci-dessous.</p>
+                    <div class="sd-cgu-highlight small">
+                        <i class="bi bi-shield-lock me-1" style="color: var(--sd-orange);"></i>
+                        Pour des raisons de sécurité, toute demande d'accès ou de suppression de données peut nécessiter une vérification préalable de votre identité.
+                    </div>
+                </div>
+
+                <div class="sd-cgu-section" id="transfert">
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        <span class="sd-cgu-number">11</span>
+                        <h3 class="fw-brand mb-0">Transfert de données</h3>
+                    </div>
+                    <p>Vos données sont hébergées et traitées dans des conditions visant à garantir un niveau de protection adéquat. Si un prestataire situé hors de votre pays de résidence est amené à traiter vos données (hébergement, envoi de notifications), SwiftDrop veille à ce que des garanties appropriées encadrent ce transfert.</p>
+                </div>
+
+                <div class="sd-cgu-section" id="mineurs">
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        <span class="sd-cgu-number">12</span>
+                        <h3 class="fw-brand mb-0">Mineurs</h3>
+                    </div>
+                    <p>La création d'un compte entreprise ou livreur sur SwiftDrop est réservée aux personnes majeures, capables de s'engager contractuellement. SwiftDrop ne collecte pas sciemment de données concernant des mineurs non accompagnés d'un représentant légal.</p>
+                </div>
+
+                <div class="sd-cgu-section" id="modification">
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        <span class="sd-cgu-number">13</span>
+                        <h3 class="fw-brand mb-0">Modification de la politique</h3>
+                    </div>
+                    <p>SwiftDrop peut modifier la présente politique de confidentialité pour refléter une évolution du service, de la réglementation ou de ses pratiques. La date de dernière mise à jour est indiquée en haut de cette page ; en cas de changement important, les utilisateurs concernés en seront informés par notification.</p>
+                </div>
+
+                <div class="sd-cgu-section" id="contact">
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        <span class="sd-cgu-number">14</span>
+                        <h3 class="fw-brand mb-0">Contact</h3>
+                    </div>
+                    <p>Pour toute question relative à cette politique ou à l'exercice de vos droits, l'équipe SwiftDrop reste joignable via les coordonnées indiquées en bas de page.</p>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</section>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Mise en surbrillance de la section active dans le sommaire au scroll
+    document.addEventListener('DOMContentLoaded', function () {
+        const liens = document.querySelectorAll('#sd-toc-list a');
+        const sections = Array.from(liens).map(lien => document.querySelector(lien.getAttribute('href')));
+
+        function activerLienVisible() {
+            let indexActif = 0;
+            sections.forEach((section, i) => {
+                if (section && section.getBoundingClientRect().top - 130 <= 0) {
+                    indexActif = i;
+                }
+            });
+            liens.forEach(l => l.classList.remove('active-link'));
+            if (liens[indexActif]) liens[indexActif].classList.add('active-link');
+        }
+
+        activerLienVisible();
+        window.addEventListener('scroll', activerLienVisible, { passive: true });
+    });
+</script>
+{% endblock %}

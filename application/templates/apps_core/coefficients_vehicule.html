@@ -1,0 +1,191 @@
+{% extends 'navigateur/base_dashboard.html' %}
+
+{% block title %}Coefficients véhicule – SwiftDrop{% endblock %}
+{% block page_title %}Coefficients véhicule{% endblock %}
+{% block user_initiales %}AD{% endblock %}
+{% block user_nom %}Administration{% endblock %}
+{% block user_role %}Administrateur{% endblock %}
+
+{% block sidebar_menu %}
+    <div class="sd-nav-section">Général</div>
+    <a href="{% url 'apps_core:dashboard_admin' %}" class="sd-nav-link"><i class="bi bi-grid-1x2"></i>Tableau de bord</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-chat-dots"></i>Messagerie</a>
+
+    <div class="sd-nav-section">Acteurs</div>
+    <a href="#" class="sd-nav-link"><i class="bi bi-building"></i>Entreprises</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-bicycle"></i>Livreurs</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-person-heart"></i>Clients</a>
+
+    <div class="sd-nav-section">Opérations</div>
+    <a href="#" class="sd-nav-link"><i class="bi bi-box-seam"></i>Livraisons B2B</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-signpost-2"></i>Livraisons directes</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-building-gear"></i>Entrepôts</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-boxes"></i>Produits</a>
+
+    <div class="sd-nav-section">Finance</div>
+    <a href="#" class="sd-nav-link"><i class="bi bi-cash-stack"></i>Lots de paiement</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-gift"></i>Bonus</a>
+
+    <div class="sd-nav-section">Système</div>
+    <a href="{% url 'apps_core:configuration_geographie' %}" class="sd-nav-link"><i class="bi bi-geo"></i>Zones géographiques</a>
+    <a href="{% url 'apps_core:gerer_coefficients_vehicule' %}" class="sd-nav-link active"><i class="bi bi-truck-front"></i>Coefficients véhicule</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-sliders"></i>Paramètres</a>
+{% endblock %}
+
+{% block extra_css %}
+    .sd-form-card {
+        background: #fff;
+        border: 1px solid #EDEFF4;
+        border-radius: 16px;
+        padding: 1.75rem;
+    }
+    .sd-form-card .form-label { font-weight: 600; color: var(--sd-navy); font-size: .88rem; }
+    .sd-form-card .form-control,
+    .sd-form-card .form-select {
+        border-radius: 10px; padding: .55rem .8rem; border: 1.5px solid #EDEFF4;
+    }
+    .sd-form-card .form-control:focus,
+    .sd-form-card .form-select:focus {
+        border-color: var(--sd-orange); box-shadow: 0 0 0 .2rem rgba(255,107,53,0.15);
+    }
+    .sd-vehicule-icon {
+        width: 38px; height: 38px;
+        border-radius: 10px;
+        background: rgba(255,107,53,0.12);
+        color: var(--sd-orange);
+        display: inline-flex; align-items: center; justify-content: center;
+    }
+    .sd-badge-inactif {
+        background: #F1F2F6; color: var(--sd-gris);
+        font-size: .72rem; font-weight: 700;
+        padding: .2rem .55rem; border-radius: 50px;
+    }
+    .sd-badge-actif {
+        background: #E5F7EC; color: #1FAA59;
+        font-size: .72rem; font-weight: 700;
+        padding: .2rem .55rem; border-radius: 50px;
+    }
+{% endblock %}
+
+{% block dashboard_content %}
+
+<div class="row g-3">
+
+    <!-- ── Formulaire d'ajout / édition ────────────────────────── -->
+    <div class="col-lg-4">
+        <div class="sd-form-card">
+            <h6 class="fw-bold mb-1" style="color: var(--sd-navy);">
+                {% if form.instance.pk %}Modifier{% else %}Ajouter{% endif %} un coefficient
+            </h6>
+            <p class="text-muted small mb-3">
+                Chaque type de véhicule est unique : soumettre pour un véhicule déjà configuré met simplement à jour son coefficient.
+            </p>
+
+            {% if form.non_field_errors %}
+                <div class="alert alert-danger py-2 small">
+                    {% for erreur in form.non_field_errors %}{{ erreur }}{% endfor %}
+                </div>
+            {% endif %}
+
+            <form method="post" novalidate>
+                {% csrf_token %}
+
+                <div class="mb-3">
+                    <label for="{{ form.type_vehicule.id_for_label }}" class="form-label">{{ form.type_vehicule.label }}</label>
+                    {{ form.type_vehicule }}
+                    {% if form.type_vehicule.errors %}<div class="text-danger small mt-1">{{ form.type_vehicule.errors.0 }}</div>{% endif %}
+                </div>
+
+                <div class="mb-3">
+                    <label for="{{ form.coefficient_multiplicateur.id_for_label }}" class="form-label">{{ form.coefficient_multiplicateur.label }}</label>
+                    {{ form.coefficient_multiplicateur }}
+                    {% if form.coefficient_multiplicateur.errors %}<div class="text-danger small mt-1">{{ form.coefficient_multiplicateur.errors.0 }}</div>{% endif %}
+                    <div class="form-text">Ex : 1.00 = moto (référence), 1.50 = voiture (+50%)</div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="{{ form.frais_fixe_supplement.id_for_label }}" class="form-label">{{ form.frais_fixe_supplement.label }}</label>
+                    {{ form.frais_fixe_supplement }}
+                    {% if form.frais_fixe_supplement.errors %}<div class="text-danger small mt-1">{{ form.frais_fixe_supplement.errors.0 }}</div>{% endif %}
+                </div>
+
+                <div class="mb-3">
+                    <label for="{{ form.description.id_for_label }}" class="form-label">{{ form.description.label }}</label>
+                    {{ form.description }}
+                    {% if form.description.errors %}<div class="text-danger small mt-1">{{ form.description.errors.0 }}</div>{% endif %}
+                </div>
+
+                <div class="mb-4 form-check">
+                    {{ form.est_actif }}
+                    <label class="form-check-label" for="{{ form.est_actif.id_for_label }}">{{ form.est_actif.label }}</label>
+                </div>
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-sd-primary flex-grow-1">
+                        <i class="bi bi-check2 me-1"></i>{% if form.instance.pk %}Mettre à jour{% else %}Enregistrer{% endif %}
+                    </button>
+                    {% if form.instance.pk %}
+                        <a href="{% url 'apps_core:gerer_coefficients_vehicule' %}" class="btn btn-sd-outline">Annuler</a>
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ── Tableau récapitulatif ───────────────────────────────── -->
+    <div class="col-lg-8">
+        <div class="sd-panel h-100">
+            <div class="sd-panel-title mb-3">Véhicules configurés</div>
+
+            {% if coefficients %}
+                <div class="table-responsive">
+                    <table class="table sd-table align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Véhicule</th>
+                                <th>Coefficient</th>
+                                <th>Supplément fixe</th>
+                                <th>Statut</th>
+                                <th class="text-end">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for coef in coefficients %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <span class="sd-vehicule-icon"><i class="bi bi-truck-front"></i></span>
+                                            <span class="fw-semibold">{{ coef.get_type_vehicule_display }}</span>
+                                        </div>
+                                    </td>
+                                    <td>× {{ coef.coefficient_multiplicateur }}</td>
+                                    <td>{{ coef.frais_fixe_supplement }} FCFA</td>
+                                    <td>
+                                        {% if coef.est_actif %}
+                                            <span class="sd-badge-actif">Actif</span>
+                                        {% else %}
+                                            <span class="sd-badge-inactif">Inactif</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-end">
+                                        <a href="{% url 'apps_core:gerer_coefficients_vehicule' %}?vehicule={{ coef.type_vehicule }}" class="btn btn-sm btn-sd-outline">
+                                            <i class="bi bi-pencil-square me-1"></i>Modifier
+                                        </a>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p class="text-muted small mb-0">
+                    Aucun coefficient configuré — tant qu'un véhicule n'a pas de ligne ici,
+                    <code>Zone.get_prix_pour_vehicule()</code> retombe silencieusement sur le prix de base moto pour ce véhicule.
+                </p>
+            {% endif %}
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}

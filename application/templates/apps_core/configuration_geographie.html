@@ -1,0 +1,451 @@
+{% extends 'navigateur/base_dashboard.html' %}
+
+{% block title %}Configuration géographique – SwiftDrop{% endblock %}
+{% block page_title %}Configuration géographique{% endblock %}
+{% block user_initiales %}AD{% endblock %}
+{% block user_nom %}Administration{% endblock %}
+{% block user_role %}Administrateur{% endblock %}
+
+{% block sidebar_menu %}
+    <div class="sd-nav-section">Général</div>
+    <a href="{% url 'apps_core:dashboard_admin' %}" class="sd-nav-link"><i class="bi bi-grid-1x2"></i>Tableau de bord</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-chat-dots"></i>Messagerie</a>
+
+    <div class="sd-nav-section">Acteurs</div>
+    <a href="#" class="sd-nav-link"><i class="bi bi-building"></i>Entreprises</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-bicycle"></i>Livreurs</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-person-heart"></i>Clients</a>
+
+    <div class="sd-nav-section">Opérations</div>
+    <a href="#" class="sd-nav-link"><i class="bi bi-box-seam"></i>Livraisons B2B</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-signpost-2"></i>Livraisons directes</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-building-gear"></i>Entrepôts</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-boxes"></i>Produits</a>
+
+    <div class="sd-nav-section">Finance</div>
+    <a href="#" class="sd-nav-link"><i class="bi bi-cash-stack"></i>Lots de paiement</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-gift"></i>Bonus</a>
+
+    <div class="sd-nav-section">Système</div>
+    <a href="{% url 'apps_core:gerer_parametres_systeme' %}" class="sd-nav-link active"><i class="bi bi-sliders"></i>Paramètres</a>
+    <a href="{% url 'apps_core:gerer_coefficients_vehicule' %}" class="sd-nav-link"><i class="bi bi-truck"></i>Coefficients véhicule</a>
+    <a href="{% url 'apps_core:gerer_tarifs_intervilles' %}" class="sd-nav-link"><i class="bi bi-signpost-split"></i>Tarifs inter-villes</a>
+{% endblock %}
+
+{% block extra_css %}
+    .sd-geo-row {
+        border: 1px solid #EDEFF4;
+        border-radius: 10px;
+        margin-bottom: .5rem;
+        overflow: hidden;
+    }
+    .sd-geo-row-header {
+        padding: .6rem .8rem;
+        background: #fff;
+    }
+    .sd-geo-label {
+        cursor: pointer;
+        color: var(--sd-navy);
+    }
+    .sd-geo-label:hover { color: var(--sd-orange); }
+    .sd-geo-toolbar form { display: inline-block; margin: 0; }
+    .sd-geo-toolbar .btn { line-height: 1; }
+    .sd-geo-chevron { transition: transform .2s ease; display: inline-block; }
+    .sd-geo-label[aria-expanded="true"] .sd-geo-chevron { transform: rotate(90deg); }
+    .sd-geo-body { padding: .8rem; background: var(--sd-fond); border-top: 1px solid #EDEFF4; }
+    .sd-quartier-badge {
+        border: none;
+        cursor: pointer;
+    }
+{% endblock %}
+
+{% block dashboard_content %}
+
+<!-- ═══════════════════ Configuration géographique ═══════════════════ -->
+<div class="row g-3">
+    <div class="col-12">
+        <div class="sd-panel">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div class="sd-panel-title mb-0"><i class="bi bi-geo-alt me-2"></i>Configuration géographique</div>
+                <div class="d-flex gap-2">
+                    <a href="{% url 'apps_core:gerer_tarifs_intervilles' %}" class="btn btn-sm btn-sd-outline">
+                        <i class="bi bi-signpost-split"></i> Tarifs inter-villes
+                    </a>
+                    <a href="{% url 'apps_core:gerer_coefficients_vehicule' %}" class="btn btn-sm btn-sd-outline">
+                        <i class="bi bi-truck"></i> Coefficients véhicule
+                    </a>
+                    <button type="button" class="btn btn-sm btn-sd-primary" data-bs-toggle="modal" data-bs-target="#modalPays">
+                        <i class="bi bi-plus-lg"></i> Pays
+                    </button>
+                </div>
+            </div>
+
+            {% if pays_liste %}
+                <div id="accordionGeo">
+                    {% for pays in pays_liste %}
+                        <div class="sd-geo-row">
+                            <div class="sd-geo-row-header d-flex justify-content-between align-items-center">
+                                <span class="fw-semibold sd-geo-label" data-bs-toggle="collapse"
+                                      data-bs-target="#collapsePays{{ pays.id }}" aria-expanded="false">
+                                    <i class="bi bi-chevron-right sd-geo-chevron small text-muted me-1"></i>
+                                    <i class="bi bi-flag me-1"></i>{{ pays.nom }}
+                                    <span class="badge bg-light text-dark ms-2">{{ pays.villes.count }} ville{{ pays.villes.count|pluralize }}</span>
+                                    {% if not pays.est_actif %}<span class="badge bg-secondary ms-2">Inactif</span>{% endif %}
+                                </span>
+                                <div class="sd-geo-toolbar btn-group btn-group-sm">
+                                    <a href="{% url 'apps_core:modifier_geographie' niveau='pays' pk=pays.id %}"
+                                       class="btn btn-light" title="Modifier"><i class="bi bi-pencil"></i></a>
+                                    <form method="post" action="{% url 'apps_core:toggle_actif_geographie' niveau='pays' pk=pays.id %}">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-light"
+                                                title="{% if pays.est_actif %}Désactiver{% else %}Activer{% endif %}">
+                                            <i class="bi {% if pays.est_actif %}bi-toggle-on text-success{% else %}bi-toggle-off text-muted{% endif %}"></i>
+                                        </button>
+                                    </form>
+                                    <form method="post" action="{% url 'apps_core:supprimer_geographie' niveau='pays' pk=pays.id %}"
+                                          onsubmit="return confirm('Supprimer le pays « {{ pays.nom|escapejs }} » et tout son contenu ? Cette action est irréversible.');">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-light text-danger" title="Supprimer"><i class="bi bi-trash"></i></button>
+                                    </form>
+                                </div>
+                            </div>
+
+                            <div id="collapsePays{{ pays.id }}" class="collapse" data-bs-parent="#accordionGeo">
+                                <div class="sd-geo-body">
+                                    <div class="d-flex justify-content-end mb-2">
+                                        <button type="button" class="btn btn-sm btn-sd-outline"
+                                                data-bs-toggle="modal" data-bs-target="#modalVille"
+                                                data-pays-id="{{ pays.id }}">
+                                            <i class="bi bi-plus-lg"></i> Ville
+                                        </button>
+                                    </div>
+
+                                    {% for ville in pays.villes.all %}
+                                        <div class="sd-geo-row bg-white">
+                                            <div class="sd-geo-row-header d-flex justify-content-between align-items-center">
+                                                <span class="fw-semibold small">
+                                                    <i class="bi bi-building me-1"></i>{{ ville.nom }}
+                                                    {% if not ville.est_active %}<span class="badge bg-secondary ms-2">Inactive</span>{% endif %}
+                                                </span>
+                                                <div class="sd-geo-toolbar btn-group btn-group-sm">
+                                                    <button type="button" class="btn btn-light" title="Ajouter une zone"
+                                                            data-bs-toggle="modal" data-bs-target="#modalZone" data-ville-id="{{ ville.id }}">
+                                                        <i class="bi bi-plus-lg"></i>
+                                                    </button>
+                                                    <a href="{% url 'apps_core:modifier_geographie' niveau='ville' pk=ville.id %}"
+                                                       class="btn btn-light" title="Modifier"><i class="bi bi-pencil"></i></a>
+                                                    <form method="post" action="{% url 'apps_core:toggle_actif_geographie' niveau='ville' pk=ville.id %}">
+                                                        {% csrf_token %}
+                                                        <button type="submit" class="btn btn-light"
+                                                                title="{% if ville.est_active %}Désactiver{% else %}Activer{% endif %}">
+                                                            <i class="bi {% if ville.est_active %}bi-toggle-on text-success{% else %}bi-toggle-off text-muted{% endif %}"></i>
+                                                        </button>
+                                                    </form>
+                                                    <form method="post" action="{% url 'apps_core:supprimer_geographie' niveau='ville' pk=ville.id %}"
+                                                          onsubmit="return confirm('Supprimer la ville « {{ ville.nom|escapejs }} » et tout son contenu ?');">
+                                                        {% csrf_token %}
+                                                        <button type="submit" class="btn btn-light text-danger" title="Supprimer"><i class="bi bi-trash"></i></button>
+                                                    </form>
+                                                </div>
+                                            </div>
+
+                                            {% if ville.zones.all %}
+                                                <div class="sd-geo-body">
+                                                    {% for zone in ville.zones.all %}
+                                                        <div class="border rounded p-2 mb-2 bg-white">
+                                                            <div class="d-flex justify-content-between align-items-center">
+                                                                <span class="small text-muted">
+                                                                    <i class="bi bi-signpost-2 me-1"></i>{{ zone.nom }}
+                                                                    <span class="fw-semibold text-dark">— {{ zone.prix_livraison }} FCFA</span>
+                                                                    {% if not zone.est_active %}<span class="badge bg-secondary ms-2">Inactive</span>{% endif %}
+                                                                </span>
+                                                                <div class="sd-geo-toolbar btn-group btn-group-sm">
+                                                                    <button type="button" class="btn btn-light" title="Ajouter un quartier"
+                                                                            data-bs-toggle="modal" data-bs-target="#modalQuartier" data-zone-id="{{ zone.id }}">
+                                                                        <i class="bi bi-plus-lg"></i>
+                                                                    </button>
+                                                                    <a href="{% url 'apps_core:modifier_geographie' niveau='zone' pk=zone.id %}"
+                                                                       class="btn btn-light" title="Modifier"><i class="bi bi-pencil"></i></a>
+                                                                    <a href="{% url 'apps_core:modifier_tarif_zone' pk=zone.id %}"
+                                                                       class="btn btn-light" title="Modifier le tarif"><i class="bi bi-cash-coin"></i></a>
+                                                                    <a href="{% url 'apps_core:historique_tarifs_zone' pk=zone.id %}"
+                                                                       class="btn btn-light" title="Historique des tarifs"><i class="bi bi-clock-history"></i></a>
+                                                                    <form method="post" action="{% url 'apps_core:toggle_actif_geographie' niveau='zone' pk=zone.id %}">
+                                                                        {% csrf_token %}
+                                                                        <button type="submit" class="btn btn-light"
+                                                                                title="{% if zone.est_active %}Désactiver{% else %}Activer{% endif %}">
+                                                                            <i class="bi {% if zone.est_active %}bi-toggle-on text-success{% else %}bi-toggle-off text-muted{% endif %}"></i>
+                                                                        </button>
+                                                                    </form>
+                                                                    <form method="post" action="{% url 'apps_core:supprimer_geographie' niveau='zone' pk=zone.id %}"
+                                                                          onsubmit="return confirm('Supprimer la zone « {{ zone.nom|escapejs }} » ?');">
+                                                                        {% csrf_token %}
+                                                                        <button type="submit" class="btn btn-light text-danger" title="Supprimer"><i class="bi bi-trash"></i></button>
+                                                                    </form>
+                                                                </div>
+                                                            </div>
+
+                                                            {% if zone.quartiers.all %}
+                                                                <div class="d-flex flex-wrap gap-1 mt-2">
+                                                                    {% for quartier in zone.quartiers.all %}
+                                                                        <div class="dropdown">
+                                                                            <button class="badge bg-light text-dark border sd-quartier-badge dropdown-toggle"
+                                                                                    type="button" data-bs-toggle="dropdown">
+                                                                                {{ quartier.nom }}{% if not quartier.est_actif %} <span class="text-muted">(inactif)</span>{% endif %}
+                                                                            </button>
+                                                                            <ul class="dropdown-menu">
+                                                                                <li>
+                                                                                    <a class="dropdown-item small"
+                                                                                       href="{% url 'apps_core:modifier_geographie' niveau='quartier' pk=quartier.id %}">
+                                                                                        <i class="bi bi-pencil me-1"></i>Modifier
+                                                                                    </a>
+                                                                                </li>
+                                                                                <li>
+                                                                                    <form method="post" action="{% url 'apps_core:toggle_actif_geographie' niveau='quartier' pk=quartier.id %}">
+                                                                                        {% csrf_token %}
+                                                                                        <button type="submit" class="dropdown-item small">
+                                                                                            <i class="bi bi-toggle-{% if quartier.est_actif %}on{% else %}off{% endif %} me-1"></i>
+                                                                                            {% if quartier.est_actif %}Désactiver{% else %}Activer{% endif %}
+                                                                                        </button>
+                                                                                    </form>
+                                                                                </li>
+                                                                                <li><hr class="dropdown-divider"></li>
+                                                                                <li>
+                                                                                    <form method="post" action="{% url 'apps_core:supprimer_geographie' niveau='quartier' pk=quartier.id %}"
+                                                                                          onsubmit="return confirm('Supprimer le quartier « {{ quartier.nom|escapejs }} » ?');">
+                                                                                        {% csrf_token %}
+                                                                                        <button type="submit" class="dropdown-item small text-danger">
+                                                                                            <i class="bi bi-trash me-1"></i>Supprimer
+                                                                                        </button>
+                                                                                    </form>
+                                                                                </li>
+                                                                            </ul>
+                                                                        </div>
+                                                                    {% endfor %}
+                                                                </div>
+                                                            {% else %}
+                                                                <p class="text-muted small mb-0 mt-2">Aucun quartier.</p>
+                                                            {% endif %}
+                                                        </div>
+                                                    {% endfor %}
+                                                </div>
+                                            {% else %}
+                                                <p class="text-muted small mb-0 mt-2 px-2 pb-2">Aucune zone pour cette ville.</p>
+                                            {% endif %}
+                                        </div>
+                                    {% empty %}
+                                        <p class="text-muted small mb-0">Aucune ville pour ce pays.</p>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="text-muted small mb-0">Aucun pays configuré pour le moment.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════ Modals géographie (ajout) ═══════════════════ -->
+<!--
+    IMPORTANT : aucun de ces modals n'a la classe "show" ni de style
+    "display:block" en dur dans le HTML. Ils sont TOUJOURS ouverts via
+    le JS de Bootstrap (soit par data-bs-toggle="modal" au clic, soit
+    par new bootstrap.Modal(el).show() dans le script plus bas pour la
+    réouverture après erreur). C'est ce qui garantit que Bootstrap
+    retire bien aria-hidden, crée le backdrop et active le focus trap —
+    sans ça, les champs sont visibles mais impossibles à remplir.
+-->
+
+<!-- Modal Pays -->
+<div class="modal fade" id="modalPays" tabindex="-1" aria-labelledby="modalPaysLabel">
+    <div class="modal-dialog">
+        <form method="post" class="modal-content">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="ajouter_pays">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalPaysLabel">Ajouter un pays</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                {% for field in pays_form %}
+                    {% if field.field.widget.input_type == 'checkbox' %}
+                        <div class="form-check mb-3">
+                            {{ field }}
+                            <label class="form-check-label small" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                            {% if field.errors %}<div class="text-danger small mt-1">{{ field.errors|join:", " }}</div>{% endif %}
+                        </div>
+                    {% else %}
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                            {{ field }}
+                            {% if field.errors %}<div class="text-danger small mt-1">{{ field.errors|join:", " }}</div>{% endif %}
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-sd-outline" data-bs-dismiss="modal">Annuler</button>
+                <button type="submit" class="btn btn-sd-primary">Enregistrer</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal Ville -->
+<div class="modal fade" id="modalVille" tabindex="-1" aria-labelledby="modalVilleLabel">
+    <div class="modal-dialog">
+        <form method="post" class="modal-content">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="ajouter_ville">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalVilleLabel">Ajouter une ville</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                {% for field in ville_form %}
+                    {% if field.field.widget.input_type == 'checkbox' %}
+                        <div class="form-check mb-3">
+                            {{ field }}
+                            <label class="form-check-label small" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                            {% if field.errors %}<div class="text-danger small mt-1">{{ field.errors|join:", " }}</div>{% endif %}
+                        </div>
+                    {% else %}
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                            {{ field }}
+                            {% if field.errors %}<div class="text-danger small mt-1">{{ field.errors|join:", " }}</div>{% endif %}
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-sd-outline" data-bs-dismiss="modal">Annuler</button>
+                <button type="submit" class="btn btn-sd-primary">Enregistrer</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal Zone -->
+<div class="modal fade" id="modalZone" tabindex="-1" aria-labelledby="modalZoneLabel">
+    <div class="modal-dialog">
+        <form method="post" class="modal-content">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="ajouter_zone">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalZoneLabel">Ajouter une zone</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                {% for field in zone_form %}
+                    {% if field.field.widget.input_type == 'checkbox' %}
+                        <div class="form-check mb-3">
+                            {{ field }}
+                            <label class="form-check-label small" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                            {% if field.errors %}<div class="text-danger small mt-1">{{ field.errors|join:", " }}</div>{% endif %}
+                        </div>
+                    {% else %}
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                            {{ field }}
+                            {% if field.errors %}<div class="text-danger small mt-1">{{ field.errors|join:", " }}</div>{% endif %}
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-sd-outline" data-bs-dismiss="modal">Annuler</button>
+                <button type="submit" class="btn btn-sd-primary">Enregistrer</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal Quartier -->
+<div class="modal fade" id="modalQuartier" tabindex="-1" aria-labelledby="modalQuartierLabel">
+    <div class="modal-dialog">
+        <form method="post" class="modal-content">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="ajouter_quartier">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalQuartierLabel">Ajouter un quartier</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                {% for field in quartier_form %}
+                    {% if field.field.widget.input_type == 'checkbox' %}
+                        <div class="form-check mb-3">
+                            {{ field }}
+                            <label class="form-check-label small" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                            {% if field.errors %}<div class="text-danger small mt-1">{{ field.errors|join:", " }}</div>{% endif %}
+                        </div>
+                    {% else %}
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                            {{ field }}
+                            {% if field.errors %}<div class="text-danger small mt-1">{{ field.errors|join:", " }}</div>{% endif %}
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-sd-outline" data-bs-dismiss="modal">Annuler</button>
+                <button type="submit" class="btn btn-sd-primary">Enregistrer</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    // Préselection du parent dans les modals enfants
+    document.querySelectorAll('[data-bs-target="#modalVille"]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            var select = document.querySelector('#modalVille select[name="ville-pays"]');
+            if (select) select.value = btn.dataset.paysId;
+        });
+    });
+    document.querySelectorAll('[data-bs-target="#modalZone"]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            var select = document.querySelector('#modalZone select[name="zone-ville"]');
+            if (select) select.value = btn.dataset.villeId;
+        });
+    });
+    document.querySelectorAll('[data-bs-target="#modalQuartier"]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            var select = document.querySelector('#modalQuartier select[name="quartier-zone"]');
+            if (select) select.value = btn.dataset.zoneId;
+        });
+    });
+
+    // Icône chevron + aria-expanded synchronisés avec l'état réel du collapse
+    // (Bootstrap gère aria-expanded lui-même sur les vrais accordion-button,
+    // mais ici le déclencheur est un <span>, donc on le fait à la main).
+    document.querySelectorAll('.sd-geo-label').forEach(function (label) {
+        var targetSel = label.getAttribute('data-bs-target');
+        var target = document.querySelector(targetSel);
+        if (!target) return;
+        target.addEventListener('show.bs.collapse', function () { label.setAttribute('aria-expanded', 'true'); });
+        target.addEventListener('hide.bs.collapse', function () { label.setAttribute('aria-expanded', 'false'); });
+    });
+
+    // Réouverture automatique du modal fautif après une erreur de
+    // validation — TOUJOURS via l'API JS de Bootstrap, jamais via une
+    // classe "show" ajoutée dans le HTML : c'est ce qui garantit que
+    // aria-hidden est retiré et que les champs redeviennent saisissables.
+    {% if modal_ouvert %}
+        var modalIds = {pays: 'modalPays', ville: 'modalVille', zone: 'modalZone', quartier: 'modalQuartier'};
+        var modalEl = document.getElementById(modalIds['{{ modal_ouvert }}']);
+        if (modalEl) {
+            new bootstrap.Modal(modalEl).show();
+        }
+    {% endif %}
+});
+</script>
+{% endblock %}

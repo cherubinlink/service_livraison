@@ -1,0 +1,788 @@
+{% extends 'navigateur/base.html' %}
+
+{% block title %}SwiftDrop – Livraison B2B rapide, suivie et fiable{% endblock %}
+
+{% block extra_css %}
+    .hero-swiftdrop {
+        background: linear-gradient(135deg, var(--sd-navy) 0%, var(--sd-navy-light) 100%);
+        color: #fff;
+        position: relative;
+        overflow: hidden;
+    }
+    .hero-swiftdrop::before {
+        content: "";
+        position: absolute;
+        top: -80px; right: -80px;
+        width: 320px; height: 320px;
+        background: radial-gradient(circle, rgba(255,107,53,0.35) 0%, transparent 70%);
+        border-radius: 50%;
+    }
+    .hero-badge {
+        background: rgba(255,255,255,0.1);
+        border: 1px solid rgba(255,255,255,0.2);
+        color: #fff;
+        border-radius: 50px;
+        padding: 6px 16px;
+        font-size: .85rem;
+        display: inline-block;
+    }
+    .sd-step-number {
+        width: 52px; height: 52px;
+        border-radius: 14px;
+        background: linear-gradient(135deg, var(--sd-orange), var(--sd-orange-dark));
+        color: #fff;
+        display: flex; align-items: center; justify-content: center;
+        font-weight: 800; font-size: 1.2rem;
+        flex-shrink: 0;
+    }
+    .sd-card-persona {
+        border: 1px solid #EDEFF4;
+        border-radius: 16px;
+        transition: transform .2s ease, box-shadow .2s ease;
+        height: 100%;
+    }
+    .sd-card-persona:hover {
+        transform: translateY(-6px);
+        box-shadow: 0 16px 32px rgba(22,33,62,0.08);
+    }
+    .sd-icon-circle {
+        width: 60px; height: 60px;
+        border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.5rem;
+    }
+    .sd-icon-circle.orange { background: rgba(255,107,53,0.12); color: var(--sd-orange); }
+    .sd-icon-circle.navy   { background: rgba(22,33,62,0.08); color: var(--sd-navy); }
+    .sd-stat-number { font-size: 2.4rem; font-weight: 800; color: var(--sd-navy); }
+    .sd-avantage-item i { color: var(--sd-orange); font-size: 1.4rem; }
+    .sd-cta-final {
+        background: linear-gradient(135deg, var(--sd-orange) 0%, var(--sd-orange-dark) 100%);
+        border-radius: 24px;
+        color: #fff;
+    }
+
+    /* ── Fonctionnalités ──────────────────────────────────────── */
+    .sd-feature-card {
+        border: 1px solid #EDEFF4;
+        border-radius: 16px;
+        height: 100%;
+        transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+    }
+    .sd-feature-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 14px 28px rgba(22,33,62,0.07);
+        border-color: transparent;
+    }
+    .sd-feature-icon {
+        width: 52px; height: 52px;
+        border-radius: 12px;
+        background: rgba(255,107,53,0.12);
+        color: var(--sd-orange);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.35rem;
+    }
+
+    /* ── Onglets "Comment ça marche" ──────────────────────────── */
+    .sd-nav-pills .nav-link {
+        border-radius: 50px;
+        font-weight: 600;
+        color: var(--sd-navy);
+        padding: .6rem 1.4rem;
+        border: 1.5px solid #EDEFF4;
+    }
+    .sd-nav-pills .nav-link.active {
+        background-color: var(--sd-orange);
+        border-color: var(--sd-orange);
+        color: #fff;
+    }
+
+    /* ── Produits en ligne / hors-ligne ───────────────────────── */
+    .sd-compare-card {
+        border-radius: 18px;
+        padding: 2rem;
+        height: 100%;
+    }
+    .sd-compare-card.en-ligne {
+        background: linear-gradient(135deg, #EAF7EF 0%, #F3FBF6 100%);
+        border: 1.5px solid #BEE8CC;
+    }
+    .sd-compare-card.hors-ligne {
+        background: var(--sd-fond);
+        border: 1.5px solid #EDEFF4;
+    }
+    .sd-compare-badge {
+        font-size: .75rem;
+        font-weight: 700;
+        letter-spacing: .04em;
+        text-transform: uppercase;
+        padding: .3rem .8rem;
+        border-radius: 50px;
+        display: inline-block;
+    }
+    .sd-compare-badge.en-ligne { background: #1FAA59; color: #fff; }
+    .sd-compare-badge.hors-ligne { background: var(--sd-navy); color: #fff; }
+
+    /* ── Villes desservies ─────────────────────────────────────── */
+    .sd-city-badge {
+        border: 1.5px solid #EDEFF4;
+        border-radius: 50px;
+        padding: .55rem 1.3rem;
+        font-weight: 600;
+        color: var(--sd-navy);
+        background: #fff;
+        display: inline-flex;
+        align-items: center;
+        gap: .4rem;
+    }
+    .sd-city-badge i { color: var(--sd-orange); }
+    .sd-city-badge.expansion {
+        border-style: dashed;
+        color: var(--sd-gris);
+    }
+
+    /* ── FAQ ───────────────────────────────────────────────────── */
+    .sd-accordion .accordion-item {
+        border: none;
+        border-bottom: 1px solid #EDEFF4;
+        border-radius: 0 !important;
+    }
+    .sd-accordion .accordion-button {
+        font-weight: 600;
+        color: var(--sd-navy);
+        background: none;
+        box-shadow: none;
+        padding-left: 0;
+        padding-right: 0;
+    }
+    .sd-accordion .accordion-button:not(.collapsed) { color: var(--sd-orange); background: none; }
+    .sd-accordion .accordion-button::after { flex-shrink: 0; }
+    .sd-accordion .accordion-body { padding-left: 0; padding-right: 0; color: var(--sd-gris); }
+{% endblock %}
+
+{% block content %}
+
+<!-- ═══════════════════════════ 1. HERO ═══════════════════════════ -->
+<section class="hero-swiftdrop py-5">
+    <div class="container py-5">
+        <div class="row align-items-center gy-5">
+            <div class="col-lg-6">
+                <span class="hero-badge mb-3"><i class="bi bi-geo-alt-fill me-1"></i> Disponible dans plusieurs villes</span>
+                <h1 class="display-5 fw-brand mt-3 mb-3">La livraison B2B rapide, suivie et sans complications.</h1>
+                <p class="fs-5" style="color:#C9CFDD;">
+                    SwiftDrop connecte vos <strong class="text-white">produits</strong>, nos
+                    <strong class="text-white">livreurs partenaires</strong> et vos
+                    <strong class="text-white">clients</strong> sur une seule plateforme :
+                    stockage en entrepôt, attribution automatique, suivi en temps réel et
+                    paiement transparent par zone.
+                </p>
+                <div class="d-flex flex-wrap gap-3 mt-4">
+                    <!-- TODO : remplacer par un formulaire d'inscription Entreprise dédié
+                         (créera en plus le profil apps_entreprise.Entreprise) -->
+                    <a href="{% url 'apps_core:inscription' %}" class="btn btn-sd-primary btn-lg px-4">
+                        <i class="bi bi-building me-2"></i>Créer mon compte entreprise
+                    </a>
+                    <!-- TODO : remplacer par un formulaire d'inscription Livreur dédié
+                         (créera en plus le profil apps_livreur.Livreur) -->
+                    <a href="{% url 'apps_core:inscription' %}" class="btn btn-outline-light btn-lg px-4">
+                        <i class="bi bi-bicycle me-2"></i>Devenir livreur partenaire
+                    </a>
+                </div>
+                <p class="mt-3 small" style="color:#9AA5C0;">
+                    Déjà inscrit ? <a href="{% url 'apps_core:connexion' %}" class="text-white text-decoration-underline">Connectez-vous ici</a>
+                </p>
+            </div>
+            <div class="col-lg-6">
+                <div class="p-4 p-lg-5 rounded-4" style="background: rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12);">
+                    <div class="d-flex align-items-center gap-3 mb-4">
+                        <div class="sd-icon-circle orange"><i class="bi bi-box-seam"></i></div>
+                        <div>
+                            <div class="fw-semibold text-white">Commande #SD-20260827-0142</div>
+                            <div class="small" style="color:#9AA5C0;">Statut : en cours de livraison</div>
+                        </div>
+                    </div>
+                    <div class="progress mb-4" style="height:8px; background: rgba(255,255,255,0.12);">
+                        <div class="progress-bar bg-warning" style="width:75%"></div>
+                    </div>
+                    <ul class="list-unstyled small mb-0" style="color:#C9CFDD;">
+                        <li class="mb-2"><i class="bi bi-check-circle-fill text-warning me-2"></i>Commande validée</li>
+                        <li class="mb-2"><i class="bi bi-check-circle-fill text-warning me-2"></i>Livreur attribué — Moto</li>
+                        <li class="mb-0"><i class="bi bi-truck me-2"></i>En route vers le client…</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ═══════════════════ 2. CHIFFRES CLÉS ═══════════════════ -->
+<section class="py-5 border-bottom">
+    <div class="container">
+        <div class="row text-center gy-4">
+            <div class="col-6 col-md-3">
+                <div class="sd-stat-number">{{ nb_entreprises }}+</div>
+                <div class="text-muted">Entreprises partenaires</div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="sd-stat-number">{{ nb_livreurs }}+</div>
+                <div class="text-muted">Livreurs actifs</div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="sd-stat-number">{{ nb_livraisons }}+</div>
+                <div class="text-muted">Livraisons réussies</div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="sd-stat-number">{{ nb_villes }}</div>
+                <div class="text-muted">Villes couvertes</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ═══════════════════ 3. FONCTIONNALITÉS ═══════════════════ -->
+<section id="fonctionnalites" class="py-5 py-lg-6">
+    <div class="container py-4">
+        <div class="text-center mb-5">
+            <span class="text-uppercase fw-semibold" style="color: var(--sd-orange); letter-spacing: .08em;">Fonctionnalités</span>
+            <h2 class="fw-brand mt-2">Tout ce qu'il faut pour livrer sans mauvaise surprise</h2>
+            <p class="text-muted col-lg-7 mx-auto">De la gestion de vos stocks jusqu'au paiement de vos gains, chaque étape est pensée pour la fiabilité et la transparence.</p>
+        </div>
+        <div class="row g-4">
+            <div class="col-md-6 col-lg-4">
+                <div class="sd-feature-card p-4">
+                    <div class="sd-feature-icon mb-3"><i class="bi bi-building"></i></div>
+                    <h5 class="fw-semibold">Entrepôts multiples</h5>
+                    <p class="text-muted small mb-0">Vos produits peuvent être répartis dans plusieurs entrepôts affectés par la plateforme, avec un stock suivi individuellement par entrepôt.</p>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+                <div class="sd-feature-card p-4">
+                    <div class="sd-feature-icon mb-3"><i class="bi bi-shop"></i></div>
+                    <h5 class="fw-semibold">Intégration Yopishop</h5>
+                    <p class="text-muted small mb-0">Les produits vendus en ligne via Yopishop bénéficient d'une livraison gratuite pour le client, avec une commission plateforme claire.</p>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+                <div class="sd-feature-card p-4">
+                    <div class="sd-feature-icon mb-3"><i class="bi bi-signpost-split"></i></div>
+                    <h5 class="fw-semibold">Tarification par zone & véhicule</h5>
+                    <p class="text-muted small mb-0">Le prix de livraison dépend de la zone de destination et du véhicule requis (moto, voiture, camionnette) selon le poids du produit.</p>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+                <div class="sd-feature-card p-4">
+                    <div class="sd-feature-icon mb-3"><i class="bi bi-geo-alt"></i></div>
+                    <h5 class="fw-semibold">Suivi GPS en temps réel</h5>
+                    <p class="text-muted small mb-0">La position du livreur et chaque changement de statut sont visibles en direct, jusqu'à la preuve de livraison.</p>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+                <div class="sd-feature-card p-4">
+                    <div class="sd-feature-icon mb-3"><i class="bi bi-cash-coin"></i></div>
+                    <h5 class="fw-semibold">Paiement par lot</h5>
+                    <p class="text-muted small mb-0">Vos gains sont regroupés et réglés selon le cycle de votre choix — quotidien, hebdomadaire ou mensuel — par Mobile Money, avec preuve jointe.</p>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+                <div class="sd-feature-card p-4">
+                    <div class="sd-feature-icon mb-3"><i class="bi bi-bell"></i></div>
+                    <h5 class="fw-semibold">Alertes de stock</h5>
+                    <p class="text-muted small mb-0">Notification automatique dès qu'un produit atteint son seuil d'alerte ou passe en rupture dans un entrepôt.</p>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+                <div class="sd-feature-card p-4">
+                    <div class="sd-feature-icon mb-3"><i class="bi bi-gift"></i></div>
+                    <h5 class="fw-semibold">Bonus & fidélité</h5>
+                    <p class="text-muted small mb-0">Des réductions de frais, priorités de traitement ou livraisons offertes peuvent être attribuées aux entreprises actives.</p>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+                <div class="sd-feature-card p-4">
+                    <div class="sd-feature-icon mb-3"><i class="bi bi-chat-dots"></i></div>
+                    <h5 class="fw-semibold">Messagerie intégrée</h5>
+                    <p class="text-muted small mb-0">Échangez directement avec l'administration depuis votre tableau de bord, sans sortir de la plateforme.</p>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+                <div class="sd-feature-card p-4">
+                    <div class="sd-feature-icon mb-3"><i class="bi bi-signpost-2"></i></div>
+                    <h5 class="fw-semibold">Livraison directe</h5>
+                    <p class="text-muted small mb-0">Un particulier peut envoyer un colis au kilomètre, entre deux villes, ou à prix négocié — sans créer de compte.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ═══════════════════ 4. COMMENT ÇA MARCHE ═══════════════════ -->
+<section id="comment-ca-marche" class="py-5 py-lg-6 bg-light" style="background-color: var(--sd-fond) !important;">
+    <div class="container py-4">
+        <div class="text-center mb-5">
+            <span class="text-uppercase fw-semibold" style="color: var(--sd-orange); letter-spacing: .08em;">Comment ça marche</span>
+            <h2 class="fw-brand mt-2">Un parcours simple, adapté à votre profil</h2>
+            <p class="text-muted col-lg-6 mx-auto">Que vous soyez une entreprise, un livreur ou un client, le parcours reste transparent du dépôt à la livraison.</p>
+        </div>
+
+        <ul class="nav sd-nav-pills justify-content-center gap-2 mb-5" id="ccmTab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="tab-entreprise-btn" data-bs-toggle="tab" data-bs-target="#tab-entreprise" type="button" role="tab">
+                    <i class="bi bi-building me-1"></i> Entreprise
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="tab-client-btn" data-bs-toggle="tab" data-bs-target="#tab-client" type="button" role="tab">
+                    <i class="bi bi-person-heart me-1"></i> Client direct
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="tab-livreur-btn" data-bs-toggle="tab" data-bs-target="#tab-livreur" type="button" role="tab">
+                    <i class="bi bi-bicycle me-1"></i> Livreur
+                </button>
+            </li>
+        </ul>
+
+        <div class="tab-content" id="ccmTabContent">
+            <!-- Parcours Entreprise -->
+            <div class="tab-pane fade show active" id="tab-entreprise" role="tabpanel">
+                <div class="row gy-4">
+                    <div class="col-md-3">
+                        <div class="d-flex flex-column gap-3">
+                            <div class="sd-step-number">1</div>
+                            <div>
+                                <h6 class="fw-semibold">Créez votre compte</h6>
+                                <p class="text-muted small mb-0">Renseignez votre secteur, vos documents (registre de commerce, NIU) et votre type d'activité : vente en ligne, physique, ou les deux.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="d-flex flex-column gap-3">
+                            <div class="sd-step-number">2</div>
+                            <div>
+                                <h6 class="fw-semibold">Recevez votre entrepôt</h6>
+                                <p class="text-muted small mb-0">Une fois validée, votre entreprise est affectée à un ou plusieurs entrepôts selon votre zone d'activité.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="d-flex flex-column gap-3">
+                            <div class="sd-step-number">3</div>
+                            <div>
+                                <h6 class="fw-semibold">Enregistrez vos produits</h6>
+                                <p class="text-muted small mb-0">Précisez pour chacun s'il est vendu en ligne via Yopishop ou uniquement en physique, son poids et le véhicule requis.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="d-flex flex-column gap-3">
+                            <div class="sd-step-number">4</div>
+                            <div>
+                                <h6 class="fw-semibold">Livraison & paiement</h6>
+                                <p class="text-muted small mb-0">Vos commandes sont livrées et vos gains réglés automatiquement selon votre cycle de paiement.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Parcours Client direct -->
+            <div class="tab-pane fade" id="tab-client" role="tabpanel">
+                <div class="row gy-4">
+                    <div class="col-md-3">
+                        <div class="d-flex flex-column gap-3">
+                            <div class="sd-step-number">1</div>
+                            <div>
+                                <h6 class="fw-semibold">Décrivez votre colis</h6>
+                                <p class="text-muted small mb-0">Adresse de collecte, adresse de livraison et poids estimé — aucun compte requis pour commencer.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="d-flex flex-column gap-3">
+                            <div class="sd-step-number">2</div>
+                            <div>
+                                <h6 class="fw-semibold">Obtenez un prix</h6>
+                                <p class="text-muted small mb-0">Tarif au kilomètre, par zone, entre deux villes, ou négocié directement selon votre besoin.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="d-flex flex-column gap-3">
+                            <div class="sd-step-number">3</div>
+                            <div>
+                                <h6 class="fw-semibold">Suivez la course</h6>
+                                <p class="text-muted small mb-0">Un lien de suivi public vous permet de voir la progression en temps réel, sans créer de compte.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="d-flex flex-column gap-3">
+                            <div class="sd-step-number">4</div>
+                            <div>
+                                <h6 class="fw-semibold">Réception confirmée</h6>
+                                <p class="text-muted small mb-0">Un code de confirmation et, si besoin, une preuve photo valident la livraison auprès du destinataire.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Parcours Livreur -->
+            <div class="tab-pane fade" id="tab-livreur" role="tabpanel">
+                <div class="row gy-4">
+                    <div class="col-md-3">
+                        <div class="d-flex flex-column gap-3">
+                            <div class="sd-step-number">1</div>
+                            <div>
+                                <h6 class="fw-semibold">Inscrivez votre véhicule</h6>
+                                <p class="text-muted small mb-0">Moto, voiture ou camionnette : indiquez votre CNI, votre véhicule et vos zones de travail préférées.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="d-flex flex-column gap-3">
+                            <div class="sd-step-number">2</div>
+                            <div>
+                                <h6 class="fw-semibold">Recevez des courses</h6>
+                                <p class="text-muted small mb-0">La plateforme vous attribue des livraisons compatibles avec votre véhicule et votre zone.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="d-flex flex-column gap-3">
+                            <div class="sd-step-number">3</div>
+                            <div>
+                                <h6 class="fw-semibold">Livrez & suivez</h6>
+                                <p class="text-muted small mb-0">Confirmez chaque étape depuis l'application, votre position est partagée en direct.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="d-flex flex-column gap-3">
+                            <div class="sd-step-number">4</div>
+                            <div>
+                                <h6 class="fw-semibold">Construisez votre note</h6>
+                                <p class="text-muted small mb-0">Votre historique et votre note moyenne sont visibles — la qualité de service est valorisée.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ═══════════════════ 5. POUR QUI ? ═══════════════════ -->
+<section id="pour-qui" class="py-5 py-lg-6">
+    <div class="container py-4">
+        <div class="text-center mb-5">
+            <span class="text-uppercase fw-semibold" style="color: var(--sd-orange); letter-spacing: .08em;">Pour qui ?</span>
+            <h2 class="fw-brand mt-2">Une plateforme, trois façons de l'utiliser</h2>
+        </div>
+        <div class="row gy-4">
+            <!-- Entreprises -->
+            <div class="col-lg-4">
+                <div class="sd-card-persona p-4">
+                    <div class="sd-icon-circle orange mb-3"><i class="bi bi-building"></i></div>
+                    <h5 class="fw-semibold">Entreprises</h5>
+                    <p class="text-muted small">Stockez vos produits, suivez vos livraisons et recevez vos paiements par lot, avec un tableau de bord dédié et un score de fiabilité transparent.</p>
+                    <ul class="list-unstyled small text-muted mb-4">
+                        <li class="mb-2"><i class="bi bi-check2 text-success me-2"></i>Gestion multi-entrepôts</li>
+                        <li class="mb-2"><i class="bi bi-check2 text-success me-2"></i>Alertes stock bas & rupture</li>
+                        <li class="mb-2"><i class="bi bi-check2 text-success me-2"></i>Frais de livraison transparents par zone</li>
+                        <li class="mb-0"><i class="bi bi-check2 text-success me-2"></i>Vente en ligne (Yopishop) ou physique</li>
+                    </ul>
+                    <!-- TODO : formulaire d'inscription Entreprise dédié -->
+                    <a href="{% url 'apps_core:inscription' %}" class="btn btn-sd-primary w-100">Créer un compte entreprise</a>
+                </div>
+            </div>
+            <!-- Livreurs -->
+            <div class="col-lg-4">
+                <div class="sd-card-persona p-4">
+                    <div class="sd-icon-circle navy mb-3"><i class="bi bi-bicycle"></i></div>
+                    <h5 class="fw-semibold">Livreurs</h5>
+                    <p class="text-muted small">Recevez des courses adaptées à votre véhicule, suivez votre position et vos statistiques, et développez votre note grâce à un travail de qualité.</p>
+                    <ul class="list-unstyled small text-muted mb-4">
+                        <li class="mb-2"><i class="bi bi-check2 text-success me-2"></i>Attribution automatique des courses</li>
+                        <li class="mb-2"><i class="bi bi-check2 text-success me-2"></i>Suivi GPS intégré</li>
+                        <li class="mb-2"><i class="bi bi-check2 text-success me-2"></i>Historique & note moyenne</li>
+                        <li class="mb-0"><i class="bi bi-check2 text-success me-2"></i>Moto, voiture ou camionnette acceptées</li>
+                    </ul>
+                    <!-- TODO : formulaire d'inscription Livreur dédié -->
+                    <a href="{% url 'apps_core:inscription' %}" class="btn btn-sd-outline w-100">Devenir livreur partenaire</a>
+                </div>
+            </div>
+            <!-- Clients -->
+            <div class="col-lg-4">
+                <div class="sd-card-persona p-4">
+                    <div class="sd-icon-circle orange mb-3"><i class="bi bi-person-heart"></i></div>
+                    <h5 class="fw-semibold">Clients</h5>
+                    <p class="text-muted small">Envoyez un colis en quelques clics, intra-zone ou entre villes, et suivez la livraison via un lien de suivi — sans même créer de compte.</p>
+                    <ul class="list-unstyled small text-muted mb-4">
+                        <li class="mb-2"><i class="bi bi-check2 text-success me-2"></i>Livraison directe au kilomètre</li>
+                        <li class="mb-2"><i class="bi bi-check2 text-success me-2"></i>Suivi par lien public</li>
+                        <li class="mb-0"><i class="bi bi-check2 text-success me-2"></i>Prix négocié ou tarif zone</li>
+                    </ul>
+                    <!-- TODO : formulaire "Nouvelle livraison directe" (aucun compte requis, cf. FAQ) -->
+                    <a href="#" class="btn btn-sd-outline w-100">Envoyer un colis</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ═══════════════ 6. PRODUITS EN LIGNE VS HORS-LIGNE ═══════════════ -->
+<section class="py-5 py-lg-6" style="background-color: var(--sd-fond);">
+    <div class="container py-4">
+        <div class="text-center mb-5">
+            <span class="text-uppercase fw-semibold" style="color: var(--sd-orange); letter-spacing: .08em;">Tarification</span>
+            <h2 class="fw-brand mt-2">Comment sont calculés vos frais de livraison</h2>
+            <p class="text-muted col-lg-7 mx-auto">Le mode de facturation dépend de la nature de vos produits — la règle est simple et toujours visible avant validation.</p>
+        </div>
+        <div class="row g-4 mb-5">
+            <div class="col-lg-6">
+                <div class="sd-compare-card en-ligne">
+                    <span class="sd-compare-badge en-ligne mb-3"><i class="bi bi-shop me-1"></i>Produit vendu en ligne (Yopishop)</span>
+                    <h5 class="fw-semibold mt-3">Livraison gratuite pour le client</h5>
+                    <p class="text-muted small mb-3">Si Yopishop gère à la fois la vente et la livraison de votre produit, aucun frais n'est facturé au client. La plateforme prélève une commission sur le montant du produit.</p>
+                    <ul class="list-unstyled small text-muted mb-0">
+                        <li class="mb-2"><i class="bi bi-check2 text-success me-2"></i>Aucun frais de livraison pour le client</li>
+                        <li class="mb-0"><i class="bi bi-check2 text-success me-2"></i>Commission plateforme déduite du montant produit</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="sd-compare-card hors-ligne">
+                    <span class="sd-compare-badge hors-ligne mb-3"><i class="bi bi-box-seam me-1"></i>Produit hors-ligne</span>
+                    <h5 class="fw-semibold mt-3">Frais selon la zone et le véhicule</h5>
+                    <p class="text-muted small mb-3">Pour un produit non pris en charge par Yopishop, les frais de livraison sont facturés selon la zone de destination et le véhicule nécessaire au transport.</p>
+                    <ul class="list-unstyled small text-muted mb-0">
+                        <li class="mb-2"><i class="bi bi-check2 text-success me-2"></i>Tarif transparent, visible avant validation</li>
+                        <li class="mb-0"><i class="bi bi-check2 text-success me-2"></i>S'applique aussi aux commandes mixtes (en ligne + hors-ligne)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="bg-white rounded-4 p-4 border">
+                    <h6 class="fw-semibold mb-3"><i class="bi bi-signpost-split me-2" style="color: var(--sd-orange);"></i>Exemple de majoration selon le véhicule requis</h6>
+                    <div class="table-responsive">
+                        <table class="table align-middle mb-0">
+                            <thead>
+                                <tr class="text-muted small text-uppercase">
+                                    <th>Véhicule</th>
+                                    <th>Type de produit</th>
+                                    <th class="text-end">Majoration</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><i class="bi bi-bicycle me-2" style="color: var(--sd-orange);"></i>Moto</td>
+                                    <td class="text-muted small">Léger, standard</td>
+                                    <td class="text-end fw-semibold">Tarif de référence</td>
+                                </tr>
+                                <tr>
+                                    <td><i class="bi bi-car-front me-2" style="color: var(--sd-orange);"></i>Voiture</td>
+                                    <td class="text-muted small">Volumineux</td>
+                                    <td class="text-end fw-semibold">+ majoration modérée</td>
+                                </tr>
+                                <tr>
+                                    <td><i class="bi bi-truck me-2" style="color: var(--sd-orange);"></i>Camionnette</td>
+                                    <td class="text-muted small">Lourd, gros volume</td>
+                                    <td class="text-end fw-semibold">+ majoration renforcée</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <p class="text-muted small mt-3 mb-0">Le véhicule requis pour une livraison correspond toujours au produit le plus exigeant qu'elle contient.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ═══════════════════ 7. VILLES DESSERVIES ═══════════════════ -->
+<section id="villes" class="py-5">
+    <div class="container py-4 text-center">
+        <span class="text-uppercase fw-semibold" style="color: var(--sd-orange); letter-spacing: .08em;">Zone de couverture</span>
+        <h2 class="fw-brand mt-2 mb-4">Déjà présents dans plusieurs villes du Cameroun</h2>
+        <div class="d-flex flex-wrap justify-content-center gap-2">
+            {% for ville in villes_desservies %}
+                <span class="sd-city-badge"><i class="bi bi-geo-alt-fill"></i>{{ ville }}</span>
+            {% endfor %}
+            <span class="sd-city-badge expansion"><i class="bi bi-arrow-up-right-circle"></i>Afrique Centrale — bientôt</span>
+        </div>
+    </div>
+</section>
+
+<!-- ═══════════════════ 8. AVANTAGES ═══════════════════ -->
+<section id="avantages" class="py-5 py-lg-6" style="background-color: var(--sd-fond);">
+    <div class="container py-4">
+        <div class="row align-items-center gy-5">
+            <div class="col-lg-5">
+                <span class="text-uppercase fw-semibold" style="color: var(--sd-orange); letter-spacing: .08em;">Pourquoi SwiftDrop</span>
+                <h2 class="fw-brand mt-2 mb-3">Conçu pour la fiabilité, pas seulement la vitesse</h2>
+                <p class="text-muted">Chaque livraison est tracée de bout en bout : validation, attribution, position du livreur, preuve de livraison et paiement — rien n'est laissé au hasard.</p>
+            </div>
+            <div class="col-lg-7">
+                <div class="row gy-4">
+                    <div class="col-sm-6 sd-avantage-item d-flex gap-3">
+                        <i class="bi bi-geo-alt"></i>
+                        <div>
+                            <h6 class="fw-semibold mb-1">Suivi en temps réel</h6>
+                            <p class="text-muted small mb-0">Position du livreur et statut de la course visibles à chaque étape.</p>
+                        </div>
+                    </div>
+                    <div class="col-sm-6 sd-avantage-item d-flex gap-3">
+                        <i class="bi bi-shield-check"></i>
+                        <div>
+                            <h6 class="fw-semibold mb-1">Entrepôts sécurisés</h6>
+                            <p class="text-muted small mb-0">Vos produits sont stockés et suivis par mouvement de stock.</p>
+                        </div>
+                    </div>
+                    <div class="col-sm-6 sd-avantage-item d-flex gap-3">
+                        <i class="bi bi-cash-coin"></i>
+                        <div>
+                            <h6 class="fw-semibold mb-1">Paiements par lot</h6>
+                            <p class="text-muted small mb-0">Réglements groupés selon votre cycle, avec preuve jointe.</p>
+                        </div>
+                    </div>
+                    <div class="col-sm-6 sd-avantage-item d-flex gap-3">
+                        <i class="bi bi-star"></i>
+                        <div>
+                            <h6 class="fw-semibold mb-1">Score de fiabilité</h6>
+                            <p class="text-muted small mb-0">Entreprises et livreurs sont évalués pour une confiance mutuelle.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ═══════════════════ 9. FAQ ═══════════════════ -->
+<section id="faq" class="py-5 py-lg-6">
+    <div class="container py-4">
+        <div class="text-center mb-5">
+            <span class="text-uppercase fw-semibold" style="color: var(--sd-orange); letter-spacing: .08em;">Questions fréquentes</span>
+            <h2 class="fw-brand mt-2">Tout ce que vous vous demandez encore</h2>
+        </div>
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="accordion sd-accordion" id="faqAccordion">
+
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
+                                Comment créer un compte entreprise ?
+                            </button>
+                        </h2>
+                        <div id="faq1" class="accordion-collapse collapse show" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                Cliquez sur « Créer un compte entreprise », renseignez votre raison sociale, votre secteur, vos documents (registre de commerce, NIU) et votre type d'activité. Votre compte est ensuite examiné par notre équipe avant validation.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
+                                Combien de temps prend la validation de mon compte ?
+                            </button>
+                        </h2>
+                        <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                La validation se fait généralement sous 24 à 72h ouvrées, une fois vos documents complets soumis. Vous êtes notifié par SMS ou WhatsApp dès que votre compte est validé ou si un complément est nécessaire.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
+                                Quelle différence entre un produit vendu en ligne et un produit hors-ligne ?
+                            </button>
+                        </h2>
+                        <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                Un produit est « vendu en ligne » uniquement si Yopishop gère à la fois sa vente et sa livraison — dans ce cas, la livraison est gratuite pour le client et une commission est prélevée. Tout autre produit est considéré hors-ligne et ses frais de livraison sont facturés selon la zone.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq4">
+                                Comment suis-je payé en tant qu'entreprise ?
+                            </button>
+                        </h2>
+                        <div id="faq4" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                Vos livraisons livrées et validées sont regroupées en un lot, selon le cycle que vous choisissez (quotidien, hebdomadaire ou mensuel). La plateforme déduit ses frais de livraison et commissions, puis vous envoie le montant net par Mobile Money avec une preuve de paiement. Vous confirmez ensuite la réception depuis votre tableau de bord.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq5">
+                                Que se passe-t-il si mon compte entreprise reste inactif ?
+                            </button>
+                        </h2>
+                        <div id="faq5" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                Après 30 jours sans activité de livraison, votre compte est automatiquement désactivé et vos produits en stock vous sont retournés. Vous pouvez éviter ce retour ou réactiver votre compte en réglant des frais de gardiennage auprès de l'administration.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq6">
+                                Comment devenir livreur partenaire ?
+                            </button>
+                        </h2>
+                        <div id="faq6" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                Inscrivez-vous avec votre CNI, le type de véhicule que vous possédez (moto, voiture, camionnette) et vos zones de travail préférées. Une fois validé, vous recevez des courses compatibles avec votre véhicule.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq7">
+                                Puis-je envoyer un colis sans créer de compte ?
+                            </button>
+                        </h2>
+                        <div id="faq7" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                Oui. La livraison directe pour particuliers ne nécessite aucun compte : vous renseignez l'adresse de collecte et de livraison, obtenez un prix, puis suivez la course via un lien public.
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ═══════════════════ 10. CTA FINAL ═══════════════════ -->
+<section class="py-5">
+    <div class="container">
+        <div class="sd-cta-final p-5 p-lg-6 text-center">
+            <h2 class="fw-brand mb-3">Prêt à livrer plus vite, plus simplement ?</h2>
+            <p class="fs-5 mb-4" style="opacity:.9;">Créez votre compte en quelques minutes et rejoignez les entreprises et livreurs déjà actifs sur SwiftDrop.</p>
+            <div class="d-flex flex-wrap justify-content-center gap-3">
+                <!-- TODO : formulaire d'inscription Entreprise dédié -->
+                <a href="{% url 'apps_core:inscription' %}" class="btn btn-light btn-lg px-4 fw-semibold">Créer mon compte entreprise</a>
+                <!-- TODO : formulaire d'inscription Livreur dédié -->
+                <a href="{% url 'apps_core:inscription' %}" class="btn btn-outline-light btn-lg px-4 fw-semibold">Devenir livreur partenaire</a>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% endblock %}

@@ -1,0 +1,131 @@
+{% extends 'navigateur/base_dashboard.html' %}
+
+{% block title %}Modifier {{ label }} – SwiftDrop{% endblock %}
+{% block page_title %}Modifier {{ label|lower }}{% endblock %}
+{% block user_initiales %}AD{% endblock %}
+{% block user_nom %}Administration{% endblock %}
+{% block user_role %}Administrateur{% endblock %}
+
+{% block sidebar_menu %}
+    <div class="sd-nav-section">Général</div>
+    <a href="{% url 'apps_core:dashboard_admin' %}" class="sd-nav-link"><i class="bi bi-grid-1x2"></i>Tableau de bord</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-chat-dots"></i>Messagerie</a>
+
+    <div class="sd-nav-section">Acteurs</div>
+    <a href="#" class="sd-nav-link"><i class="bi bi-building"></i>Entreprises</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-bicycle"></i>Livreurs</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-person-heart"></i>Clients</a>
+
+    <div class="sd-nav-section">Opérations</div>
+    <a href="#" class="sd-nav-link"><i class="bi bi-box-seam"></i>Livraisons B2B</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-signpost-2"></i>Livraisons directes</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-building-gear"></i>Entrepôts</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-boxes"></i>Produits</a>
+
+    <div class="sd-nav-section">Finance</div>
+    <a href="#" class="sd-nav-link"><i class="bi bi-cash-stack"></i>Lots de paiement</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-gift"></i>Bonus</a>
+
+    <div class="sd-nav-section">Système</div>
+    <a href="{% url 'apps_core:configuration_geographie' %}" class="sd-nav-link active"><i class="bi bi-geo"></i>Zones géographiques</a>
+    <a href="{% url 'apps_core:gerer_coefficients_vehicule' %}" class="sd-nav-link"><i class="bi bi-truck-front"></i>Coefficients véhicule</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-sliders"></i>Paramètres</a>
+{% endblock %}
+
+{% block extra_css %}
+    .sd-form-card {
+        background: #fff;
+        border: 1px solid #EDEFF4;
+        border-radius: 16px;
+        padding: 2rem;
+        max-width: 720px;
+    }
+    .sd-form-card .form-label { font-weight: 600; color: var(--sd-navy); font-size: .9rem; }
+    .sd-form-card .form-control,
+    .sd-form-card .form-select {
+        border-radius: 10px; padding: .6rem .85rem; border: 1.5px solid #EDEFF4;
+    }
+    .sd-form-card .form-control:focus,
+    .sd-form-card .form-select:focus {
+        border-color: var(--sd-orange); box-shadow: 0 0 0 .2rem rgba(255,107,53,0.15);
+    }
+    .sd-back-link { color: var(--sd-gris); font-size: .88rem; }
+    .sd-back-link:hover { color: var(--sd-orange); }
+    .sd-tarif-lock {
+        background: var(--sd-fond);
+        border: 1px dashed #DDE2EC;
+        border-radius: 12px;
+        padding: 1rem 1.25rem;
+    }
+{% endblock %}
+
+{% block dashboard_content %}
+
+<a href="{% url 'apps_core:configuration_geographie' %}" class="sd-back-link d-inline-flex align-items-center gap-1 mb-3">
+    <i class="bi bi-arrow-left"></i> Retour à la configuration géographique
+</a>
+
+<div class="sd-form-card">
+    <h5 class="fw-bold mb-1" style="color: var(--sd-navy);">{{ label }} — {{ objet.nom }}</h5>
+    <p class="text-muted small mb-4">Modifiez les informations ci-dessous, puis enregistrez.</p>
+
+    {% if form.non_field_errors %}
+        <div class="alert alert-danger">
+            {% for erreur in form.non_field_errors %}{{ erreur }}{% endfor %}
+        </div>
+    {% endif %}
+
+    {% if niveau == 'zone' %}
+        <div class="sd-tarif-lock d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <div class="small text-muted mb-1">Prix actuel (véhicule MOTO)</div>
+                <div class="fw-bold" style="color: var(--sd-navy); font-size:1.1rem;">{{ objet.prix_livraison }} FCFA</div>
+            </div>
+            <a href="{% url 'apps_core:modifier_tarif_zone' objet.pk %}" class="btn btn-sd-outline btn-sm">
+                <i class="bi bi-cash-coin me-1"></i>Modifier ce tarif
+            </a>
+        </div>
+        <p class="text-muted small mb-3">
+            <i class="bi bi-info-circle me-1"></i>Le prix ne se modifie pas depuis ce formulaire — voir le bouton ci-dessus, qui journalise le changement dans l'historique des tarifs.
+        </p>
+    {% endif %}
+
+    <form method="post" novalidate>
+        {% csrf_token %}
+        <div class="row g-3">
+            {% for field in form %}
+                {% if field.name != 'prix_livraison' or niveau != 'zone' %}
+                    {% if field.field.widget.input_type == 'checkbox' %}
+                        <div class="col-12">
+                            <div class="form-check">
+                                {{ field }}
+                                <label class="form-check-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                            </div>
+                            {% if field.errors %}<div class="text-danger small mt-1">{{ field.errors.0 }}</div>{% endif %}
+                        </div>
+                    {% elif field.name == 'description' or field.name == 'repere' %}
+                        <div class="col-12">
+                            <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                            {{ field }}
+                            {% if field.errors %}<div class="text-danger small mt-1">{{ field.errors.0 }}</div>{% endif %}
+                        </div>
+                    {% else %}
+                        <div class="col-md-6">
+                            <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                            {{ field }}
+                            {% if field.errors %}<div class="text-danger small mt-1">{{ field.errors.0 }}</div>{% endif %}
+                            {% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}
+                        </div>
+                    {% endif %}
+                {% endif %}
+            {% endfor %}
+        </div>
+
+        <div class="d-flex gap-2 mt-4">
+            <button type="submit" class="btn btn-sd-primary px-4"><i class="bi bi-check2 me-1"></i>Enregistrer</button>
+            <a href="{% url 'apps_core:configuration_geographie' %}" class="btn btn-sd-outline px-4">Annuler</a>
+        </div>
+    </form>
+</div>
+
+{% endblock %}
