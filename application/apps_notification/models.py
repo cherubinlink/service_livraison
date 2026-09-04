@@ -15,6 +15,8 @@ class Notification(models.Model):
         PUSH        = 'PUSH', _('Push mobile (FCM)')
 
     class Evenement(models.TextChoices):
+        OTP_ENVOYE                = 'OTP_ENVOYE', _('Code OTP envoyé')
+        MDP_REINIT_DEMANDE        = 'MDP_REINIT', _('Réinitialisation mot de passe demandée')
         LIV_CREEE            = 'LIV_CREEE', _('Livraison créée')
         LIV_VALIDEE            = 'LIV_VALIDEE', _('Livraison validée')
         LIV_REFUSEE               = 'LIV_REFUSEE', _('Livraison refusée')

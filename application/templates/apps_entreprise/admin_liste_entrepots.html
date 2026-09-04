@@ -1,0 +1,132 @@
+{% extends 'navigateur/base_dashboard.html' %}
+
+{% block title %}Entrepôts – Administration SwiftDrop{% endblock %}
+{% block page_title %}Entrepôts{% endblock %}
+{% block user_initiales %}AD{% endblock %}
+{% block user_nom %}Administration{% endblock %}
+{% block user_role %}Administrateur{% endblock %}
+
+{% block sidebar_menu %}
+    <div class="sd-nav-section">Général</div>
+    <a href="{% url 'apps_core:dashboard_admin' %}" class="sd-nav-link"><i class="bi bi-grid-1x2"></i>Tableau de bord</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-chat-dots"></i>Messagerie</a>
+
+    <div class="sd-nav-section">Acteurs</div>
+    <a href="{% url 'apps_entreprise:admin_liste_entreprises' %}" class="sd-nav-link"><i class="bi bi-building"></i>Entreprises</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-bicycle"></i>Livreurs</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-person-heart"></i>Clients</a>
+
+    <div class="sd-nav-section">Opérations</div>
+    <a href="#" class="sd-nav-link"><i class="bi bi-box-seam"></i>Livraisons B2B</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-signpost-2"></i>Livraisons directes</a>
+    <a href="{% url 'apps_entreprise:admin_liste_entrepots' %}" class="sd-nav-link active"><i class="bi bi-building-gear"></i>Entrepôts</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-boxes"></i>Produits</a>
+
+    <div class="sd-nav-section">Finance</div>
+    <a href="#" class="sd-nav-link"><i class="bi bi-cash-stack"></i>Lots de paiement</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-gift"></i>Bonus</a>
+
+    <div class="sd-nav-section">Système</div>
+    <a href="{% url 'apps_core:configuration_geographie' %}" class="sd-nav-link"><i class="bi bi-geo"></i>Zones géographiques</a>
+    <a href="{% url 'apps_core:gerer_coefficients_vehicule' %}" class="sd-nav-link"><i class="bi bi-truck-front"></i>Coefficients véhicule</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-sliders"></i>Paramètres</a>
+{% endblock %}
+
+{% block extra_css %}
+    .sd-filtre-bar { background: #fff; border: 1px solid #EDEFF4; border-radius: 14px; padding: 1rem 1.25rem; }
+    .sd-filtre-bar .form-select, .sd-filtre-bar .form-control {
+        border-radius: 10px; border: 1.5px solid #EDEFF4;
+    }
+    .sd-filtre-bar .form-select:focus, .sd-filtre-bar .form-control:focus {
+        border-color: var(--sd-orange); box-shadow: 0 0 0 .2rem rgba(255,107,53,0.15);
+    }
+    .sd-badge-statut { font-size: .72rem; font-weight: 700; padding: .25rem .65rem; border-radius: 50px; }
+    .sd-badge-statut.valide { background: #E5F7EC; color: #1FAA59; }
+    .sd-badge-statut.inactif { background: #F1F2F6; color: var(--sd-gris); }
+{% endblock %}
+
+{% block dashboard_content %}
+
+<div class="sd-filtre-bar mb-3">
+    <form method="get" class="row g-2 align-items-end">
+        <div class="col-md-5">
+            <label class="form-label small fw-semibold mb-1">Recherche</label>
+            <input type="text" name="q" value="{{ recherche }}" class="form-control form-control-sm" placeholder="Nom ou code de l'entrepôt…">
+        </div>
+        <div class="col-md-4">
+            <label class="form-label small fw-semibold mb-1">Ville</label>
+            <select name="ville" class="form-select form-select-sm">
+                <option value="">Toutes les villes</option>
+                {% for ville in villes %}
+                    <option value="{{ ville.id }}" {% if filtre_ville == ville.id|stringformat:"s" %}selected{% endif %}>{{ ville.nom }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-3 d-flex gap-2">
+            <button type="submit" class="btn btn-sd-primary btn-sm flex-grow-1"><i class="bi bi-search"></i></button>
+            <a href="{% url 'apps_entreprise:admin_liste_entrepots' %}" class="btn btn-sd-outline btn-sm" title="Réinitialiser"><i class="bi bi-x-lg"></i></a>
+        </div>
+    </form>
+</div>
+
+<div class="sd-panel">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div class="sd-panel-title mb-0"><i class="bi bi-building-gear me-2"></i>Entrepôts</div>
+        <a href="{% url 'apps_entreprise:admin_creer_entrepot' %}" class="btn btn-sm btn-sd-primary">
+            <i class="bi bi-plus-lg"></i> Nouvel entrepôt
+        </a>
+    </div>
+
+    {% if entrepots %}
+        <div class="table-responsive">
+            <table class="table sd-table align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Entrepôt</th>
+                        <th>Ville</th>
+                        <th>Zone</th>
+                        <th>Responsable</th>
+                        <th>Entreprises affectées</th>
+                        <th>Statut</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for entrepot in entrepots %}
+                        <tr>
+                            <td>
+                                <div class="fw-semibold">{{ entrepot.nom }}</div>
+                                <div class="text-muted small">{{ entrepot.code }}</div>
+                            </td>
+                            <td>{{ entrepot.ville.nom|default:"—" }}</td>
+                            <td>{{ entrepot.zone.nom|default:"—" }}</td>
+                            <td>{{ entrepot.responsable|default:"—" }}</td>
+                            <td>
+                                <span class="badge bg-light text-dark border">{{ entrepot.nb_entreprises }}</span>
+                            </td>
+                            <td>
+                                {% if entrepot.est_actif %}
+                                    <span class="sd-badge-statut valide">Actif</span>
+                                {% else %}
+                                    <span class="sd-badge-statut inactif">Inactif</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end">
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{% url 'apps_entreprise:admin_detail_entrepot' pk=entrepot.pk %}"
+                                       class="btn btn-sd-outline" title="Voir"><i class="bi bi-eye"></i></a>
+                                    <a href="{% url 'apps_entreprise:admin_modifier_entrepot' pk=entrepot.pk %}"
+                                       class="btn btn-light" title="Modifier"><i class="bi bi-pencil"></i></a>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p class="text-muted small mb-0">Aucun entrepôt ne correspond à ces critères.</p>
+    {% endif %}
+</div>
+
+{% endblock %}

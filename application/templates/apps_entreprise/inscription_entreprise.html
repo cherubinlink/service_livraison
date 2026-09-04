@@ -1,0 +1,277 @@
+{% extends 'navigateur/base.html' %}
+
+{% block title %}Créer un compte entreprise – SwiftDrop{% endblock %}
+
+{% block extra_css %}
+    .sd-auth-section { background: var(--sd-fond); padding: 4rem 0; }
+    .sd-auth-card {
+        background: #fff;
+        border-radius: 20px;
+        box-shadow: 0 20px 50px rgba(22,33,62,0.08);
+        padding: 2.5rem;
+        max-width: 780px;
+        margin: 0 auto;
+    }
+    .sd-auth-icon {
+        width: 56px; height: 56px; border-radius: 14px;
+        background: rgba(255,107,53,0.12); color: var(--sd-orange);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.4rem; margin-bottom: 1rem;
+    }
+    .sd-auth-title { font-weight: 800; color: var(--sd-navy); }
+    .sd-auth-sub { color: var(--sd-gris); }
+    .sd-auth-card .form-label { font-weight: 600; color: var(--sd-navy); font-size: .88rem; }
+    .sd-auth-card .form-control,
+    .sd-auth-card .form-select {
+        border-radius: 10px; padding: .6rem .85rem; border: 1.5px solid #EDEFF4;
+    }
+    .sd-auth-card .form-control:focus,
+    .sd-auth-card .form-select:focus {
+        border-color: var(--sd-orange); box-shadow: 0 0 0 .2rem rgba(255,107,53,0.15);
+    }
+    .sd-auth-footer-link { color: var(--sd-gris); font-size: .9rem; }
+    .sd-auth-footer-link a { color: var(--sd-orange); font-weight: 600; }
+    .sd-form-section-title {
+        text-transform: uppercase;
+        font-size: .75rem;
+        font-weight: 700;
+        letter-spacing: .06em;
+        color: var(--sd-orange);
+        margin-bottom: 1rem;
+    }
+    .sd-form-section { margin-bottom: 2rem; }
+    .sd-info-banner {
+        background: var(--sd-fond);
+        border: 1px solid #EDEFF4;
+        border-radius: 12px;
+        padding: 1rem 1.2rem;
+        font-size: .87rem;
+        color: var(--sd-gris);
+    }
+    .sd-info-banner i { color: var(--sd-orange); }
+
+    /* ── Champs mot de passe avec bouton "afficher/masquer" ──────── */
+    .sd-password-group { display: flex; }
+    .sd-password-group .form-control {
+        border-radius: 10px 0 0 10px;
+        border-right: none;
+    }
+    .sd-password-group .form-control:focus { box-shadow: none; }
+    .sd-password-group .btn-toggle-password {
+        border-radius: 0 10px 10px 0;
+        border: 1.5px solid #EDEFF4;
+        border-left: none;
+        background: #fff;
+        color: var(--sd-gris);
+        padding: 0 .9rem;
+        display: flex; align-items: center; justify-content: center;
+    }
+    .sd-password-group .btn-toggle-password:hover { color: var(--sd-orange); }
+    .sd-password-group:focus-within .form-control,
+    .sd-password-group:focus-within .btn-toggle-password {
+        border-color: var(--sd-orange);
+    }
+    .sd-password-group:focus-within {
+        box-shadow: 0 0 0 .2rem rgba(255,107,53,0.15);
+        border-radius: 10px;
+    }
+{% endblock %}
+
+{% block content %}
+<section class="sd-auth-section">
+    <div class="container">
+        <div class="sd-auth-card">
+            <div class="sd-auth-icon"><i class="bi bi-building-add"></i></div>
+            <h1 class="sd-auth-title h3 mb-1">Créer votre compte entreprise</h1>
+            <p class="sd-auth-sub mb-4">
+                Stockez vos produits, recevez des livraisons et suivez vos paiements depuis un tableau de bord dédié.
+            </p>
+
+            <div class="sd-info-banner mb-4">
+                <i class="bi bi-info-circle me-1"></i>
+                Après inscription, votre compte est <strong>en attente de validation</strong> par notre équipe
+                (généralement sous 24 à 72h ouvrées) avant de pouvoir enregistrer des produits ou recevoir des livraisons.
+            </div>
+
+            {% if form.non_field_errors %}
+                <div class="alert alert-danger">
+                    {% for erreur in form.non_field_errors %}{{ erreur }}{% endfor %}
+                </div>
+            {% endif %}
+
+            <form method="post" enctype="multipart/form-data" novalidate>
+                {% csrf_token %}
+
+                <!-- ═══════════════ Compte ═══════════════ -->
+                <div class="sd-form-section">
+                    <div class="sd-form-section-title">Vos informations de connexion</div>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="{{ form.nom_contact.id_for_label }}" class="form-label">{{ form.nom_contact.label }}</label>
+                            {{ form.nom_contact }}
+                            {% if form.nom_contact.errors %}<div class="text-danger small mt-1">{{ form.nom_contact.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="{{ form.telephone.id_for_label }}" class="form-label">{{ form.telephone.label }}</label>
+                            {{ form.telephone }}
+                            {% if form.telephone.errors %}<div class="text-danger small mt-1">{{ form.telephone.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="col-12">
+                            <label for="{{ form.email.id_for_label }}" class="form-label">{{ form.email.label }}</label>
+                            {{ form.email }}
+                            {% if form.email.errors %}<div class="text-danger small mt-1">{{ form.email.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="{{ form.mot_de_passe.id_for_label }}" class="form-label">{{ form.mot_de_passe.label }}</label>
+                            <div class="sd-password-group">
+                                {{ form.mot_de_passe }}
+                                <button type="button" class="btn-toggle-password" id="toggleMotDePasse" aria-label="Afficher le mot de passe">
+                                    <i class="bi bi-eye" id="toggleMotDePasseIcon"></i>
+                                </button>
+                            </div>
+                            {% if form.mot_de_passe.errors %}<div class="text-danger small mt-1">{{ form.mot_de_passe.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="{{ form.mot_de_passe_confirmation.id_for_label }}" class="form-label">{{ form.mot_de_passe_confirmation.label }}</label>
+                            <div class="sd-password-group">
+                                {{ form.mot_de_passe_confirmation }}
+                                <button type="button" class="btn-toggle-password" id="toggleMotDePasseConfirmation" aria-label="Afficher le mot de passe">
+                                    <i class="bi bi-eye" id="toggleMotDePasseConfirmationIcon"></i>
+                                </button>
+                            </div>
+                            {% if form.mot_de_passe_confirmation.errors %}<div class="text-danger small mt-1">{{ form.mot_de_passe_confirmation.errors.0 }}</div>{% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ═══════════════ Entreprise ═══════════════ -->
+                <div class="sd-form-section">
+                    <div class="sd-form-section-title">Informations sur l'entreprise</div>
+
+                    <div class="row g-3">
+                        <div class="col-md-7">
+                            <label for="{{ form.raison_sociale.id_for_label }}" class="form-label">{{ form.raison_sociale.label }}</label>
+                            {{ form.raison_sociale }}
+                            {% if form.raison_sociale.errors %}<div class="text-danger small mt-1">{{ form.raison_sociale.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-5">
+                            <label for="{{ form.nom_commercial.id_for_label }}" class="form-label">{{ form.nom_commercial.label }}</label>
+                            {{ form.nom_commercial }}
+                            {% if form.nom_commercial.errors %}<div class="text-danger small mt-1">{{ form.nom_commercial.errors.0 }}</div>{% endif %}
+                        </div>
+
+                        <div class="col-md-4">
+                            <label for="{{ form.secteur.id_for_label }}" class="form-label">{{ form.secteur.label }}</label>
+                            {{ form.secteur }}
+                            {% if form.secteur.errors %}<div class="text-danger small mt-1">{{ form.secteur.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-4">
+                            <label for="{{ form.taille.id_for_label }}" class="form-label">{{ form.taille.label }}</label>
+                            {{ form.taille }}
+                            {% if form.taille.errors %}<div class="text-danger small mt-1">{{ form.taille.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-4">
+                            <label for="{{ form.type_entreprise.id_for_label }}" class="form-label">{{ form.type_entreprise.label }}</label>
+                            {{ form.type_entreprise }}
+                            <div class="form-text small">{{ form.type_entreprise.help_text }}</div>
+                            {% if form.type_entreprise.errors %}<div class="text-danger small mt-1">{{ form.type_entreprise.errors.0 }}</div>{% endif %}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="{{ form.numero_registre.id_for_label }}" class="form-label">{{ form.numero_registre.label }}</label>
+                            {{ form.numero_registre }}
+                            {% if form.numero_registre.errors %}<div class="text-danger small mt-1">{{ form.numero_registre.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="{{ form.numero_contribuable_niu.id_for_label }}" class="form-label">{{ form.numero_contribuable_niu.label }}</label>
+                            {{ form.numero_contribuable_niu }}
+                            {% if form.numero_contribuable_niu.errors %}<div class="text-danger small mt-1">{{ form.numero_contribuable_niu.errors.0 }}</div>{% endif %}
+                        </div>
+
+                        <div class="col-12">
+                            <label for="{{ form.adresse_siege.id_for_label }}" class="form-label">{{ form.adresse_siege.label }}</label>
+                            {{ form.adresse_siege }}
+                            {% if form.adresse_siege.errors %}<div class="text-danger small mt-1">{{ form.adresse_siege.errors.0 }}</div>{% endif %}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="{{ form.ville_principale.id_for_label }}" class="form-label">{{ form.ville_principale.label }}</label>
+                            {{ form.ville_principale }}
+                            {% if form.ville_principale.errors %}<div class="text-danger small mt-1">{{ form.ville_principale.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="{{ form.telephone_principal.id_for_label }}" class="form-label">{{ form.telephone_principal.label }}</label>
+                            {{ form.telephone_principal }}
+                            {% if form.telephone_principal.errors %}<div class="text-danger small mt-1">{{ form.telephone_principal.errors.0 }}</div>{% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ═══════════════ Documents ═══════════════ -->
+                <div class="sd-form-section">
+                    <div class="sd-form-section-title">Documents justificatifs (optionnel à l'inscription)</div>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="{{ form.document_registre.id_for_label }}" class="form-label">{{ form.document_registre.label }}</label>
+                            {{ form.document_registre }}
+                            {% if form.document_registre.errors %}<div class="text-danger small mt-1">{{ form.document_registre.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="{{ form.document_niu.id_for_label }}" class="form-label">{{ form.document_niu.label }}</label>
+                            {{ form.document_niu }}
+                            {% if form.document_niu.errors %}<div class="text-danger small mt-1">{{ form.document_niu.errors.0 }}</div>{% endif %}
+                        </div>
+                    </div>
+                    <p class="text-muted small mt-2 mb-0">
+                        Vous pourrez aussi ajouter ou compléter ces documents plus tard depuis votre tableau de bord,
+                        avant la validation de votre compte.
+                    </p>
+                </div>
+
+                <button type="submit" class="btn btn-sd-primary w-100 py-2 mb-3">Créer mon compte entreprise</button>
+
+                <p class="text-center sd-auth-footer-link mb-0">
+                    Déjà inscrit ? <a href="{% url 'apps_core:connexion' %}">Connectez-vous</a>
+                </p>
+            </form>
+
+            <div class="sd-info-banner mt-4">
+                <i class="bi bi-info-circle me-1"></i>
+                Vous êtes un particulier ou possédez un véhicule de livraison ?
+                <a href="{% url 'apps_core:inscription' %}">Créer un compte client</a> ·
+                <a href="#">Devenir livreur partenaire</a>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Bouton "afficher / masquer" réutilisable — appliqué ici deux fois
+    // (mot de passe + confirmation), chaque paire bouton/champ étant
+    // indépendante l'une de l'autre.
+    document.addEventListener('DOMContentLoaded', function () {
+        function activerToggleMotDePasse(idBouton, idIcone, idChamp) {
+            const bouton = document.getElementById(idBouton);
+            const icone = document.getElementById(idIcone);
+            const champ = document.getElementById(idChamp);
+            if (!bouton || !champ) return;
+
+            bouton.addEventListener('click', function () {
+                const estMasque = champ.type === 'password';
+                champ.type = estMasque ? 'text' : 'password';
+
+                icone.classList.toggle('bi-eye', !estMasque);
+                icone.classList.toggle('bi-eye-slash', estMasque);
+                bouton.setAttribute('aria-label', estMasque ? 'Masquer le mot de passe' : 'Afficher le mot de passe');
+            });
+        }
+
+        activerToggleMotDePasse('toggleMotDePasse', 'toggleMotDePasseIcon', '{{ form.mot_de_passe.id_for_label }}');
+        activerToggleMotDePasse('toggleMotDePasseConfirmation', 'toggleMotDePasseConfirmationIcon', '{{ form.mot_de_passe_confirmation.id_for_label }}');
+    });
+</script>
+{% endblock %}

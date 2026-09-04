@@ -12,17 +12,17 @@
     <a href="#" class="sd-nav-link"><i class="bi bi-chat-dots"></i>Messagerie</a>
 
     <div class="sd-nav-section">Acteurs</div>
-    <a href="#" class="sd-nav-link"><i class="bi bi-building"></i>Entreprises
+    <a href="{% url 'apps_entreprise:admin_liste_entreprises' %}" class="sd-nav-link"><i class="bi bi-building"></i>Entreprises
         {% if nb_entreprises_attente %}<span class="sd-nav-badge">{{ nb_entreprises_attente }}</span>{% endif %}
     </a>
-    <a href="#" class="sd-nav-link"><i class="bi bi-bicycle"></i>Livreurs</a>
+    <a href="{% url 'apps_livreur:admin_liste_livreurs' %}" class="sd-nav-link"><i class="bi bi-bicycle"></i>Livreurs</a>
     <a href="#" class="sd-nav-link"><i class="bi bi-person-heart"></i>Clients</a>
 
     <div class="sd-nav-section">Opérations</div>
     <a href="#" class="sd-nav-link"><i class="bi bi-box-seam"></i>Livraisons B2B</a>
     <a href="#" class="sd-nav-link"><i class="bi bi-signpost-2"></i>Livraisons directes</a>
-    <a href="#" class="sd-nav-link"><i class="bi bi-building-gear"></i>Entrepôts</a>
-    <a href="#" class="sd-nav-link"><i class="bi bi-boxes"></i>Produits</a>
+    <a href="{% url 'apps_entreprise:admin_liste_entrepots' %}" class="sd-nav-link"><i class="bi bi-building-gear"></i>Entrepôts</a>
+    <a href="{% url 'apps_catalogue:admin_liste_produits' %}" class="sd-nav-link"><i class="bi bi-boxes"></i>Produits</a>
 
     <div class="sd-nav-section">Finance</div>
     <a href="#" class="sd-nav-link"><i class="bi bi-cash-stack"></i>Lots de paiement
@@ -75,7 +75,7 @@
         <div class="sd-panel h-100">
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <div class="sd-panel-title mb-0">Entreprises à valider</div>
-                <a href="#" class="small">Tout voir</a>
+                <a href="{% url 'apps_entreprise:admin_entreprises_en_attente' %}" class="small">Tout voir</a>
             </div>
             {% if entreprises_a_valider %}
                 <ul class="list-unstyled mb-0">

@@ -1,0 +1,131 @@
+{% extends 'navigateur/base_dashboard.html' %}
+
+{% block title %}Mes contacts – SwiftDrop{% endblock %}
+{% block page_title %}Mes contacts{% endblock %}
+{% block user_initiales %}{{ entreprise.nom_affichage|slice:":2"|upper }}{% endblock %}
+{% block user_nom %}{{ entreprise.nom_affichage }}{% endblock %}
+{% block user_role %}Entreprise{% endblock %}
+
+{% block sidebar_menu %}
+    <div class="sd-nav-section">Général</div>
+    <a href="{% url 'apps_entreprise:dashboard' %}" class="sd-nav-link"><i class="bi bi-grid-1x2"></i>Tableau de bord</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-chat-dots"></i>Messagerie</a>
+
+    <div class="sd-nav-section">Mon entreprise</div>
+    <a href="{% url 'apps_entreprise:modifier_profil' %}" class="sd-nav-link"><i class="bi bi-building-gear"></i>Mon profil</a>
+    <a href="{% url 'apps_entreprise:mes_documents' %}" class="sd-nav-link"><i class="bi bi-file-earmark-text"></i>Mes documents</a>
+    <a href="{% url 'apps_entreprise:mes_contacts' %}" class="sd-nav-link active"><i class="bi bi-person-lines-fill"></i>Mes contacts</a>
+    <a href="{% url 'apps_entreprise:mes_frais_gardiennage' %}" class="sd-nav-link"><i class="bi bi-shield-lock"></i>Frais de gardiennage</a>
+
+    <div class="sd-nav-section">Activité</div>
+    <a href="#" class="sd-nav-link"><i class="bi bi-boxes"></i>Mes produits</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-box-seam"></i>Mes livraisons</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-cash-stack"></i>Mes paiements</a>
+{% endblock %}
+
+{% block extra_css %}
+    .sd-contact-row { display: flex; justify-content: space-between; align-items: center; padding: .9rem 0; border-bottom: 1px solid #EDEFF4; }
+    .sd-contact-row:last-child { border-bottom: none; }
+    .sd-badge-principal { background: rgba(255,107,53,0.12); color: var(--sd-orange); font-size: .7rem; font-weight: 700; padding: .15rem .55rem; border-radius: 50px; }
+    .sd-contact-actions .btn-link { color: var(--sd-gris); text-decoration: none; }
+    .sd-contact-actions .btn-link:hover { color: var(--sd-orange); }
+    .modal .form-label { font-weight: 600; color: var(--sd-navy); font-size: .85rem; }
+    .modal .form-control, .modal .form-select {
+        border-radius: 10px; padding: .55rem .8rem; border: 1.5px solid #EDEFF4;
+    }
+    .modal .form-control:focus, .modal .form-select:focus {
+        border-color: var(--sd-orange); box-shadow: 0 0 0 .2rem rgba(255,107,53,0.15);
+    }
+{% endblock %}
+
+{% block dashboard_content %}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <p class="text-muted small mb-0">Personnes à contacter au sein de votre entreprise (gérant, responsable livraison, comptable…).</p>
+    <button type="button" class="btn btn-sd-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalNouveauContact">
+        <i class="bi bi-plus-lg me-1"></i>Nouveau contact
+    </button>
+</div>
+
+<div class="sd-panel">
+    {% if contacts %}
+        {% for contact in contacts %}
+            <div class="sd-contact-row">
+                <div>
+                    <div class="fw-semibold">
+                        {{ contact.nom }}
+                        {% if contact.est_principal %}<span class="sd-badge-principal ms-1">Principal</span>{% endif %}
+                    </div>
+                    <div class="text-muted small">{{ contact.get_type_contact_display }} · {{ contact.telephone }}{% if contact.email %} · {{ contact.email }}{% endif %}</div>
+                </div>
+                <div class="sd-contact-actions d-flex gap-2">
+                    <a href="{% url 'apps_entreprise:modifier_contact' contact.pk %}" class="btn btn-link btn-sm p-0" title="Modifier"><i class="bi bi-pencil"></i></a>
+                    <form method="post" action="{% url 'apps_entreprise:supprimer_contact' contact.pk %}" onsubmit="return confirm('Supprimer ce contact ?');">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-link btn-sm p-0 text-danger" title="Supprimer"><i class="bi bi-trash"></i></button>
+                    </form>
+                </div>
+            </div>
+        {% endfor %}
+    {% else %}
+        <p class="text-muted small mb-0">Aucun contact enregistré pour le moment.</p>
+    {% endif %}
+</div>
+
+<!-- ═══════════════════ MODAL — Nouveau contact ═══════════════════ -->
+<div class="modal fade" id="modalNouveauContact" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post">
+                {% csrf_token %}
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold" style="color: var(--sd-navy);">Nouveau contact</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    {% if form.non_field_errors %}<div class="alert alert-danger py-2 small">{{ form.non_field_errors }}</div>{% endif %}
+                    <div class="mb-3">
+                        <label for="{{ form.type_contact.id_for_label }}" class="form-label">{{ form.type_contact.label }}</label>
+                        {{ form.type_contact }}
+                        {% if form.type_contact.errors %}<div class="text-danger small mt-1">{{ form.type_contact.errors.0 }}</div>{% endif %}
+                    </div>
+                    <div class="mb-3">
+                        <label for="{{ form.nom.id_for_label }}" class="form-label">{{ form.nom.label }}</label>
+                        {{ form.nom }}
+                        {% if form.nom.errors %}<div class="text-danger small mt-1">{{ form.nom.errors.0 }}</div>{% endif %}
+                    </div>
+                    <div class="mb-3">
+                        <label for="{{ form.telephone.id_for_label }}" class="form-label">{{ form.telephone.label }}</label>
+                        {{ form.telephone }}
+                        {% if form.telephone.errors %}<div class="text-danger small mt-1">{{ form.telephone.errors.0 }}</div>{% endif %}
+                    </div>
+                    <div class="mb-3">
+                        <label for="{{ form.email.id_for_label }}" class="form-label">{{ form.email.label }}</label>
+                        {{ form.email }}
+                        {% if form.email.errors %}<div class="text-danger small mt-1">{{ form.email.errors.0 }}</div>{% endif %}
+                    </div>
+                    <div class="form-check">
+                        {{ form.est_principal }}
+                        <label class="form-check-label" for="{{ form.est_principal.id_for_label }}">{{ form.est_principal.label }}</label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-sd-outline" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-sd-primary">Ajouter le contact</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+{% if form.errors %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        new bootstrap.Modal(document.getElementById('modalNouveauContact')).show();
+    });
+</script>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,129 @@
+{% extends 'navigateur/base_dashboard.html' %}
+
+{% block title %}Mes documents – SwiftDrop{% endblock %}
+{% block page_title %}Mes documents{% endblock %}
+{% block user_initiales %}{{ entreprise.nom_affichage|slice:":2"|upper }}{% endblock %}
+{% block user_nom %}{{ entreprise.nom_affichage }}{% endblock %}
+{% block user_role %}Entreprise{% endblock %}
+
+{% block sidebar_menu %}
+    <div class="sd-nav-section">Général</div>
+    <a href="{% url 'apps_entreprise:dashboard' %}" class="sd-nav-link"><i class="bi bi-grid-1x2"></i>Tableau de bord</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-chat-dots"></i>Messagerie</a>
+
+    <div class="sd-nav-section">Mon entreprise</div>
+    <a href="{% url 'apps_entreprise:modifier_profil' %}" class="sd-nav-link"><i class="bi bi-building-gear"></i>Mon profil</a>
+    <a href="{% url 'apps_entreprise:mes_documents' %}" class="sd-nav-link active"><i class="bi bi-file-earmark-text"></i>Mes documents</a>
+    <a href="{% url 'apps_entreprise:mes_contacts' %}" class="sd-nav-link"><i class="bi bi-person-lines-fill"></i>Mes contacts</a>
+    <a href="{% url 'apps_entreprise:mes_frais_gardiennage' %}" class="sd-nav-link"><i class="bi bi-shield-lock"></i>Frais de gardiennage</a>
+
+    <div class="sd-nav-section">Activité</div>
+    <a href="#" class="sd-nav-link"><i class="bi bi-boxes"></i>Mes produits</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-box-seam"></i>Mes livraisons</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-cash-stack"></i>Mes paiements</a>
+{% endblock %}
+
+{% block extra_css %}
+    .sd-doc-row { display: flex; justify-content: space-between; align-items: center; padding: .9rem 0; border-bottom: 1px solid #EDEFF4; }
+    .sd-doc-row:last-child { border-bottom: none; }
+    .sd-doc-icon {
+        width: 42px; height: 42px; border-radius: 10px;
+        background: rgba(255,107,53,0.12); color: var(--sd-orange);
+        display: flex; align-items: center; justify-content: center;
+    }
+    .sd-badge-verifie { background: #E5F7EC; color: #1FAA59; font-size: .7rem; font-weight: 700; padding: .2rem .55rem; border-radius: 50px; }
+    .sd-badge-non-verifie { background: #FFF4E5; color: #E88A00; font-size: .7rem; font-weight: 700; padding: .2rem .55rem; border-radius: 50px; }
+    .modal .form-label { font-weight: 600; color: var(--sd-navy); font-size: .85rem; }
+    .modal .form-control, .modal .form-select {
+        border-radius: 10px; padding: .55rem .8rem; border: 1.5px solid #EDEFF4;
+    }
+{% endblock %}
+
+{% block dashboard_content %}
+
+<div class="alert alert-light border small mb-3">
+    <i class="bi bi-info-circle me-1" style="color: var(--sd-orange);"></i>
+    Un document déjà <strong>vérifié</strong> ne peut plus être supprimé vous-même — contactez l'administration si besoin.
+</div>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <p class="text-muted small mb-0">Registre de commerce, NIU, statuts, pièces d'identité…</p>
+    <button type="button" class="btn btn-sd-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalNouveauDocument">
+        <i class="bi bi-plus-lg me-1"></i>Ajouter un document
+    </button>
+</div>
+
+<div class="sd-panel">
+    {% if documents %}
+        {% for document in documents %}
+            <div class="sd-doc-row">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="sd-doc-icon"><i class="bi bi-file-earmark-text"></i></div>
+                    <div>
+                        <div class="fw-semibold small">{{ document.get_type_doc_display }}</div>
+                        <div class="text-muted" style="font-size:.78rem;">{{ document.nom_fichier }} · {{ document.date_upload|date:"d/m/Y" }}</div>
+                    </div>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    {% if document.verifie %}
+                        <span class="sd-badge-verifie">Vérifié</span>
+                    {% else %}
+                        <span class="sd-badge-non-verifie">En attente</span>
+                        <form method="post" action="{% url 'apps_entreprise:supprimer_document' document.pk %}" onsubmit="return confirm('Supprimer ce document ?');">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-link btn-sm p-0 text-danger" title="Supprimer"><i class="bi bi-trash"></i></button>
+                        </form>
+                    {% endif %}
+                    <a href="{{ document.fichier.url }}" target="_blank" class="btn btn-link btn-sm p-0" title="Voir"><i class="bi bi-box-arrow-up-right"></i></a>
+                </div>
+            </div>
+        {% endfor %}
+    {% else %}
+        <p class="text-muted small mb-0">Aucun document envoyé pour le moment.</p>
+    {% endif %}
+</div>
+
+<!-- ═══════════════════ MODAL — Nouveau document ═══════════════════ -->
+<div class="modal fade" id="modalNouveauDocument" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold" style="color: var(--sd-navy);">Ajouter un document</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    {% if form.non_field_errors %}<div class="alert alert-danger py-2 small">{{ form.non_field_errors }}</div>{% endif %}
+                    <div class="mb-3">
+                        <label for="{{ form.type_doc.id_for_label }}" class="form-label">{{ form.type_doc.label }}</label>
+                        {{ form.type_doc }}
+                        {% if form.type_doc.errors %}<div class="text-danger small mt-1">{{ form.type_doc.errors.0 }}</div>{% endif %}
+                    </div>
+                    <div class="mb-1">
+                        <label for="{{ form.fichier.id_for_label }}" class="form-label">{{ form.fichier.label }}</label>
+                        {{ form.fichier }}
+                        {% if form.fichier.errors %}<div class="text-danger small mt-1">{{ form.fichier.errors.0 }}</div>{% endif %}
+                        <div class="form-text">Formats acceptés : PDF, JPG, PNG.</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-sd-outline" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-sd-primary">Envoyer le document</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+{% if form.errors %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        new bootstrap.Modal(document.getElementById('modalNouveauDocument')).show();
+    });
+</script>
+{% endif %}
+{% endblock %}

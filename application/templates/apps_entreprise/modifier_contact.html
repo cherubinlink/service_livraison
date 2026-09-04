@@ -1,0 +1,102 @@
+{% extends 'navigateur/base_dashboard.html' %}
+
+{% block title %}Modifier {{ contact.nom }} – SwiftDrop{% endblock %}
+{% block page_title %}Modifier le contact{% endblock %}
+{% block user_initiales %}{{ entreprise.nom_affichage|slice:":2"|upper }}{% endblock %}
+{% block user_nom %}{{ entreprise.nom_affichage }}{% endblock %}
+{% block user_role %}Entreprise{% endblock %}
+
+{% block sidebar_menu %}
+    <div class="sd-nav-section">Général</div>
+    <a href="{% url 'apps_entreprise:dashboard' %}" class="sd-nav-link"><i class="bi bi-grid-1x2"></i>Tableau de bord</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-chat-dots"></i>Messagerie</a>
+
+    <div class="sd-nav-section">Mon entreprise</div>
+    <a href="{% url 'apps_entreprise:modifier_profil' %}" class="sd-nav-link"><i class="bi bi-building-gear"></i>Mon profil</a>
+    <a href="{% url 'apps_entreprise:mes_documents' %}" class="sd-nav-link"><i class="bi bi-file-earmark-text"></i>Mes documents</a>
+    <a href="{% url 'apps_entreprise:mes_contacts' %}" class="sd-nav-link active"><i class="bi bi-person-lines-fill"></i>Mes contacts</a>
+    <a href="{% url 'apps_entreprise:mes_frais_gardiennage' %}" class="sd-nav-link"><i class="bi bi-shield-lock"></i>Frais de gardiennage</a>
+
+    <div class="sd-nav-section">Activité</div>
+    <a href="#" class="sd-nav-link"><i class="bi bi-boxes"></i>Mes produits</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-box-seam"></i>Mes livraisons</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-cash-stack"></i>Mes paiements</a>
+{% endblock %}
+
+{% block extra_css %}
+    .sd-form-card {
+        background: #fff;
+        border: 1px solid #EDEFF4;
+        border-radius: 16px;
+        padding: 2rem;
+        max-width: 560px;
+    }
+    .sd-form-card .form-label { font-weight: 600; color: var(--sd-navy); font-size: .9rem; }
+    .sd-form-card .form-control,
+    .sd-form-card .form-select {
+        border-radius: 10px; padding: .6rem .85rem; border: 1.5px solid #EDEFF4;
+    }
+    .sd-form-card .form-control:focus,
+    .sd-form-card .form-select:focus {
+        border-color: var(--sd-orange); box-shadow: 0 0 0 .2rem rgba(255,107,53,0.15);
+    }
+    .sd-back-link { color: var(--sd-gris); font-size: .88rem; }
+    .sd-back-link:hover { color: var(--sd-orange); }
+{% endblock %}
+
+{% block dashboard_content %}
+
+<a href="{% url 'apps_entreprise:mes_contacts' %}" class="sd-back-link d-inline-flex align-items-center gap-1 mb-3">
+    <i class="bi bi-arrow-left"></i> Retour à mes contacts
+</a>
+
+<div class="sd-form-card">
+    <h5 class="fw-bold mb-1" style="color: var(--sd-navy);">Modifier — {{ contact.nom }}</h5>
+    <p class="text-muted small mb-4">Mettez à jour les informations de ce contact.</p>
+
+    {% if form.non_field_errors %}
+        <div class="alert alert-danger">
+            {% for erreur in form.non_field_errors %}{{ erreur }}{% endfor %}
+        </div>
+    {% endif %}
+
+    <form method="post" novalidate>
+        {% csrf_token %}
+
+        <div class="mb-3">
+            <label for="{{ form.type_contact.id_for_label }}" class="form-label">{{ form.type_contact.label }}</label>
+            {{ form.type_contact }}
+            {% if form.type_contact.errors %}<div class="text-danger small mt-1">{{ form.type_contact.errors.0 }}</div>{% endif %}
+        </div>
+
+        <div class="mb-3">
+            <label for="{{ form.nom.id_for_label }}" class="form-label">{{ form.nom.label }}</label>
+            {{ form.nom }}
+            {% if form.nom.errors %}<div class="text-danger small mt-1">{{ form.nom.errors.0 }}</div>{% endif %}
+        </div>
+
+        <div class="mb-3">
+            <label for="{{ form.telephone.id_for_label }}" class="form-label">{{ form.telephone.label }}</label>
+            {{ form.telephone }}
+            {% if form.telephone.errors %}<div class="text-danger small mt-1">{{ form.telephone.errors.0 }}</div>{% endif %}
+        </div>
+
+        <div class="mb-3">
+            <label for="{{ form.email.id_for_label }}" class="form-label">{{ form.email.label }}</label>
+            {{ form.email }}
+            {% if form.email.errors %}<div class="text-danger small mt-1">{{ form.email.errors.0 }}</div>{% endif %}
+        </div>
+
+        <div class="mb-4 form-check">
+            {{ form.est_principal }}
+            <label class="form-check-label" for="{{ form.est_principal.id_for_label }}">{{ form.est_principal.label }}</label>
+        </div>
+
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-sd-primary px-4"><i class="bi bi-check2 me-1"></i>Enregistrer</button>
+            <a href="{% url 'apps_entreprise:mes_contacts' %}" class="btn btn-sd-outline px-4">Annuler</a>
+        </div>
+    </form>
+</div>
+
+{% endblock %}

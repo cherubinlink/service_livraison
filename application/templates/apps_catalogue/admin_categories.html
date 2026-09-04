@@ -1,0 +1,256 @@
+{% extends 'navigateur/base_dashboard.html' %}
+
+{% block title %}Catégories – Administration SwiftDrop{% endblock %}
+{% block page_title %}Catégories{% endblock %}
+{% block user_initiales %}AD{% endblock %}
+{% block user_nom %}Administration{% endblock %}
+{% block user_role %}Administrateur{% endblock %}
+
+{% block sidebar_menu %}
+    <div class="sd-nav-section">Général</div>
+    <a href="{% url 'apps_core:dashboard_admin' %}" class="sd-nav-link"><i class="bi bi-grid-1x2"></i>Tableau de bord</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-chat-dots"></i>Messagerie</a>
+
+    <div class="sd-nav-section">Acteurs</div>
+    <a href="{% url 'apps_entreprise:admin_liste_entreprises' %}" class="sd-nav-link"><i class="bi bi-building"></i>Entreprises</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-bicycle"></i>Livreurs</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-person-heart"></i>Clients</a>
+
+    <div class="sd-nav-section">Catalogue</div>
+    <a href="{% url 'apps_catalogue:admin_liste_produits' %}" class="sd-nav-link"><i class="bi bi-boxes"></i>Produits</a>
+    <a href="{% url 'apps_catalogue:admin_liste_categories' %}" class="sd-nav-link active"><i class="bi bi-tags"></i>Catégories</a>
+    <a href="{% url 'apps_entreprise:admin_liste_entrepots' %}" class="sd-nav-link"><i class="bi bi-building-gear"></i>Entrepôts</a>
+
+    <div class="sd-nav-section">Opérations</div>
+    <a href="#" class="sd-nav-link"><i class="bi bi-box-seam"></i>Livraisons B2B</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-signpost-2"></i>Livraisons directes</a>
+
+    <div class="sd-nav-section">Système</div>
+    <a href="{% url 'apps_core:configuration_geographie' %}" class="sd-nav-link"><i class="bi bi-geo"></i>Zones géographiques</a>
+    <a href="{% url 'apps_core:gerer_coefficients_vehicule' %}" class="sd-nav-link"><i class="bi bi-truck-front"></i>Coefficients véhicule</a>
+{% endblock %}
+
+{% block extra_css %}
+    .sd-cat-item { border: 1px solid #EDEFF4; border-radius: 12px; margin-bottom: .6rem; }
+    .sd-cat-header { display: flex; justify-content: space-between; align-items: center; padding: .85rem 1rem; }
+    .sd-cat-icon {
+        width: 34px; height: 34px; border-radius: 8px;
+        background: rgba(255,107,53,0.12); color: var(--sd-orange);
+        display: flex; align-items: center; justify-content: center;
+    }
+    .sd-cat-sous { padding: 0 1rem 1rem 3.2rem; }
+    .sd-cat-sous-item { display: flex; justify-content: space-between; align-items: center; padding: .5rem 0; border-bottom: 1px dashed #EDEFF4; }
+    .sd-cat-sous-item:last-child { border-bottom: none; }
+    .sd-badge-inactif { background: #F1F2F6; color: var(--sd-gris); font-size: .7rem; font-weight: 700; padding: .15rem .5rem; border-radius: 50px; }
+    .sd-geo-actions .btn-link { color: var(--sd-gris); text-decoration: none; }
+    .sd-geo-actions .btn-link:hover { color: var(--sd-orange); }
+    .modal .form-label { font-weight: 600; color: var(--sd-navy); font-size: .85rem; }
+    .modal .form-control, .modal .form-select { border-radius: 10px; padding: .55rem .8rem; border: 1.5px solid #EDEFF4; }
+{% endblock %}
+
+{% block dashboard_content %}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <p class="text-muted small mb-0">Catégories et sous-catégories utilisées pour classer les produits.</p>
+    <button type="button" class="btn btn-sd-primary btn-sm" id="btnNouvelleCategorie" data-bs-toggle="modal" data-bs-target="#modalCategorie">
+        <i class="bi bi-plus-lg me-1"></i>Nouvelle catégorie
+    </button>
+</div>
+
+<div class="sd-panel">
+    {% if categories %}
+        {% for categorie in categories %}
+            <div class="sd-cat-item">
+                <div class="sd-cat-header">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="sd-cat-icon"><i class="bi {{ categorie.icone|default:'bi-folder' }}"></i></span>
+                        <span class="fw-semibold">{{ categorie.nom }}</span>
+                        {% if not categorie.est_active %}<span class="sd-badge-inactif">Inactive</span>{% endif %}
+                    </div>
+                    <div class="sd-geo-actions d-flex gap-2">
+                        <button type="button" class="btn btn-link btn-sm p-0 btn-editer-categorie"
+                                data-id="{{ categorie.pk }}" data-parent="" data-nom="{{ categorie.nom }}"
+                                data-slug="{{ categorie.slug }}" data-icone="{{ categorie.icone }}"
+                                data-couleur="{{ categorie.couleur|default:'#FF6B35' }}"
+                                data-description="{{ categorie.description }}" data-ordre="{{ categorie.ordre }}"
+                                data-active="{{ categorie.est_active|yesno:'1,0' }}"
+                                data-bs-toggle="modal" data-bs-target="#modalCategorie" title="Modifier">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                        <button type="button" class="btn btn-link btn-sm p-0 btn-nouvelle-sous-categorie"
+                                data-parent-id="{{ categorie.pk }}" data-parent-nom="{{ categorie.nom }}"
+                                data-bs-toggle="modal" data-bs-target="#modalCategorie" title="Ajouter une sous-catégorie">
+                            <i class="bi bi-plus-lg"></i>
+                        </button>
+                        <form method="post" action="{% url 'apps_catalogue:admin_toggle_categorie' categorie.pk %}" class="d-inline">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-link btn-sm p-0" title="Activer/Désactiver"><i class="bi bi-power"></i></button>
+                        </form>
+                        <form method="post" action="{% url 'apps_catalogue:admin_supprimer_categorie' categorie.pk %}" class="d-inline" onsubmit="return confirm('Supprimer {{ categorie.nom|escapejs }} ?');">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-link btn-sm p-0 text-danger" title="Supprimer"><i class="bi bi-trash"></i></button>
+                        </form>
+                    </div>
+                </div>
+
+                {% if categorie.sous_categories.all %}
+                    <div class="sd-cat-sous">
+                        {% for sous in categorie.sous_categories.all %}
+                            <div class="sd-cat-sous-item">
+                                <div class="d-flex align-items-center gap-2">
+                                    <i class="bi bi-arrow-return-right text-muted"></i>
+                                    <span class="small fw-semibold">{{ sous.nom }}</span>
+                                    {% if not sous.est_active %}<span class="sd-badge-inactif">Inactive</span>{% endif %}
+                                </div>
+                                <div class="sd-geo-actions d-flex gap-2">
+                                    <button type="button" class="btn btn-link btn-sm p-0 btn-editer-categorie"
+                                            data-id="{{ sous.pk }}" data-parent="{{ categorie.pk }}" data-nom="{{ sous.nom }}"
+                                            data-slug="{{ sous.slug }}" data-icone="{{ sous.icone }}"
+                                            data-couleur="{{ sous.couleur|default:'#FF6B35' }}"
+                                            data-description="{{ sous.description }}" data-ordre="{{ sous.ordre }}"
+                                            data-active="{{ sous.est_active|yesno:'1,0' }}"
+                                            data-bs-toggle="modal" data-bs-target="#modalCategorie" title="Modifier">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+                                    <form method="post" action="{% url 'apps_catalogue:admin_toggle_categorie' sous.pk %}" class="d-inline">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-link btn-sm p-0" title="Activer/Désactiver"><i class="bi bi-power"></i></button>
+                                    </form>
+                                    <form method="post" action="{% url 'apps_catalogue:admin_supprimer_categorie' sous.pk %}" class="d-inline" onsubmit="return confirm('Supprimer {{ sous.nom|escapejs }} ?');">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-link btn-sm p-0 text-danger" title="Supprimer"><i class="bi bi-trash"></i></button>
+                                    </form>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+        {% endfor %}
+    {% else %}
+        <p class="text-muted small mb-0">Aucune catégorie créée pour le moment.</p>
+    {% endif %}
+</div>
+
+<!-- ═══════════════════ MODAL — Créer / Modifier ═══════════════════ -->
+<div class="modal fade" id="modalCategorie" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" id="formCategorie" action="{% url 'apps_catalogue:admin_liste_categories' %}">
+                {% csrf_token %}
+                <input type="hidden" name="categorie_id" id="idCategorieId" value="">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold" id="titreModalCategorie" style="color: var(--sd-navy);">Nouvelle catégorie</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    {% if form.non_field_errors %}<div class="alert alert-danger py-2 small">{{ form.non_field_errors }}</div>{% endif %}
+                    <div class="mb-3">
+                        <label for="{{ form.parent.id_for_label }}" class="form-label">{{ form.parent.label }}</label>
+                        {{ form.parent }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="{{ form.nom.id_for_label }}" class="form-label">{{ form.nom.label }}</label>
+                        {{ form.nom }}
+                        {% if form.nom.errors %}<div class="text-danger small mt-1">{{ form.nom.errors.0 }}</div>{% endif %}
+                    </div>
+                    <div class="mb-3">
+                        <label for="{{ form.slug.id_for_label }}" class="form-label">{{ form.slug.label }}</label>
+                        {{ form.slug }}
+                        {% if form.slug.errors %}<div class="text-danger small mt-1">{{ form.slug.errors.0 }}</div>{% endif %}
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-8">
+                            <label for="{{ form.icone.id_for_label }}" class="form-label">{{ form.icone.label }}</label>
+                            {{ form.icone }}
+                        </div>
+                        <div class="col-4">
+                            <label for="{{ form.couleur.id_for_label }}" class="form-label">{{ form.couleur.label }}</label>
+                            {{ form.couleur }}
+                        </div>
+                    </div>
+                    <div class="mb-3 mt-3">
+                        <label for="{{ form.description.id_for_label }}" class="form-label">{{ form.description.label }}</label>
+                        {{ form.description }}
+                    </div>
+                    <div class="row g-3 align-items-center">
+                        <div class="col-6">
+                            <label for="{{ form.ordre.id_for_label }}" class="form-label">{{ form.ordre.label }}</label>
+                            {{ form.ordre }}
+                        </div>
+                        <div class="col-6 pt-4">
+                            <div class="form-check">
+                                {{ form.est_active }}
+                                <label class="form-check-label" for="{{ form.est_active.id_for_label }}">{{ form.est_active.label }}</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-sd-outline" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-sd-primary" id="btnSubmitCategorie">Ajouter la catégorie</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const modalEl = document.getElementById('modalCategorie');
+        const idInput = document.getElementById('idCategorieId');
+        const titre = document.getElementById('titreModalCategorie');
+        const btnSubmit = document.getElementById('btnSubmitCategorie');
+        const champParent = modalEl.querySelector('select[name="parent"]');
+        const champNom = modalEl.querySelector('input[name="nom"]');
+        const champSlug = modalEl.querySelector('input[name="slug"]');
+        const champIcone = modalEl.querySelector('input[name="icone"]');
+        const champCouleur = modalEl.querySelector('input[name="couleur"]');
+        const champDescription = modalEl.querySelector('textarea[name="description"]');
+        const champOrdre = modalEl.querySelector('input[name="ordre"]');
+        const champActive = modalEl.querySelector('input[name="est_active"]');
+
+        function reinitialiserFormulaire() {
+            idInput.value = '';
+            titre.textContent = 'Nouvelle catégorie';
+            btnSubmit.textContent = 'Ajouter la catégorie';
+            champParent.value = '';
+            champNom.value = ''; champSlug.value = ''; champIcone.value = '';
+            champCouleur.value = '#FF6B35'; champDescription.value = ''; champOrdre.value = '0';
+            champActive.checked = true;
+        }
+
+        // "+ Nouvelle catégorie" en haut de page
+        document.getElementById('btnNouvelleCategorie').addEventListener('click', reinitialiserFormulaire);
+
+        // "+" sur une catégorie parent → nouvelle sous-catégorie pré-rattachée
+        document.querySelectorAll('.btn-nouvelle-sous-categorie').forEach(function (bouton) {
+            bouton.addEventListener('click', function () {
+                reinitialiserFormulaire();
+                champParent.value = bouton.dataset.parentId;
+                titre.textContent = 'Nouvelle sous-catégorie de ' + bouton.dataset.parentNom;
+            });
+        });
+
+        // Crayon "Modifier" → pré-remplissage complet + POST vers la même vue avec categorie_id
+        document.querySelectorAll('.btn-editer-categorie').forEach(function (bouton) {
+            bouton.addEventListener('click', function () {
+                idInput.value = bouton.dataset.id;
+                titre.textContent = 'Modifier — ' + bouton.dataset.nom;
+                btnSubmit.textContent = 'Enregistrer les modifications';
+                champParent.value = bouton.dataset.parent || '';
+                champNom.value = bouton.dataset.nom;
+                champSlug.value = bouton.dataset.slug;
+                champIcone.value = bouton.dataset.icone;
+                champCouleur.value = bouton.dataset.couleur;
+                champDescription.value = bouton.dataset.description;
+                champOrdre.value = bouton.dataset.ordre;
+                champActive.checked = bouton.dataset.active === '1';
+            });
+        });
+    });
+</script>
+{% endblock %}

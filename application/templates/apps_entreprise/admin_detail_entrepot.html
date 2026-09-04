@@ -1,0 +1,161 @@
+{% extends 'navigateur/base_dashboard.html' %}
+
+{% block title %}{{ entrepot.nom }} – Administration SwiftDrop{% endblock %}
+{% block page_title %}Fiche entrepôt{% endblock %}
+{% block user_initiales %}AD{% endblock %}
+{% block user_nom %}Administration{% endblock %}
+{% block user_role %}Administrateur{% endblock %}
+
+{% block sidebar_menu %}
+    <div class="sd-nav-section">Général</div>
+    <a href="{% url 'apps_core:dashboard_admin' %}" class="sd-nav-link"><i class="bi bi-grid-1x2"></i>Tableau de bord</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-chat-dots"></i>Messagerie</a>
+
+    <div class="sd-nav-section">Acteurs</div>
+    <a href="{% url 'apps_entreprise:admin_liste_entreprises' %}" class="sd-nav-link"><i class="bi bi-building"></i>Entreprises</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-bicycle"></i>Livreurs</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-person-heart"></i>Clients</a>
+
+    <div class="sd-nav-section">Opérations</div>
+    <a href="#" class="sd-nav-link"><i class="bi bi-box-seam"></i>Livraisons B2B</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-signpost-2"></i>Livraisons directes</a>
+    <a href="{% url 'apps_entreprise:admin_liste_entrepots' %}" class="sd-nav-link active"><i class="bi bi-building-gear"></i>Entrepôts</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-boxes"></i>Produits</a>
+
+    <div class="sd-nav-section">Finance</div>
+    <a href="#" class="sd-nav-link"><i class="bi bi-cash-stack"></i>Lots de paiement</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-gift"></i>Bonus</a>
+
+    <div class="sd-nav-section">Système</div>
+    <a href="{% url 'apps_core:configuration_geographie' %}" class="sd-nav-link"><i class="bi bi-geo"></i>Zones géographiques</a>
+    <a href="{% url 'apps_core:gerer_coefficients_vehicule' %}" class="sd-nav-link"><i class="bi bi-truck-front"></i>Coefficients véhicule</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-sliders"></i>Paramètres</a>
+{% endblock %}
+
+{% block extra_css %}
+    .sd-badge-statut { font-size: .72rem; font-weight: 700; padding: .25rem .65rem; border-radius: 50px; }
+    .sd-badge-statut.valide { background: #E5F7EC; color: #1FAA59; }
+    .sd-badge-statut.inactif { background: #F1F2F6; color: var(--sd-gris); }
+{% endblock %}
+
+{% block dashboard_content %}
+
+{% if messages %}
+    {% for message in messages %}
+        <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    {% endfor %}
+{% endif %}
+
+<!-- ═══════════════════ Infos entrepôt ═══════════════════ -->
+<div class="sd-panel mb-3">
+    <div class="d-flex justify-content-between align-items-start">
+        <div>
+            <div class="sd-panel-title mb-1"><i class="bi bi-building-gear me-2"></i>{{ entrepot.nom }}</div>
+            <div class="text-muted small">
+                {{ entrepot.code }} — {{ entrepot.ville.nom|default:"—" }}
+                {% if entrepot.zone %} / {{ entrepot.zone.nom }}{% endif %}
+                {% if entrepot.responsable %} — Responsable : {{ entrepot.responsable }}{% endif %}
+            </div>
+            <div class="mt-2">
+                {% if entrepot.est_actif %}
+                    <span class="sd-badge-statut valide">Actif</span>
+                {% else %}
+                    <span class="sd-badge-statut inactif">Inactif</span>
+                {% endif %}
+            </div>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'apps_entreprise:admin_modifier_entrepot' pk=entrepot.pk %}" class="btn btn-sm btn-sd-outline">
+                <i class="bi bi-pencil"></i> Modifier
+            </a>
+            <form method="post" action="{% url 'apps_entreprise:admin_toggle_actif_entrepot' pk=entrepot.pk %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-sm btn-sd-outline">
+                    <i class="bi {% if entrepot.est_actif %}bi-toggle-on text-success{% else %}bi-toggle-off text-muted{% endif %}"></i>
+                    {% if entrepot.est_actif %}Désactiver{% else %}Activer{% endif %}
+                </button>
+            </form>
+            <form method="post" action="{% url 'apps_entreprise:admin_supprimer_entrepot' pk=entrepot.pk %}"
+                  onsubmit="return confirm('Supprimer l\'entrepôt « {{ entrepot.nom|escapejs }} » ? Cette action est irréversible.');">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-sm btn-sd-outline text-danger"><i class="bi bi-trash"></i> Supprimer</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+    <!-- Formulaire d'affectation -->
+    <div class="col-lg-4">
+        <div class="sd-panel h-100">
+            <div class="sd-panel-title mb-3"><i class="bi bi-building-add me-2"></i>Affecter une entreprise</div>
+            <form method="post">
+                {% csrf_token %}
+                {% for field in form %}
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.errors %}<div class="text-danger small mt-1">{{ field.errors|join:", " }}</div>{% endif %}
+                    </div>
+                {% endfor %}
+                {% if form.non_field_errors %}
+                    <div class="text-danger small mb-3">{{ form.non_field_errors|join:", " }}</div>
+                {% endif %}
+                <button type="submit" class="btn btn-sd-primary w-100">Affecter</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Liste des affectations -->
+    <div class="col-lg-8">
+        <div class="sd-panel h-100">
+            <div class="sd-panel-title mb-3"><i class="bi bi-list-ul me-2"></i>Entreprises affectées</div>
+            {% if affectations %}
+                <div class="table-responsive">
+                    <table class="table sd-table align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Entreprise</th>
+                                <th>Affecté par</th>
+                                <th>Date d'affectation</th>
+                                <th>Statut</th>
+                                <th class="text-end">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for affectation in affectations %}
+                                <tr>
+                                    <td class="fw-semibold">{{ affectation.entreprise.nom_affichage }}</td>
+                                    <td class="text-muted small">{{ affectation.affecte_par|default:"—" }}</td>
+                                    <td class="text-muted small">{{ affectation.date_affectation|date:"d/m/Y" }}</td>
+                                    <td>
+                                        {% if affectation.est_active %}
+                                            <span class="sd-badge-statut valide">Active</span>
+                                        {% else %}
+                                            <span class="sd-badge-statut inactif">Désactivée</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-end">
+                                        <form method="post" action="{% url 'apps_entreprise:admin_toggle_affectation' pk=affectation.pk %}">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-sm btn-light">
+                                                <i class="bi {% if affectation.est_active %}bi-toggle-on text-success{% else %}bi-toggle-off text-muted{% endif %}"></i>
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p class="text-muted small mb-0">Aucune entreprise affectée à cet entrepôt pour le moment.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% endblock %}

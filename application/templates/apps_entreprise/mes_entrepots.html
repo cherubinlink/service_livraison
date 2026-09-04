@@ -1,0 +1,83 @@
+{% extends 'navigateur/base_dashboard.html' %}
+
+{% block title %}Mes entrepôts – SwiftDrop{% endblock %}
+{% block page_title %}Mes entrepôts{% endblock %}
+{% block user_initiales %}{{ entreprise.nom_affichage|slice:":2"|upper }}{% endblock %}
+{% block user_nom %}{{ entreprise.nom_affichage }}{% endblock %}
+{% block user_role %}Entreprise{% endblock %}
+
+{% block sidebar_menu %}
+    <div class="sd-nav-section">Général</div>
+    <a href="{% url 'apps_entreprise:dashboard' %}" class="sd-nav-link"><i class="bi bi-grid-1x2"></i>Tableau de bord</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-chat-dots"></i>Messagerie</a>
+
+    <div class="sd-nav-section">Mon activité</div>
+    <a href="#" class="sd-nav-link"><i class="bi bi-boxes"></i>Mes produits</a>
+    <a href="{% url 'apps_entreprise:mes_entrepots' %}" class="sd-nav-link active"><i class="bi bi-building-gear"></i>Mes entrepôts</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-box-seam"></i>Mes livraisons</a>
+
+    <div class="sd-nav-section">Finance</div>
+    <a href="#" class="sd-nav-link"><i class="bi bi-cash-stack"></i>Mes paiements</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-gift"></i>Bonus</a>
+
+    <div class="sd-nav-section">Compte</div>
+    <a href="#" class="sd-nav-link"><i class="bi bi-person-gear"></i>Profil entreprise</a>
+{% endblock %}
+
+{% block extra_css %}
+    .sd-entrepot-card {
+        border: 1px solid #EDEFF4;
+        border-radius: 14px;
+        height: 100%;
+    }
+    .sd-entrepot-icon {
+        width: 48px; height: 48px;
+        border-radius: 12px;
+        background: rgba(255,107,53,0.12);
+        color: var(--sd-orange);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.3rem;
+    }
+{% endblock %}
+
+{% block dashboard_content %}
+
+<div class="sd-panel mb-3">
+    <div class="d-flex align-items-center gap-2">
+        <i class="bi bi-info-circle text-muted"></i>
+        <p class="text-muted small mb-0">
+            Ces entrepôts vous ont été affectés par l'administration SwiftDrop en fonction de votre zone
+            d'activité. Vous ne pouvez pas en demander l'ajout ou le retrait vous-même — contactez
+            l'administration via la messagerie si votre situation a changé.
+        </p>
+    </div>
+</div>
+
+{% if affectations %}
+    <div class="row g-3">
+        {% for affectation in affectations %}
+            <div class="col-md-6 col-lg-4">
+                <div class="sd-entrepot-card p-3">
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        <div class="sd-entrepot-icon"><i class="bi bi-building-gear"></i></div>
+                        <div>
+                            <div class="fw-semibold">{{ affectation.entrepot.nom }}</div>
+                            <div class="text-muted small">{{ affectation.entrepot.code }}</div>
+                        </div>
+                    </div>
+                    <ul class="list-unstyled small text-muted mb-0">
+                        <li class="mb-1"><i class="bi bi-geo-alt me-1"></i>{{ affectation.entrepot.ville.nom|default:"—" }}</li>
+                        <li class="mb-0"><i class="bi bi-calendar-check me-1"></i>Affecté depuis le {{ affectation.date_affectation|date:"d/m/Y" }}</li>
+                    </ul>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="sd-panel text-center py-5">
+        <i class="bi bi-building-gear text-muted" style="font-size: 2.5rem;"></i>
+        <p class="text-muted mt-3 mb-0">Aucun entrepôt ne vous a encore été affecté.</p>
+    </div>
+{% endif %}
+
+{% endblock %}

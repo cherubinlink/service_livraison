@@ -1,0 +1,743 @@
+{% extends 'navigateur/base_dashboard.html' %}
+
+{% block title %}Détail livreur – Administration SwiftDrop{% endblock %}
+{% block page_title %}Détail du livreur{% endblock %}
+{% block user_initiales %}AD{% endblock %}
+{% block user_nom %}Administration{% endblock %}
+{% block user_role %}Administrateur{% endblock %}
+
+{% block sidebar_menu %}
+
+```
+<div class="sd-nav-section">Général</div>
+<a href="{% url 'apps_core:dashboard_admin' %}" class="sd-nav-link">
+    <i class="bi bi-grid-1x2"></i>Tableau de bord
+</a>
+<a href="#" class="sd-nav-link">
+    <i class="bi bi-chat-dots"></i>Messagerie
+</a>
+
+<div class="sd-nav-section">Acteurs</div>
+<a href="{% url 'apps_entreprise:admin_liste_entreprises' %}" class="sd-nav-link">
+    <i class="bi bi-building"></i>Entreprises
+</a>
+<a href="{% url 'apps_livreur:admin_liste_livreurs' %}" class="sd-nav-link active">
+    <i class="bi bi-bicycle"></i>Livreurs
+</a>
+<a href="#" class="sd-nav-link">
+    <i class="bi bi-person-heart"></i>Clients
+</a>
+
+<div class="sd-nav-section">Opérations</div>
+<a href="#" class="sd-nav-link">
+    <i class="bi bi-box-seam"></i>Livraisons B2B
+</a>
+<a href="#" class="sd-nav-link">
+    <i class="bi bi-signpost-2"></i>Livraisons directes
+</a>
+<a href="{% url 'apps_entreprise:admin_liste_entrepots' %}" class="sd-nav-link">
+    <i class="bi bi-building-gear"></i>Entrepôts
+</a>
+<a href="#" class="sd-nav-link">
+    <i class="bi bi-boxes"></i>Produits
+</a>
+
+<div class="sd-nav-section">Finance</div>
+<a href="#" class="sd-nav-link">
+    <i class="bi bi-cash-stack"></i>Lots de paiement
+</a>
+<a href="#" class="sd-nav-link">
+    <i class="bi bi-gift"></i>Bonus
+</a>
+
+<div class="sd-nav-section">Système</div>
+<a href="{% url 'apps_core:configuration_geographie' %}" class="sd-nav-link">
+    <i class="bi bi-geo"></i>Zones géographiques
+</a>
+<a href="{% url 'apps_core:gerer_coefficients_vehicule' %}" class="sd-nav-link">
+    <i class="bi bi-truck-front"></i>Coefficients véhicule
+</a>
+<a href="#" class="sd-nav-link">
+    <i class="bi bi-sliders"></i>Paramètres
+</a>
+```
+
+{% endblock %}
+
+{% block extra_css %}
+
+```
+.sd-detail-header {
+    background: #fff;
+    border: 1px solid #EDEFF4;
+    border-radius: 16px;
+    padding: 1.25rem;
+}
+
+.sd-avatar-livreur {
+    width: 64px;
+    height: 64px;
+    border-radius: 16px;
+    background: rgba(255,107,53,.12);
+    color: var(--sd-orange);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.45rem;
+    font-weight: 800;
+    flex-shrink: 0;
+}
+
+.sd-detail-title {
+    color: var(--sd-navy);
+    font-size: 1.15rem;
+    font-weight: 800;
+    margin-bottom: .15rem;
+}
+
+.sd-detail-subtitle {
+    color: var(--sd-gris);
+    font-size: .82rem;
+}
+
+.sd-badge-statut {
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    font-size: .72rem;
+    font-weight: 700;
+    padding: .3rem .7rem;
+    border-radius: 50px;
+}
+
+.sd-badge-statut.valide {
+    background: #E5F7EC;
+    color: #1FAA59;
+}
+
+.sd-badge-statut.attente {
+    background: #FFF4E5;
+    color: #E88A00;
+}
+
+.sd-badge-statut.refuse {
+    background: #FDEBEA;
+    color: #E23D32;
+}
+
+.sd-badge-statut.inactif {
+    background: #F1F2F6;
+    color: var(--sd-gris);
+}
+
+.sd-info-card {
+    background: #fff;
+    border: 1px solid #EDEFF4;
+    border-radius: 14px;
+    padding: 1.15rem;
+    height: 100%;
+}
+
+.sd-info-title {
+    font-size: .82rem;
+    font-weight: 800;
+    color: var(--sd-navy);
+    text-transform: uppercase;
+    letter-spacing: .03em;
+    margin-bottom: 1rem;
+}
+
+.sd-info-item {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: .65rem 0;
+    border-bottom: 1px solid #F0F1F5;
+    font-size: .82rem;
+}
+
+.sd-info-item:last-child {
+    border-bottom: 0;
+    padding-bottom: 0;
+}
+
+.sd-info-label {
+    color: var(--sd-gris);
+}
+
+.sd-info-value {
+    color: var(--sd-navy);
+    font-weight: 600;
+    text-align: right;
+}
+
+.sd-stat-card {
+    background: #fff;
+    border: 1px solid #EDEFF4;
+    border-radius: 14px;
+    padding: 1rem;
+    height: 100%;
+}
+
+.sd-stat-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: #F5F6F9;
+    color: var(--sd-orange);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: .65rem;
+}
+
+.sd-stat-value {
+    color: var(--sd-navy);
+    font-size: 1.15rem;
+    font-weight: 800;
+    line-height: 1.2;
+}
+
+.sd-stat-label {
+    color: var(--sd-gris);
+    font-size: .72rem;
+    margin-top: .2rem;
+}
+
+.sd-action-card {
+    background: #fff;
+    border: 1px solid #EDEFF4;
+    border-radius: 14px;
+    padding: 1rem;
+}
+
+.sd-position-item {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    padding: .75rem 0;
+    border-bottom: 1px solid #F0F1F5;
+}
+
+.sd-position-item:last-child {
+    border-bottom: 0;
+}
+
+.sd-position-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 9px;
+    background: #F5F6F9;
+    color: var(--sd-orange);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.sd-position-coords {
+    font-size: .78rem;
+    font-weight: 700;
+    color: var(--sd-navy);
+}
+
+.sd-position-date {
+    font-size: .7rem;
+    color: var(--sd-gris);
+}
+
+.sd-empty {
+    padding: 1.5rem 0;
+    text-align: center;
+    color: var(--sd-gris);
+    font-size: .8rem;
+}
+```
+
+{% endblock %}
+
+{% block dashboard_content %}
+
+<!-- ═══════════════════════════════════════════════════════════════
+     EN-TÊTE DU LIVREUR
+     ═══════════════════════════════════════════════════════════════ -->
+
+<div class="sd-detail-header mb-3">
+
+```
+<div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+
+    <div class="d-flex align-items-center gap-3">
+
+        <div class="sd-avatar-livreur">
+            <i class="bi bi-bicycle"></i>
+        </div>
+
+        <div>
+            <div class="sd-detail-title">
+                {{ livreur.utilisateur.nom }}
+            </div>
+
+            <div class="sd-detail-subtitle">
+                {{ livreur.utilisateur.email }}
+            </div>
+
+            <div class="mt-2">
+
+                {% if livreur.statut == 'ACTIF' %}
+                    <span class="sd-badge-statut valide">
+                        <i class="bi bi-circle-fill"></i>
+                        Actif
+                    </span>
+
+                {% elif livreur.statut == 'EN_MISSION' %}
+                    <span class="sd-badge-statut attente">
+                        <i class="bi bi-truck"></i>
+                        En mission
+                    </span>
+
+                {% elif livreur.statut == 'PAUSE' %}
+                    <span class="sd-badge-statut attente">
+                        <i class="bi bi-pause-circle-fill"></i>
+                        En pause
+                    </span>
+
+                {% elif livreur.statut == 'SUSPENDU' %}
+                    <span class="sd-badge-statut refuse">
+                        <i class="bi bi-slash-circle-fill"></i>
+                        Suspendu
+                    </span>
+
+                {% else %}
+                    <span class="sd-badge-statut inactif">
+                        <i class="bi bi-circle"></i>
+                        Hors ligne
+                    </span>
+                {% endif %}
+
+            </div>
+        </div>
+
+    </div>
+
+    <div class="d-flex gap-2">
+
+        <a href="{% url 'apps_livreur:admin_liste_livreurs' %}"
+           class="btn btn-sm btn-sd-outline">
+            <i class="bi bi-arrow-left me-1"></i>
+            Retour
+        </a>
+
+    </div>
+
+</div>
+```
+
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     STATISTIQUES RAPIDES
+     ═══════════════════════════════════════════════════════════════ -->
+
+<div class="row g-3 mb-3">
+
+```
+<div class="col-md-4">
+    <div class="sd-stat-card">
+
+        <div class="sd-stat-icon">
+            <i class="bi bi-star-fill"></i>
+        </div>
+
+        <div class="sd-stat-value">
+            {{ livreur.note_moyenne|default:"—" }}
+        </div>
+
+        <div class="sd-stat-label">
+            Note moyenne
+        </div>
+
+    </div>
+</div>
+
+
+<div class="col-md-4">
+    <div class="sd-stat-card">
+
+        <div class="sd-stat-icon">
+            <i class="bi bi-box-seam"></i>
+        </div>
+
+        <div class="sd-stat-value">
+            {{ livreur.total_livraisons|default:"0" }}
+        </div>
+
+        <div class="sd-stat-label">
+            Total des livraisons
+        </div>
+
+    </div>
+</div>
+
+
+<div class="col-md-4">
+    <div class="sd-stat-card">
+
+        <div class="sd-stat-icon">
+            <i class="bi bi-geo-alt"></i>
+        </div>
+
+        <div class="sd-stat-value">
+            {% if livreur.derniere_position %}
+                {{ livreur.derniere_position|date:"d/m/Y H:i" }}
+            {% else %}
+                —
+            {% endif %}
+        </div>
+
+        <div class="sd-stat-label">
+            Dernière position connue
+        </div>
+
+    </div>
+</div>
+```
+
+</div>
+
+<div class="row g-3">
+
+```
+<!-- ═══════════════════════════════════════════════════════════
+     INFORMATIONS DU LIVREUR
+     ═══════════════════════════════════════════════════════════ -->
+
+<div class="col-lg-6">
+
+    <div class="sd-info-card">
+
+        <div class="sd-info-title">
+            <i class="bi bi-person-vcard me-1"></i>
+            Informations personnelles
+        </div>
+
+        <div class="sd-info-item">
+            <span class="sd-info-label">Nom complet</span>
+            <span class="sd-info-value">
+                {{ livreur.utilisateur.nom }}
+            </span>
+        </div>
+
+        <div class="sd-info-item">
+            <span class="sd-info-label">Email</span>
+            <span class="sd-info-value">
+                {{ livreur.utilisateur.email }}
+            </span>
+        </div>
+
+        <div class="sd-info-item">
+            <span class="sd-info-label">Téléphone</span>
+            <span class="sd-info-value">
+                {{ livreur.utilisateur.telephone|default:"Non renseigné" }}
+            </span>
+        </div>
+
+        <div class="sd-info-item">
+            <span class="sd-info-label">N° CNI</span>
+            <span class="sd-info-value">
+                {{ livreur.numero_cni|default:"Non renseigné" }}
+            </span>
+        </div>
+
+        <div class="sd-info-item">
+            <span class="sd-info-label">Véhicule</span>
+            <span class="sd-info-value">
+                {{ livreur.get_type_vehicule_display }}
+            </span>
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     POSITION ACTUELLE
+     ═══════════════════════════════════════════════════════════ -->
+
+<div class="col-lg-6">
+
+    <div class="sd-info-card">
+
+        <div class="sd-info-title">
+            <i class="bi bi-geo-alt me-1"></i>
+            Position actuelle
+        </div>
+
+        <div class="sd-info-item">
+            <span class="sd-info-label">Latitude</span>
+            <span class="sd-info-value">
+                {{ livreur.latitude_actuelle|default:"—" }}
+            </span>
+        </div>
+
+        <div class="sd-info-item">
+            <span class="sd-info-label">Longitude</span>
+            <span class="sd-info-value">
+                {{ livreur.longitude_actuelle|default:"—" }}
+            </span>
+        </div>
+
+        <div class="sd-info-item">
+            <span class="sd-info-label">Dernière mise à jour</span>
+            <span class="sd-info-value">
+                {% if livreur.derniere_position %}
+                    {{ livreur.derniere_position|date:"d/m/Y à H:i" }}
+                {% else %}
+                    —
+                {% endif %}
+            </span>
+        </div>
+
+        <div class="mt-3">
+
+            {% if livreur.latitude_actuelle and livreur.longitude_actuelle %}
+
+                <a href="https://www.google.com/maps/search/?api=1&query={{ livreur.latitude_actuelle }},{{ livreur.longitude_actuelle }}"
+                   target="_blank"
+                   rel="noopener"
+                   class="btn btn-sm btn-sd-primary w-100">
+                    <i class="bi bi-map me-1"></i>
+                    Voir sur la carte
+                </a>
+
+            {% else %}
+
+                <button type="button"
+                        class="btn btn-sm btn-sd-outline w-100"
+                        disabled>
+                    <i class="bi bi-geo-alt me-1"></i>
+                    Position indisponible
+                </button>
+
+            {% endif %}
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     ACTIONS ADMINISTRATEUR
+     ═══════════════════════════════════════════════════════════ -->
+
+<div class="col-lg-12">
+
+    <div class="sd-action-card">
+
+        <div class="sd-info-title mb-3">
+            <i class="bi bi-shield-check me-1"></i>
+            Actions administrateur
+        </div>
+
+        <div class="d-flex flex-wrap gap-2">
+
+            {% if livreur.statut == 'SUSPENDU' %}
+
+                <form method="post"
+                      action="{% url 'apps_livreur:admin_reactiver_livreur' pk=livreur.pk %}">
+                    {% csrf_token %}
+
+                    <button type="submit"
+                            class="btn btn-sm btn-sd-primary">
+                        <i class="bi bi-person-check me-1"></i>
+                        Réactiver le livreur
+                    </button>
+
+                </form>
+
+            {% else %}
+
+                <form method="post"
+                      action="{% url 'apps_livreur:admin_suspendre_livreur' pk=livreur.pk %}"
+                      onsubmit="return confirm('Voulez-vous vraiment suspendre ce livreur ?');">
+
+                    {% csrf_token %}
+
+                    <button type="submit"
+                            class="btn btn-sm btn-danger">
+                        <i class="bi bi-person-x me-1"></i>
+                        Suspendre le livreur
+                    </button>
+
+                </form>
+
+            {% endif %}
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     LIVRAISONS RÉCENTES
+     ═══════════════════════════════════════════════════════════ -->
+
+<div class="col-lg-7">
+
+    <div class="sd-panel">
+
+        <div class="d-flex align-items-center justify-content-between mb-3">
+
+            <div class="sd-info-title mb-0">
+                <i class="bi bi-box-seam me-1"></i>
+                Livraisons récentes
+            </div>
+
+            <span class="text-muted small">
+                10 dernières
+            </span>
+
+        </div>
+
+
+        {% if livraisons_recentes %}
+
+            <div class="table-responsive">
+
+                <table class="table sd-table align-middle mb-0">
+
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Date</th>
+                            <th>Statut</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        {% for livraison in livraisons_recentes %}
+
+                            <tr>
+
+                                <td class="fw-semibold">
+                                    #{{ livraison.pk }}
+                                </td>
+
+                                <td class="small">
+                                    {{ livraison.date_creation|date:"d/m/Y H:i" }}
+                                </td>
+
+                                <td>
+
+                                    {% if livraison.statut %}
+                                        <span class="sd-badge-statut inactif">
+                                            {{ livraison.get_statut_display|default:livraison.statut }}
+                                        </span>
+                                    {% else %}
+                                        —
+                                    {% endif %}
+
+                                </td>
+
+                            </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        {% else %}
+
+            <div class="sd-empty">
+                <i class="bi bi-box-seam d-block mb-2" style="font-size:1.5rem;"></i>
+                Aucune livraison récente.
+            </div>
+
+        {% endif %}
+
+    </div>
+
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     HISTORIQUE DES POSITIONS
+     ═══════════════════════════════════════════════════════════ -->
+
+<div class="col-lg-5">
+
+    <div class="sd-panel">
+
+        <div class="sd-info-title">
+            <i class="bi bi-clock-history me-1"></i>
+            Dernières positions
+        </div>
+
+
+        {% if dernieres_positions %}
+
+            <div>
+
+                {% for position in dernieres_positions %}
+
+                    <div class="sd-position-item">
+
+                        <div class="sd-position-icon">
+                            <i class="bi bi-geo-alt"></i>
+                        </div>
+
+                        <div class="flex-grow-1">
+
+                            <div class="sd-position-coords">
+                                {{ position.latitude }},
+                                {{ position.longitude }}
+                            </div>
+
+                            <div class="sd-position-date">
+
+                                {% if position.date_creation %}
+                                    {{ position.date_creation|date:"d/m/Y H:i:s" }}
+
+                                {% elif position.date_enregistrement %}
+                                    {{ position.date_enregistrement|date:"d/m/Y H:i:s" }}
+
+                                {% else %}
+                                    Date non disponible
+                                {% endif %}
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                {% endfor %}
+
+            </div>
+
+        {% else %}
+
+            <div class="sd-empty">
+                <i class="bi bi-geo-alt d-block mb-2" style="font-size:1.5rem;"></i>
+                Aucune position enregistrée.
+            </div>
+
+        {% endif %}
+
+    </div>
+
+</div>
+
+
+</div>
+
+{% endblock %}

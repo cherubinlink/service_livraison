@@ -1,0 +1,129 @@
+{% extends 'navigateur/base_dashboard.html' %}
+
+{% block title %}Entreprises en attente – Administration SwiftDrop{% endblock %}
+{% block page_title %}Entreprises en attente de validation{% endblock %}
+{% block user_initiales %}AD{% endblock %}
+{% block user_nom %}Administration{% endblock %}
+{% block user_role %}Administrateur{% endblock %}
+
+{% block sidebar_menu %}
+    <div class="sd-nav-section">Général</div>
+    <a href="{% url 'apps_core:dashboard_admin' %}" class="sd-nav-link"><i class="bi bi-grid-1x2"></i>Tableau de bord</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-chat-dots"></i>Messagerie</a>
+
+    <div class="sd-nav-section">Acteurs</div>
+    <a href="{% url 'apps_entreprise:admin_liste_entreprises' %}" class="sd-nav-link"><i class="bi bi-building"></i>Entreprises</a>
+    <a href="{% url 'apps_entreprise:admin_entreprises_en_attente' %}" class="sd-nav-link active">
+        <i class="bi bi-hourglass-split"></i>En attente
+        {% if entreprises %}<span class="sd-nav-badge">{{ entreprises|length }}</span>{% endif %}
+    </a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-bicycle"></i>Livreurs</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-person-heart"></i>Clients</a>
+
+    <div class="sd-nav-section">Opérations</div>
+    <a href="#" class="sd-nav-link"><i class="bi bi-box-seam"></i>Livraisons B2B</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-signpost-2"></i>Livraisons directes</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-building-gear"></i>Entrepôts</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-boxes"></i>Produits</a>
+
+    <div class="sd-nav-section">Finance</div>
+    <a href="#" class="sd-nav-link"><i class="bi bi-cash-stack"></i>Lots de paiement</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-gift"></i>Bonus</a>
+
+    <div class="sd-nav-section">Système</div>
+    <a href="{% url 'apps_core:configuration_geographie' %}" class="sd-nav-link"><i class="bi bi-geo"></i>Zones géographiques</a>
+    <a href="{% url 'apps_core:gerer_coefficients_vehicule' %}" class="sd-nav-link"><i class="bi bi-truck-front"></i>Coefficients véhicule</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-sliders"></i>Paramètres</a>
+{% endblock %}
+
+{% block extra_css %}
+    .sd-attente-row {
+        border: 1px solid #EDEFF4;
+        border-radius: 14px;
+        padding: 1.1rem 1.25rem;
+        margin-bottom: .75rem;
+        background: #fff;
+    }
+    .sd-attente-row:hover { border-color: #DDE2EC; }
+    .sd-delai-badge { font-size: .72rem; font-weight: 700; padding: .2rem .6rem; border-radius: 50px; }
+    .sd-delai-badge.ok { background: #E5F7EC; color: #1FAA59; }
+    .sd-delai-badge.attention { background: #FFF4E5; color: #E88A00; }
+    .sd-delai-badge.urgent { background: #FDEBEA; color: #E23D32; }
+    .modal .form-label { font-weight: 600; color: var(--sd-navy); font-size: .85rem; }
+    .modal .form-control { border-radius: 10px; padding: .55rem .8rem; border: 1.5px solid #EDEFF4; }
+{% endblock %}
+
+{% block dashboard_content %}
+
+<p class="text-muted small mb-3">
+    Triées de la plus ancienne à la plus récente — traitez en priorité celles qui attendent depuis le plus longtemps.
+</p>
+
+{% if entreprises %}
+    {% for entreprise in entreprises %}
+        <div class="sd-attente-row">
+            <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
+                <div>
+                    <div class="d-flex align-items-center gap-2 mb-1">
+                        <span class="fw-semibold" style="color: var(--sd-navy);">{{ entreprise.nom_affichage }}</span>
+                        {% with jours=entreprise.date_creation|timesince %}
+                            {% if '3 day' in jours or 'week' in jours or 'month' in jours %}
+                                <span class="sd-delai-badge urgent">En attente depuis {{ jours }}</span>
+                            {% elif '1 day' in jours or '2 day' in jours %}
+                                <span class="sd-delai-badge attention">En attente depuis {{ jours }}</span>
+                            {% else %}
+                                <span class="sd-delai-badge ok">En attente depuis {{ jours }}</span>
+                            {% endif %}
+                        {% endwith %}
+                    </div>
+                    <div class="text-muted small">
+                        {{ entreprise.get_secteur_display }} · {{ entreprise.ville_principale.nom|default:"Ville non renseignée" }} · {{ entreprise.utilisateur.email }}
+                    </div>
+                </div>
+
+                <div class="d-flex gap-2">
+                    <a href="{% url 'apps_entreprise:admin_detail_entreprise' entreprise.pk %}" class="btn btn-sd-outline btn-sm">
+                        <i class="bi bi-eye me-1"></i>Voir la fiche
+                    </a>
+                    <form method="post" action="{% url 'apps_entreprise:admin_valider_entreprise' entreprise.pk %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-sd-primary btn-sm"><i class="bi bi-check2 me-1"></i>Valider</button>
+                    </form>
+                    <button type="button" class="btn btn-sd-outline btn-sm text-danger" data-bs-toggle="modal" data-bs-target="#modalRefuser-{{ entreprise.pk }}">
+                        <i class="bi bi-x-lg me-1"></i>Refuser
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal refus, propre à cette entreprise (id unique pour éviter les collisions) -->
+        <div class="modal fade" id="modalRefuser-{{ entreprise.pk }}" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <form method="post" action="{% url 'apps_entreprise:admin_refuser_entreprise' entreprise.pk %}">
+                        {% csrf_token %}
+                        <div class="modal-header">
+                            <h5 class="modal-title fw-bold" style="color: var(--sd-navy);">Refuser « {{ entreprise.nom_affichage }} »</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <label class="form-label">Motif du refus</label>
+                            <textarea name="motif" class="form-control" rows="3" required></textarea>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-sd-outline" data-bs-dismiss="modal">Annuler</button>
+                            <button type="submit" class="btn btn-sd-primary">Confirmer le refus</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+{% else %}
+    <div class="sd-panel text-center py-5">
+        <i class="bi bi-check2-circle" style="font-size: 2.5rem; color: #1FAA59;"></i>
+        <p class="text-muted mt-3 mb-0">Aucune entreprise en attente — tout est à jour.</p>
+    </div>
+{% endif %}
+
+{% endblock %}

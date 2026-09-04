@@ -1,0 +1,124 @@
+{% extends 'navigateur/base_dashboard.html' %}
+
+{% block title %}Produits – Administration SwiftDrop{% endblock %}
+{% block page_title %}Produits{% endblock %}
+{% block user_initiales %}AD{% endblock %}
+{% block user_nom %}Administration{% endblock %}
+{% block user_role %}Administrateur{% endblock %}
+
+{% block sidebar_menu %}
+    <div class="sd-nav-section">Général</div>
+    <a href="{% url 'apps_core:dashboard_admin' %}" class="sd-nav-link"><i class="bi bi-grid-1x2"></i>Tableau de bord</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-chat-dots"></i>Messagerie</a>
+
+    <div class="sd-nav-section">Acteurs</div>
+    <a href="{% url 'apps_entreprise:admin_liste_entreprises' %}" class="sd-nav-link"><i class="bi bi-building"></i>Entreprises</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-bicycle"></i>Livreurs</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-person-heart"></i>Clients</a>
+
+    <div class="sd-nav-section">Catalogue</div>
+    <a href="{% url 'apps_catalogue:admin_liste_produits' %}" class="sd-nav-link active"><i class="bi bi-boxes"></i>Produits</a>
+    <a href="{% url 'apps_catalogue:admin_liste_categories' %}" class="sd-nav-link"><i class="bi bi-tags"></i>Catégories</a>
+    <a href="{% url 'apps_entreprise:admin_liste_entrepots' %}" class="sd-nav-link"><i class="bi bi-building-gear"></i>Entrepôts</a>
+
+    <div class="sd-nav-section">Opérations</div>
+    <a href="#" class="sd-nav-link"><i class="bi bi-box-seam"></i>Livraisons B2B</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-signpost-2"></i>Livraisons directes</a>
+
+    <div class="sd-nav-section">Système</div>
+    <a href="{% url 'apps_core:configuration_geographie' %}" class="sd-nav-link"><i class="bi bi-geo"></i>Zones géographiques</a>
+    <a href="{% url 'apps_core:gerer_coefficients_vehicule' %}" class="sd-nav-link"><i class="bi bi-truck-front"></i>Coefficients véhicule</a>
+{% endblock %}
+
+{% block extra_css %}
+    .sd-filtre-bar { background: #fff; border: 1px solid #EDEFF4; border-radius: 14px; padding: 1rem 1.25rem; }
+    .sd-filtre-bar .form-select, .sd-filtre-bar .form-control { border-radius: 10px; border: 1.5px solid #EDEFF4; }
+    .sd-badge-statut { font-size: .72rem; font-weight: 700; padding: .25rem .65rem; border-radius: 50px; }
+    .sd-badge-statut.valide { background: #E5F7EC; color: #1FAA59; }
+    .sd-badge-statut.attente { background: #FFF4E5; color: #E88A00; }
+    .sd-badge-statut.refuse, .sd-badge-statut.epuise { background: #FDEBEA; color: #E23D32; }
+    .sd-badge-statut.archive { background: #F1F2F6; color: var(--sd-gris); }
+    .sd-produit-thumb { width: 40px; height: 40px; border-radius: 8px; object-fit: cover; background: var(--sd-fond); }
+{% endblock %}
+
+{% block dashboard_content %}
+
+<div class="sd-filtre-bar mb-3">
+    <form method="get" class="row g-2 align-items-end">
+        <div class="col-md-6">
+            <label class="form-label small fw-semibold mb-1">Recherche</label>
+            <input type="text" name="q" value="{{ recherche }}" class="form-control form-control-sm" placeholder="Nom ou référence SKU…">
+        </div>
+        <div class="col-md-4">
+            <label class="form-label small fw-semibold mb-1">Statut</label>
+            <select name="statut" class="form-select form-select-sm">
+                <option value="">Tous les statuts</option>
+                {% for valeur, libelle in statuts %}
+                    <option value="{{ valeur }}" {% if filtre_statut == valeur %}selected{% endif %}>{{ libelle }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-2 d-flex gap-2">
+            <button type="submit" class="btn btn-sd-primary btn-sm flex-grow-1"><i class="bi bi-search"></i></button>
+            <a href="{% url 'apps_catalogue:admin_liste_produits' %}" class="btn btn-sd-outline btn-sm" title="Réinitialiser"><i class="bi bi-x-lg"></i></a>
+        </div>
+    </form>
+</div>
+
+<div class="d-flex justify-content-end mb-2">
+    <a href="{% url 'apps_catalogue:admin_creer_produit' %}" class="btn btn-sd-primary btn-sm">
+        <i class="bi bi-plus-lg me-1"></i>Enregistrer un produit
+    </a>
+</div>
+
+<div class="sd-panel">
+    {% if produits %}
+        <div class="table-responsive">
+            <table class="table sd-table align-middle mb-0">
+                <thead>
+                    <tr><th></th><th>Produit</th><th>Entreprise</th><th>Catégorie</th><th>Prix</th><th>Statut</th><th class="text-end">Action</th></tr>
+                </thead>
+                <tbody>
+                    {% for produit in produits %}
+                        <tr>
+                            <td>
+                                {% if produit.photo_principale %}
+                                    <img src="{{ produit.photo_principale.url }}" class="sd-produit-thumb" alt="">
+                                {% else %}
+                                    <div class="sd-produit-thumb d-flex align-items-center justify-content-center text-muted"><i class="bi bi-box"></i></div>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="fw-semibold">{{ produit.nom }}</div>
+                                <div class="text-muted small">{{ produit.reference_sku|default:"—" }}</div>
+                            </td>
+                            <td>{{ produit.entreprise.nom_affichage }}</td>
+                            <td>{{ produit.categorie.nom|default:"—" }}</td>
+                            <td class="fw-semibold">{{ produit.prix_unitaire }} FCFA</td>
+                            <td>
+                                {% if produit.statut == 'VALIDE' %}
+                                    <span class="sd-badge-statut valide">Validé</span>
+                                {% elif produit.statut == 'EN_ATTENTE' %}
+                                    <span class="sd-badge-statut attente">En attente</span>
+                                {% elif produit.statut == 'REFUSE' or produit.statut == 'EPUISE' %}
+                                    <span class="sd-badge-statut refuse">{{ produit.get_statut_display }}</span>
+                                {% else %}
+                                    <span class="sd-badge-statut archive">{{ produit.get_statut_display }}</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end">
+                                <a href="{% url 'apps_catalogue:admin_detail_produit' produit.pk %}" class="btn btn-sm btn-sd-outline">
+                                    <i class="bi bi-eye me-1"></i>Voir
+                                </a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p class="text-muted small mb-0">Aucun produit ne correspond à ces critères.</p>
+    {% endif %}
+</div>
+
+{% endblock %}

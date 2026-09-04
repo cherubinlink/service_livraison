@@ -1,0 +1,140 @@
+{% extends 'navigateur/base_dashboard.html' %}
+
+{% block title %}Livreurs – Administration SwiftDrop{% endblock %}
+{% block page_title %}Livreurs{% endblock %}
+{% block user_initiales %}AD{% endblock %}
+{% block user_nom %}Administration{% endblock %}
+{% block user_role %}Administrateur{% endblock %}
+
+{% block sidebar_menu %}
+    <div class="sd-nav-section">Général</div>
+    <a href="{% url 'apps_core:dashboard_admin' %}" class="sd-nav-link"><i class="bi bi-grid-1x2"></i>Tableau de bord</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-chat-dots"></i>Messagerie</a>
+
+    <div class="sd-nav-section">Acteurs</div>
+    <a href="{% url 'apps_entreprise:admin_liste_entreprises' %}" class="sd-nav-link"><i class="bi bi-building"></i>Entreprises</a>
+    <a href="{% url 'apps_livreur:admin_liste_livreurs' %}" class="sd-nav-link active"><i class="bi bi-bicycle"></i>Livreurs</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-person-heart"></i>Clients</a>
+
+    <div class="sd-nav-section">Opérations</div>
+    <a href="#" class="sd-nav-link"><i class="bi bi-box-seam"></i>Livraisons B2B</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-signpost-2"></i>Livraisons directes</a>
+    <a href="{% url 'apps_entreprise:admin_liste_entrepots' %}" class="sd-nav-link"><i class="bi bi-building-gear"></i>Entrepôts</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-boxes"></i>Produits</a>
+
+    <div class="sd-nav-section">Finance</div>
+    <a href="#" class="sd-nav-link"><i class="bi bi-cash-stack"></i>Lots de paiement</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-gift"></i>Bonus</a>
+
+    <div class="sd-nav-section">Système</div>
+    <a href="{% url 'apps_core:configuration_geographie' %}" class="sd-nav-link"><i class="bi bi-geo"></i>Zones géographiques</a>
+    <a href="{% url 'apps_core:gerer_coefficients_vehicule' %}" class="sd-nav-link"><i class="bi bi-truck-front"></i>Coefficients véhicule</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-sliders"></i>Paramètres</a>
+{% endblock %}
+
+{% block extra_css %}
+    .sd-filtre-bar { background: #fff; border: 1px solid #EDEFF4; border-radius: 14px; padding: 1rem 1.25rem; }
+    .sd-filtre-bar .form-select, .sd-filtre-bar .form-control {
+        border-radius: 10px; border: 1.5px solid #EDEFF4;
+    }
+    .sd-filtre-bar .form-select:focus, .sd-filtre-bar .form-control:focus {
+        border-color: var(--sd-orange); box-shadow: 0 0 0 .2rem rgba(255,107,53,0.15);
+    }
+    .sd-badge-statut { font-size: .72rem; font-weight: 700; padding: .25rem .65rem; border-radius: 50px; }
+    .sd-badge-statut.valide { background: #E5F7EC; color: #1FAA59; }
+    .sd-badge-statut.attente { background: #FFF4E5; color: #E88A00; }
+    .sd-badge-statut.refuse { background: #FDEBEA; color: #E23D32; }
+    .sd-badge-statut.inactif { background: #F1F2F6; color: var(--sd-gris); }
+    .sd-score-pill { font-weight: 700; }
+{% endblock %}
+
+{% block dashboard_content %}
+
+<div class="sd-filtre-bar mb-3">
+    <form method="get" class="row g-2 align-items-end">
+        <div class="col-md-4">
+            <label class="form-label small fw-semibold mb-1">Recherche</label>
+            <input type="text" name="q" value="{{ recherche }}" class="form-control form-control-sm" placeholder="Nom ou numéro CNI…">
+        </div>
+        <div class="col-md-3">
+            <label class="form-label small fw-semibold mb-1">Statut</label>
+            <select name="statut" class="form-select form-select-sm">
+                <option value="">Tous les statuts</option>
+                {% for valeur, libelle in statuts %}
+                    <option value="{{ valeur }}" {% if filtre_statut == valeur %}selected{% endif %}>{{ libelle }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label small fw-semibold mb-1">Véhicule</label>
+            <select name="vehicule" class="form-select form-select-sm">
+                <option value="">Tous les véhicules</option>
+                {% for valeur, libelle in vehicules %}
+                    <option value="{{ valeur }}" {% if filtre_vehicule == valeur %}selected{% endif %}>{{ libelle }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-2 d-flex gap-2">
+            <button type="submit" class="btn btn-sd-primary btn-sm flex-grow-1"><i class="bi bi-search"></i></button>
+            <a href="{% url 'apps_livreur:admin_liste_livreurs' %}" class="btn btn-sd-outline btn-sm" title="Réinitialiser"><i class="bi bi-x-lg"></i></a>
+        </div>
+    </form>
+</div>
+
+<div class="sd-panel">
+    {% if livreurs %}
+        <div class="table-responsive">
+            <table class="table sd-table align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Livreur</th>
+                        <th>N° CNI</th>
+                        <th>Véhicule</th>
+                        <th>Note</th>
+                        <th>Livraisons</th>
+                        <th>Statut</th>
+                        <th class="text-end">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for livreur in livreurs %}
+                        <tr>
+                            <td>
+                                <div class="fw-semibold">{{ livreur.utilisateur.nom }}</div>
+                                <div class="text-muted small">{{ livreur.utilisateur.email }}</div>
+                            </td>
+                            <td>{{ livreur.numero_cni }}</td>
+                            <td>{{ livreur.get_type_vehicule_display }}</td>
+                            <td class="sd-score-pill" style="color: var(--sd-navy);">
+                                <i class="bi bi-star-fill text-warning me-1" style="font-size:.75rem;"></i>{{ livreur.note_moyenne }}
+                            </td>
+                            <td>{{ livreur.total_livraisons }}</td>
+                            <td>
+                                {% if livreur.statut == 'ACTIF' %}
+                                    <span class="sd-badge-statut valide">Actif</span>
+                                {% elif livreur.statut == 'EN_MISSION' %}
+                                    <span class="sd-badge-statut attente">En mission</span>
+                                {% elif livreur.statut == 'PAUSE' %}
+                                    <span class="sd-badge-statut attente">En pause</span>
+                                {% elif livreur.statut == 'SUSPENDU' %}
+                                    <span class="sd-badge-statut refuse">Suspendu</span>
+                                {% else %}
+                                    <span class="sd-badge-statut inactif">Hors ligne</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end">
+                                <a href="{% url 'apps_livreur:admin_detail_livreur' pk=livreur.pk %}" class="btn btn-sm btn-sd-outline">
+                                    <i class="bi bi-eye me-1"></i>Voir
+                                </a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p class="text-muted small mb-0">Aucun livreur ne correspond à ces critères.</p>
+    {% endif %}
+</div>
+
+{% endblock %}

@@ -1,0 +1,204 @@
+{% extends 'navigateur/base_dashboard.html' %}
+
+{% block title %}Nouveau produit – Administration SwiftDrop{% endblock %}
+{% block page_title %}Enregistrer un produit{% endblock %}
+{% block user_initiales %}AD{% endblock %}
+{% block user_nom %}Administration{% endblock %}
+{% block user_role %}Administrateur{% endblock %}
+
+{% block sidebar_menu %}
+    <div class="sd-nav-section">Général</div>
+    <a href="{% url 'apps_core:dashboard_admin' %}" class="sd-nav-link"><i class="bi bi-grid-1x2"></i>Tableau de bord</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-chat-dots"></i>Messagerie</a>
+
+    <div class="sd-nav-section">Acteurs</div>
+    <a href="{% url 'apps_entreprise:admin_liste_entreprises' %}" class="sd-nav-link"><i class="bi bi-building"></i>Entreprises</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-bicycle"></i>Livreurs</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-person-heart"></i>Clients</a>
+
+    <div class="sd-nav-section">Catalogue</div>
+    <a href="{% url 'apps_catalogue:admin_liste_produits' %}" class="sd-nav-link active"><i class="bi bi-boxes"></i>Produits</a>
+    <a href="{% url 'apps_catalogue:admin_liste_categories' %}" class="sd-nav-link"><i class="bi bi-tags"></i>Catégories</a>
+    <a href="{% url 'apps_entreprise:admin_liste_entrepots' %}" class="sd-nav-link"><i class="bi bi-building-gear"></i>Entrepôts</a>
+
+    <div class="sd-nav-section">Opérations</div>
+    <a href="#" class="sd-nav-link"><i class="bi bi-box-seam"></i>Livraisons B2B</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-signpost-2"></i>Livraisons directes</a>
+
+    <div class="sd-nav-section">Système</div>
+    <a href="{% url 'apps_core:configuration_geographie' %}" class="sd-nav-link"><i class="bi bi-geo"></i>Zones géographiques</a>
+    <a href="{% url 'apps_core:gerer_coefficients_vehicule' %}" class="sd-nav-link"><i class="bi bi-truck-front"></i>Coefficients véhicule</a>
+{% endblock %}
+
+{% block extra_css %}
+    .sd-form-card { background: #fff; border: 1px solid #EDEFF4; border-radius: 16px; padding: 2rem; max-width: 900px; }
+    .sd-form-card .form-label { font-weight: 600; color: var(--sd-navy); font-size: .88rem; }
+    .sd-form-card .form-control, .sd-form-card .form-select {
+        border-radius: 10px; padding: .6rem .85rem; border: 1.5px solid #EDEFF4;
+    }
+    .sd-form-card .form-control:focus, .sd-form-card .form-select:focus {
+        border-color: var(--sd-orange); box-shadow: 0 0 0 .2rem rgba(255,107,53,0.15);
+    }
+    .sd-form-section-title {
+        text-transform: uppercase; font-size: .75rem; font-weight: 700; letter-spacing: .06em;
+        color: var(--sd-orange); margin-bottom: 1rem;
+    }
+    .sd-form-section { margin-bottom: 2rem; }
+    .sd-back-link { color: var(--sd-gris); font-size: .88rem; }
+    .sd-back-link:hover { color: var(--sd-orange); }
+    .sd-info-banner {
+        background: var(--sd-fond); border: 1px solid #EDEFF4; border-radius: 12px;
+        padding: 1rem 1.2rem; font-size: .87rem; color: var(--sd-gris);
+    }
+    .sd-info-banner i { color: var(--sd-orange); }
+{% endblock %}
+
+{% block dashboard_content %}
+
+<a href="{% url 'apps_catalogue:admin_liste_produits' %}" class="sd-back-link d-inline-flex align-items-center gap-1 mb-3">
+    <i class="bi bi-arrow-left"></i> Retour à la liste des produits
+</a>
+
+<div class="sd-form-card">
+    <h5 class="fw-bold mb-1" style="color: var(--sd-navy);">Enregistrer un produit</h5>
+    <p class="text-muted small mb-4">Ce produit est créé au nom d'une entreprise — c'est ensuite elle qui devra le valider depuis son tableau de bord.</p>
+
+    <div class="sd-info-banner mb-4">
+        <i class="bi bi-info-circle me-1"></i>
+        Le produit est immédiatement placé dans l'entrepôt choisi avec la quantité initiale indiquée.
+    </div>
+
+    {% if form.non_field_errors %}
+        <div class="alert alert-danger">{% for erreur in form.non_field_errors %}{{ erreur }}{% endfor %}</div>
+    {% endif %}
+
+    <form method="post" enctype="multipart/form-data" novalidate>
+        {% csrf_token %}
+
+        <div class="sd-form-section">
+            <div class="sd-form-section-title">Entreprise & catégorie</div>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label for="{{ form.entreprise.id_for_label }}" class="form-label">{{ form.entreprise.label }}</label>
+                    {{ form.entreprise }}
+                    {% if form.entreprise.errors %}<div class="text-danger small mt-1">{{ form.entreprise.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="col-md-6">
+                    <label for="{{ form.categorie.id_for_label }}" class="form-label">{{ form.categorie.label }}</label>
+                    {{ form.categorie }}
+                    {% if form.categorie.errors %}<div class="text-danger small mt-1">{{ form.categorie.errors.0 }}</div>{% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="sd-form-section">
+            <div class="sd-form-section-title">Informations produit</div>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label for="{{ form.nom.id_for_label }}" class="form-label">{{ form.nom.label }}</label>
+                    {{ form.nom }}
+                    {% if form.nom.errors %}<div class="text-danger small mt-1">{{ form.nom.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="col-md-3">
+                    <label for="{{ form.reference_sku.id_for_label }}" class="form-label">{{ form.reference_sku.label }}</label>
+                    {{ form.reference_sku }}
+                </div>
+                <div class="col-md-3">
+                    <label for="{{ form.code_barre.id_for_label }}" class="form-label">{{ form.code_barre.label }}</label>
+                    {{ form.code_barre }}
+                </div>
+                <div class="col-12">
+                    <label for="{{ form.description.id_for_label }}" class="form-label">{{ form.description.label }}</label>
+                    {{ form.description }}
+                </div>
+                <div class="col-md-4">
+                    <label for="{{ form.prix_unitaire.id_for_label }}" class="form-label">{{ form.prix_unitaire.label }}</label>
+                    {{ form.prix_unitaire }}
+                    {% if form.prix_unitaire.errors %}<div class="text-danger small mt-1">{{ form.prix_unitaire.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="col-md-4">
+                    <label for="{{ form.unite.id_for_label }}" class="form-label">{{ form.unite.label }}</label>
+                    {{ form.unite }}
+                </div>
+                <div class="col-md-2">
+                    <label for="{{ form.seuil_alerte_defaut.id_for_label }}" class="form-label">{{ form.seuil_alerte_defaut.label }}</label>
+                    {{ form.seuil_alerte_defaut }}
+                </div>
+                <div class="col-md-2">
+                    <label for="{{ form.seuil_rupture_defaut.id_for_label }}" class="form-label">{{ form.seuil_rupture_defaut.label }}</label>
+                    {{ form.seuil_rupture_defaut }}
+                </div>
+            </div>
+        </div>
+
+        <div class="sd-form-section">
+            <div class="sd-form-section-title">Vente en ligne & transport</div>
+            <div class="row g-3">
+                <div class="col-md-6 form-check pt-4">
+                    {{ form.vendu_en_ligne }}
+                    <label class="form-check-label" for="{{ form.vendu_en_ligne.id_for_label }}">{{ form.vendu_en_ligne.label }}</label>
+                </div>
+                <div class="col-md-6">
+                    <label for="{{ form.reference_yopishop.id_for_label }}" class="form-label">{{ form.reference_yopishop.label }}</label>
+                    {{ form.reference_yopishop }}
+                </div>
+                <div class="col-md-6">
+                    <label for="{{ form.qualite_produit.id_for_label }}" class="form-label">{{ form.qualite_produit.label }}</label>
+                    {{ form.qualite_produit }}
+                </div>
+                <div class="col-md-6">
+                    <label for="{{ form.vehicule_minimum_requis.id_for_label }}" class="form-label">{{ form.vehicule_minimum_requis.label }}</label>
+                    {{ form.vehicule_minimum_requis }}
+                </div>
+                <div class="col-md-3">
+                    <label for="{{ form.poids_kg.id_for_label }}" class="form-label">{{ form.poids_kg.label }}</label>
+                    {{ form.poids_kg }}
+                </div>
+                <div class="col-md-3">
+                    <label for="{{ form.longueur_cm.id_for_label }}" class="form-label">{{ form.longueur_cm.label }}</label>
+                    {{ form.longueur_cm }}
+                </div>
+                <div class="col-md-3">
+                    <label for="{{ form.largeur_cm.id_for_label }}" class="form-label">{{ form.largeur_cm.label }}</label>
+                    {{ form.largeur_cm }}
+                </div>
+                <div class="col-md-3">
+                    <label for="{{ form.hauteur_cm.id_for_label }}" class="form-label">{{ form.hauteur_cm.label }}</label>
+                    {{ form.hauteur_cm }}
+                </div>
+                <div class="col-md-6 form-check">
+                    {{ form.fragile }}
+                    <label class="form-check-label" for="{{ form.fragile.id_for_label }}">{{ form.fragile.label }}</label>
+                </div>
+                <div class="col-md-6 form-check">
+                    {{ form.necessite_froid }}
+                    <label class="form-check-label" for="{{ form.necessite_froid.id_for_label }}">{{ form.necessite_froid.label }}</label>
+                </div>
+                <div class="col-12">
+                    <label for="{{ form.photo_principale.id_for_label }}" class="form-label">{{ form.photo_principale.label }}</label>
+                    {{ form.photo_principale }}
+                </div>
+            </div>
+        </div>
+
+        <div class="sd-form-section">
+            <div class="sd-form-section-title">Stock initial</div>
+            <div class="row g-3">
+                <div class="col-md-8">
+                    <label for="{{ form.entrepot.id_for_label }}" class="form-label">{{ form.entrepot.label }}</label>
+                    {{ form.entrepot }}
+                    {% if form.entrepot.errors %}<div class="text-danger small mt-1">{{ form.entrepot.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="col-md-4">
+                    <label for="{{ form.quantite_initiale.id_for_label }}" class="form-label">{{ form.quantite_initiale.label }}</label>
+                    {{ form.quantite_initiale }}
+                    {% if form.quantite_initiale.errors %}<div class="text-danger small mt-1">{{ form.quantite_initiale.errors.0 }}</div>{% endif %}
+                </div>
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-sd-primary px-4"><i class="bi bi-check2 me-1"></i>Enregistrer le produit</button>
+    </form>
+</div>
+
+{% endblock %}

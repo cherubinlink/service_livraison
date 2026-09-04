@@ -1,0 +1,140 @@
+{% extends 'navigateur/base_dashboard.html' %}
+
+{% block title %}{{ produit.nom }} – Administration SwiftDrop{% endblock %}
+{% block page_title %}Fiche produit{% endblock %}
+{% block user_initiales %}AD{% endblock %}
+{% block user_nom %}Administration{% endblock %}
+{% block user_role %}Administrateur{% endblock %}
+
+{% block sidebar_menu %}
+    <div class="sd-nav-section">Général</div>
+    <a href="{% url 'apps_core:dashboard_admin' %}" class="sd-nav-link"><i class="bi bi-grid-1x2"></i>Tableau de bord</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-chat-dots"></i>Messagerie</a>
+
+    <div class="sd-nav-section">Acteurs</div>
+    <a href="{% url 'apps_entreprise:admin_liste_entreprises' %}" class="sd-nav-link"><i class="bi bi-building"></i>Entreprises</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-bicycle"></i>Livreurs</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-person-heart"></i>Clients</a>
+
+    <div class="sd-nav-section">Catalogue</div>
+    <a href="{% url 'apps_catalogue:admin_liste_produits' %}" class="sd-nav-link active"><i class="bi bi-boxes"></i>Produits</a>
+    <a href="{% url 'apps_catalogue:admin_liste_categories' %}" class="sd-nav-link"><i class="bi bi-tags"></i>Catégories</a>
+    <a href="{% url 'apps_entreprise:admin_liste_entrepots' %}" class="sd-nav-link"><i class="bi bi-building-gear"></i>Entrepôts</a>
+
+    <div class="sd-nav-section">Opérations</div>
+    <a href="#" class="sd-nav-link"><i class="bi bi-box-seam"></i>Livraisons B2B</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-signpost-2"></i>Livraisons directes</a>
+
+    <div class="sd-nav-section">Système</div>
+    <a href="{% url 'apps_core:configuration_geographie' %}" class="sd-nav-link"><i class="bi bi-geo"></i>Zones géographiques</a>
+    <a href="{% url 'apps_core:gerer_coefficients_vehicule' %}" class="sd-nav-link"><i class="bi bi-truck-front"></i>Coefficients véhicule</a>
+{% endblock %}
+
+{% block extra_css %}
+    .sd-badge-statut { font-size: .75rem; font-weight: 700; padding: .3rem .75rem; border-radius: 50px; }
+    .sd-badge-statut.valide { background: #E5F7EC; color: #1FAA59; }
+    .sd-badge-statut.attente { background: #FFF4E5; color: #E88A00; }
+    .sd-badge-statut.refuse, .sd-badge-statut.epuise { background: #FDEBEA; color: #E23D32; }
+    .sd-badge-statut.archive { background: #F1F2F6; color: var(--sd-gris); }
+    .sd-info-row { display: flex; justify-content: space-between; padding: .5rem 0; border-bottom: 1px dashed #EDEFF4; font-size: .88rem; }
+    .sd-info-row:last-child { border-bottom: none; }
+    .sd-info-row .label { color: var(--sd-gris); }
+    .sd-info-row .value { font-weight: 600; color: var(--sd-navy); text-align: right; }
+    .sd-produit-photo { width: 100%; height: 260px; object-fit: cover; border-radius: 14px; background: var(--sd-fond); }
+    .sd-photo-thumb { width: 100%; height: 90px; object-fit: cover; border-radius: 10px; }
+    .sd-back-link { color: var(--sd-gris); font-size: .88rem; }
+    .sd-back-link:hover { color: var(--sd-orange); }
+{% endblock %}
+
+{% block dashboard_content %}
+
+<a href="{% url 'apps_catalogue:admin_liste_produits' %}" class="sd-back-link d-inline-flex align-items-center gap-1 mb-3">
+    <i class="bi bi-arrow-left"></i> Retour à la liste des produits
+</a>
+
+<div class="row g-3">
+    <div class="col-lg-4">
+        {% if produit.photo_principale %}
+            <img src="{{ produit.photo_principale.url }}" class="sd-produit-photo mb-3" alt="{{ produit.nom }}">
+        {% else %}
+            <div class="sd-produit-photo mb-3 d-flex align-items-center justify-content-center text-muted">
+                <i class="bi bi-image" style="font-size:2rem;"></i>
+            </div>
+        {% endif %}
+        {% if photos %}
+            <div class="row g-2">
+                {% for photo in photos %}
+                    <div class="col-4"><img src="{{ photo.photo.url }}" class="sd-photo-thumb" alt="{{ photo.legende }}"></div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+
+    <div class="col-lg-8">
+        <div class="sd-panel mb-3">
+            <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
+                <div>
+                    <h5 class="fw-bold mb-1" style="color: var(--sd-navy);">{{ produit.nom }}</h5>
+                    <p class="text-muted small mb-0">{{ produit.entreprise.nom_affichage }} · {{ produit.categorie.nom|default:"Sans catégorie" }}</p>
+                </div>
+                {% if produit.statut == 'VALIDE' %}
+                    <span class="sd-badge-statut valide">Validé</span>
+                {% elif produit.statut == 'EN_ATTENTE' %}
+                    <span class="sd-badge-statut attente">En attente de validation par l'entreprise</span>
+                {% elif produit.statut == 'REFUSE' or produit.statut == 'EPUISE' %}
+                    <span class="sd-badge-statut refuse">{{ produit.get_statut_display }}</span>
+                {% else %}
+                    <span class="sd-badge-statut archive">{{ produit.get_statut_display }}</span>
+                {% endif %}
+            </div>
+
+            {% if produit.description %}<p class="text-muted small">{{ produit.description }}</p>{% endif %}
+
+            <div class="row g-4 mt-1">
+                <div class="col-md-6">
+                    <div class="sd-info-row"><span class="label">Prix unitaire</span><span class="value">{{ produit.prix_unitaire }} FCFA / {{ produit.get_unite_display }}</span></div>
+                    <div class="sd-info-row"><span class="label">Référence SKU</span><span class="value">{{ produit.reference_sku|default:"—" }}</span></div>
+                    <div class="sd-info-row"><span class="label">Code-barre</span><span class="value">{{ produit.code_barre|default:"—" }}</span></div>
+                    <div class="sd-info-row"><span class="label">Vendu en ligne</span><span class="value">{% if produit.vendu_en_ligne %}Oui (Yopishop){% else %}Non{% endif %}</span></div>
+                </div>
+                <div class="col-md-6">
+                    <div class="sd-info-row"><span class="label">Qualité</span><span class="value">{{ produit.get_qualite_produit_display }}</span></div>
+                    <div class="sd-info-row"><span class="label">Véhicule minimum</span><span class="value">{{ produit.get_vehicule_minimum_requis_display }}</span></div>
+                    <div class="sd-info-row"><span class="label">Poids</span><span class="value">{{ produit.poids_kg|default:"—" }} kg</span></div>
+                    <div class="sd-info-row"><span class="label">Fragile / Froid</span><span class="value">{{ produit.fragile|yesno:"Oui,Non" }} / {{ produit.necessite_froid|yesno:"Oui,Non" }}</span></div>
+                </div>
+            </div>
+
+            {% if produit.motif_refus %}
+                <div class="alert alert-warning small mt-3 mb-0">
+                    <i class="bi bi-info-circle me-1"></i><strong>Motif de refus :</strong> {{ produit.motif_refus }}
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="sd-panel">
+            <div class="sd-panel-title mb-3">Stock par entrepôt</div>
+            {% if stocks %}
+                <div class="table-responsive">
+                    <table class="table sd-table align-middle mb-0">
+                        <thead><tr><th>Entrepôt</th><th>Stock</th><th>Réservé</th><th>Disponible</th></tr></thead>
+                        <tbody>
+                            {% for stock in stocks %}
+                                <tr>
+                                    <td>{{ stock.entrepot.nom }} <span class="text-muted small">({{ stock.entrepot.ville.nom }})</span></td>
+                                    <td>{{ stock.quantite_stock }}</td>
+                                    <td>{{ stock.quantite_reservee }}</td>
+                                    <td class="fw-semibold">{{ stock.quantite_disponible }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p class="text-muted small mb-0">Aucun stock enregistré pour ce produit.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% endblock %}

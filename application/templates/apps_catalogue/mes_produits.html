@@ -1,0 +1,101 @@
+{% extends 'navigateur/base_dashboard.html' %}
+
+{% block title %}Mes produits – SwiftDrop{% endblock %}
+{% block page_title %}Mes produits{% endblock %}
+{% block user_initiales %}{{ entreprise.nom_affichage|slice:":2"|upper }}{% endblock %}
+{% block user_nom %}{{ entreprise.nom_affichage }}{% endblock %}
+{% block user_role %}Entreprise{% endblock %}
+
+{% block sidebar_menu %}
+    <div class="sd-nav-section">Général</div>
+    <a href="{% url 'apps_entreprise:dashboard' %}" class="sd-nav-link"><i class="bi bi-grid-1x2"></i>Tableau de bord</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-chat-dots"></i>Messagerie</a>
+
+    <div class="sd-nav-section">Mon entreprise</div>
+    <a href="{% url 'apps_entreprise:modifier_profil' %}" class="sd-nav-link"><i class="bi bi-building-gear"></i>Mon profil</a>
+    <a href="{% url 'apps_entreprise:mes_documents' %}" class="sd-nav-link"><i class="bi bi-file-earmark-text"></i>Mes documents</a>
+    <a href="{% url 'apps_entreprise:mes_contacts' %}" class="sd-nav-link"><i class="bi bi-person-lines-fill"></i>Mes contacts</a>
+    <a href="{% url 'apps_entreprise:mes_frais_gardiennage' %}" class="sd-nav-link"><i class="bi bi-shield-lock"></i>Frais de gardiennage</a>
+    <a href="{% url 'apps_entreprise:mes_entrepots' %}" class="sd-nav-link"><i class="bi bi-building"></i>Mes entrepôts</a>
+
+    <div class="sd-nav-section">Activité</div>
+    <a href="{% url 'apps_catalogue:mes_produits' %}" class="sd-nav-link active"><i class="bi bi-boxes"></i>Mes produits</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-box-seam"></i>Mes livraisons</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-cash-stack"></i>Mes paiements</a>
+{% endblock %}
+
+{% block extra_css %}
+    .sd-filtre-bar { background: #fff; border: 1px solid #EDEFF4; border-radius: 14px; padding: 1rem 1.25rem; }
+    .sd-filtre-bar .form-select { border-radius: 10px; border: 1.5px solid #EDEFF4; }
+    .sd-badge-statut { font-size: .72rem; font-weight: 700; padding: .25rem .65rem; border-radius: 50px; }
+    .sd-badge-statut.valide { background: #E5F7EC; color: #1FAA59; }
+    .sd-badge-statut.attente { background: #FFF4E5; color: #E88A00; }
+    .sd-badge-statut.refuse, .sd-badge-statut.epuise { background: #FDEBEA; color: #E23D32; }
+    .sd-badge-statut.archive { background: #F1F2F6; color: var(--sd-gris); }
+    .sd-produit-thumb { width: 42px; height: 42px; border-radius: 8px; object-fit: cover; background: var(--sd-fond); }
+{% endblock %}
+
+{% block dashboard_content %}
+
+<div class="sd-filtre-bar mb-3">
+    <form method="get" class="row g-2 align-items-end">
+        <div class="col-md-4">
+            <label class="form-label small fw-semibold mb-1">Statut</label>
+            <select name="statut" class="form-select form-select-sm" onchange="this.form.submit()">
+                <option value="">Tous les statuts</option>
+                {% for valeur, libelle in statuts %}
+                    <option value="{{ valeur }}" {% if filtre_statut == valeur %}selected{% endif %}>{{ libelle }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    </form>
+</div>
+
+<div class="sd-panel">
+    {% if produits %}
+        <div class="table-responsive">
+            <table class="table sd-table align-middle mb-0">
+                <thead><tr><th></th><th>Produit</th><th>Catégorie</th><th>Prix</th><th>Statut</th><th class="text-end">Action</th></tr></thead>
+                <tbody>
+                    {% for produit in produits %}
+                        <tr>
+                            <td>
+                                {% if produit.photo_principale %}
+                                    <img src="{{ produit.photo_principale.url }}" class="sd-produit-thumb" alt="">
+                                {% else %}
+                                    <div class="sd-produit-thumb d-flex align-items-center justify-content-center text-muted"><i class="bi bi-box"></i></div>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="fw-semibold">{{ produit.nom }}</div>
+                                <div class="text-muted small">{{ produit.reference_sku|default:"—" }}</div>
+                            </td>
+                            <td>{{ produit.categorie.nom|default:"—" }}</td>
+                            <td class="fw-semibold">{{ produit.prix_unitaire }} FCFA</td>
+                            <td>
+                                {% if produit.statut == 'VALIDE' %}
+                                    <span class="sd-badge-statut valide">Validé</span>
+                                {% elif produit.statut == 'EN_ATTENTE' %}
+                                    <span class="sd-badge-statut attente">À valider</span>
+                                {% elif produit.statut == 'REFUSE' or produit.statut == 'EPUISE' %}
+                                    <span class="sd-badge-statut refuse">{{ produit.get_statut_display }}</span>
+                                {% else %}
+                                    <span class="sd-badge-statut archive">{{ produit.get_statut_display }}</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end">
+                                <a href="{% url 'apps_catalogue:detail_produit' produit.pk %}" class="btn btn-sm btn-sd-outline">
+                                    <i class="bi bi-eye me-1"></i>Voir
+                                </a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p class="text-muted small mb-0">Aucun produit enregistré pour votre entreprise pour le moment.</p>
+    {% endif %}
+</div>
+
+{% endblock %}

@@ -1,0 +1,296 @@
+{% extends 'navigateur/base_dashboard.html' %}
+
+{% block title %}{{ entreprise.nom_affichage }} – Administration SwiftDrop{% endblock %}
+{% block page_title %}Fiche entreprise{% endblock %}
+{% block user_initiales %}AD{% endblock %}
+{% block user_nom %}Administration{% endblock %}
+{% block user_role %}Administrateur{% endblock %}
+
+{% block sidebar_menu %}
+    <div class="sd-nav-section">Général</div>
+    <a href="{% url 'apps_core:dashboard_admin' %}" class="sd-nav-link"><i class="bi bi-grid-1x2"></i>Tableau de bord</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-chat-dots"></i>Messagerie</a>
+
+    <div class="sd-nav-section">Acteurs</div>
+    <a href="{% url 'apps_entreprise:admin_liste_entreprises' %}" class="sd-nav-link active"><i class="bi bi-building"></i>Entreprises</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-bicycle"></i>Livreurs</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-person-heart"></i>Clients</a>
+
+    <div class="sd-nav-section">Opérations</div>
+    <a href="#" class="sd-nav-link"><i class="bi bi-box-seam"></i>Livraisons B2B</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-signpost-2"></i>Livraisons directes</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-building-gear"></i>Entrepôts</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-boxes"></i>Produits</a>
+
+    <div class="sd-nav-section">Finance</div>
+    <a href="#" class="sd-nav-link"><i class="bi bi-cash-stack"></i>Lots de paiement</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-gift"></i>Bonus</a>
+
+    <div class="sd-nav-section">Système</div>
+    <a href="{% url 'apps_core:configuration_geographie' %}" class="sd-nav-link"><i class="bi bi-geo"></i>Zones géographiques</a>
+    <a href="{% url 'apps_core:gerer_coefficients_vehicule' %}" class="sd-nav-link"><i class="bi bi-truck-front"></i>Coefficients véhicule</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-sliders"></i>Paramètres</a>
+{% endblock %}
+
+{% block extra_css %}
+    .sd-badge-statut { font-size: .75rem; font-weight: 700; padding: .3rem .75rem; border-radius: 50px; }
+    .sd-badge-statut.valide { background: #E5F7EC; color: #1FAA59; }
+    .sd-badge-statut.attente { background: #FFF4E5; color: #E88A00; }
+    .sd-badge-statut.refuse, .sd-badge-statut.suspendu { background: #FDEBEA; color: #E23D32; }
+    .sd-badge-statut.inactif { background: #F1F2F6; color: var(--sd-gris); }
+    .sd-badge-verifie { background: #E5F7EC; color: #1FAA59; font-size: .7rem; font-weight: 700; padding: .15rem .5rem; border-radius: 50px; }
+    .sd-badge-non-verifie { background: #FFF4E5; color: #E88A00; font-size: .7rem; font-weight: 700; padding: .15rem .5rem; border-radius: 50px; }
+    .sd-badge-paye { background: #E5F7EC; color: #1FAA59; font-size: .7rem; font-weight: 700; padding: .15rem .5rem; border-radius: 50px; }
+    .sd-badge-impaye { background: #FDEBEA; color: #E23D32; font-size: .7rem; font-weight: 700; padding: .15rem .5rem; border-radius: 50px; }
+    .sd-info-row { display: flex; justify-content: space-between; padding: .5rem 0; border-bottom: 1px dashed #EDEFF4; font-size: .88rem; }
+    .sd-info-row:last-child { border-bottom: none; }
+    .sd-info-row .label { color: var(--sd-gris); }
+    .sd-info-row .value { font-weight: 600; color: var(--sd-navy); text-align: right; }
+    .modal .form-label { font-weight: 600; color: var(--sd-navy); font-size: .85rem; }
+    .modal .form-control, .modal .form-select {
+        border-radius: 10px; padding: .55rem .8rem; border: 1.5px solid #EDEFF4;
+    }
+{% endblock %}
+
+{% block dashboard_content %}
+
+<!-- ═══════════════════ EN-TÊTE ENTREPRISE + ACTIONS ═══════════════════ -->
+<div class="sd-panel mb-3">
+    <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <h5 class="fw-bold mb-0" style="color: var(--sd-navy);">{{ entreprise.nom_affichage }}</h5>
+                {% if entreprise.statut == 'VALIDE' %}
+                    <span class="sd-badge-statut valide">Validée</span>
+                {% elif entreprise.statut == 'EN_ATTENTE' %}
+                    <span class="sd-badge-statut attente">En attente</span>
+                {% elif entreprise.statut == 'REFUSE' or entreprise.statut == 'SUSPENDU' %}
+                    <span class="sd-badge-statut refuse">{{ entreprise.get_statut_display }}</span>
+                {% else %}
+                    <span class="sd-badge-statut inactif">{{ entreprise.get_statut_display }}</span>
+                {% endif %}
+            </div>
+            <p class="text-muted small mb-0">{{ entreprise.utilisateur.email }} · {{ entreprise.telephone_principal }}</p>
+        </div>
+
+        <div class="d-flex gap-2 flex-wrap">
+            {% if entreprise.statut == 'EN_ATTENTE' %}
+                <form method="post" action="{% url 'apps_entreprise:admin_valider_entreprise' entreprise.pk %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-sd-primary btn-sm"><i class="bi bi-check2 me-1"></i>Valider</button>
+                </form>
+                <button type="button" class="btn btn-sd-outline btn-sm" data-bs-toggle="modal" data-bs-target="#modalRefuser">
+                    <i class="bi bi-x-lg me-1"></i>Refuser
+                </button>
+            {% endif %}
+            {% if entreprise.statut != 'SUSPENDU' %}
+                <button type="button" class="btn btn-sd-outline btn-sm text-danger" data-bs-toggle="modal" data-bs-target="#modalSuspendre">
+                    <i class="bi bi-pause-circle me-1"></i>Suspendre
+                </button>
+            {% endif %}
+            <form method="post" action="{% url 'apps_entreprise:admin_recalculer_score' entreprise.pk %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-sd-outline btn-sm"><i class="bi bi-arrow-repeat me-1"></i>Recalculer le score</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="row g-4 mt-2">
+        <div class="col-md-6">
+            <div class="sd-info-row"><span class="label">Raison sociale</span><span class="value">{{ entreprise.raison_sociale }}</span></div>
+            <div class="sd-info-row"><span class="label">Secteur</span><span class="value">{{ entreprise.get_secteur_display }}</span></div>
+            <div class="sd-info-row"><span class="label">Taille</span><span class="value">{{ entreprise.get_taille_display }}</span></div>
+            <div class="sd-info-row"><span class="label">Type d'entreprise</span><span class="value">{{ entreprise.get_type_entreprise_display }}</span></div>
+            <div class="sd-info-row"><span class="label">Score de fiabilité</span><span class="value">{{ entreprise.score_fiabilite }} / 100</span></div>
+        </div>
+        <div class="col-md-6">
+            <div class="sd-info-row"><span class="label">Registre de commerce</span><span class="value">{{ entreprise.numero_registre|default:"—" }}</span></div>
+            <div class="sd-info-row"><span class="label">NIU</span><span class="value">{{ entreprise.numero_contribuable_niu|default:"—" }}</span></div>
+            <div class="sd-info-row"><span class="label">Ville principale</span><span class="value">{{ entreprise.ville_principale.nom|default:"—" }}</span></div>
+            <div class="sd-info-row"><span class="label">Adresse du siège</span><span class="value">{{ entreprise.adresse_siege|truncatechars:40 }}</span></div>
+            <div class="sd-info-row"><span class="label">Créée le</span><span class="value">{{ entreprise.date_creation|date:"d/m/Y" }}</span></div>
+        </div>
+    </div>
+
+    {% if entreprise.motif_refus %}
+        <div class="alert alert-warning small mt-3 mb-0">
+            <i class="bi bi-info-circle me-1"></i><strong>Motif enregistré :</strong> {{ entreprise.motif_refus }}
+        </div>
+    {% endif %}
+</div>
+
+<div class="row g-3">
+
+    <!-- ═══════════════════ DOCUMENTS ═══════════════════ -->
+    <div class="col-lg-6">
+        <div class="sd-panel h-100">
+            <div class="sd-panel-title mb-3">Documents ({{ documents|length }})</div>
+            {% if documents %}
+                <ul class="list-unstyled mb-0">
+                    {% for document in documents %}
+                        <li class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                            <div>
+                                <div class="fw-semibold small">{{ document.get_type_doc_display }}</div>
+                                <div class="text-muted" style="font-size:.78rem;">{{ document.nom_fichier }}</div>
+                            </div>
+                            <div class="d-flex align-items-center gap-2">
+                                {% if document.verifie %}
+                                    <span class="sd-badge-verifie">Vérifié</span>
+                                {% else %}
+                                    <span class="sd-badge-non-verifie">En attente</span>
+                                    <form method="post" action="{% url 'apps_entreprise:admin_verifier_document' document.pk %}">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-sm btn-sd-outline py-1 px-2">Vérifier</button>
+                                    </form>
+                                {% endif %}
+                                <a href="{{ document.fichier.url }}" target="_blank" class="btn btn-sm btn-link p-0"><i class="bi bi-box-arrow-up-right"></i></a>
+                            </div>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p class="text-muted small mb-0">Aucun document soumis pour le moment.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- ═══════════════════ CONTACTS ═══════════════════ -->
+    <div class="col-lg-6">
+        <div class="sd-panel h-100">
+            <div class="sd-panel-title mb-3">Contacts ({{ contacts|length }})</div>
+            {% if contacts %}
+                <ul class="list-unstyled mb-0">
+                    {% for contact in contacts %}
+                        <li class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                            <div>
+                                <div class="fw-semibold small">{{ contact.nom }} {% if contact.est_principal %}<span class="text-muted">· Principal</span>{% endif %}</div>
+                                <div class="text-muted" style="font-size:.78rem;">{{ contact.get_type_contact_display }} · {{ contact.telephone }}</div>
+                            </div>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p class="text-muted small mb-0">Aucun contact secondaire renseigné.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- ═══════════════════ FRAIS DE GARDIENNAGE ═══════════════════ -->
+    <div class="col-12">
+        <div class="sd-panel">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div class="sd-panel-title mb-0">Frais de gardiennage</div>
+                <button type="button" class="btn btn-sd-outline btn-sm" data-bs-toggle="modal" data-bs-target="#modalGardiennage">
+                    <i class="bi bi-plus-lg me-1"></i>Créer un frais
+                </button>
+            </div>
+            {% if frais_gardiennage %}
+                <div class="table-responsive">
+                    <table class="table sd-table align-middle mb-0">
+                        <thead><tr><th>Montant dû</th><th>Montant payé</th><th>Statut</th><th>Raison</th><th class="text-end">Action</th></tr></thead>
+                        <tbody>
+                            {% for frais in frais_gardiennage %}
+                                <tr>
+                                    <td class="fw-semibold">{{ frais.montant_du }} FCFA</td>
+                                    <td>{{ frais.montant_paye }} FCFA</td>
+                                    <td>
+                                        {% if frais.paye %}<span class="sd-badge-paye">Payé</span>{% else %}<span class="sd-badge-impaye">Impayé</span>{% endif %}
+                                    </td>
+                                    <td class="text-muted small">{{ frais.raison|default:"—"|truncatechars:40 }}</td>
+                                    <td class="text-end">
+                                        {% if not frais.paye %}
+                                            <form method="post" action="{% url 'apps_entreprise:admin_confirmer_paiement_gardiennage' frais.pk %}" class="d-flex gap-1 justify-content-end">
+                                                {% csrf_token %}
+                                                <input type="number" name="montant_paye" step="0.01" min="0" class="form-control form-control-sm" style="width:110px;" placeholder="Montant" required>
+                                                <button type="submit" class="btn btn-sm btn-sd-primary">Confirmer</button>
+                                            </form>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p class="text-muted small mb-0">Aucun frais de gardiennage pour cette entreprise.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════ MODAL — Refuser ═══════════════════ -->
+<div class="modal fade" id="modalRefuser" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" action="{% url 'apps_entreprise:admin_refuser_entreprise' entreprise.pk %}">
+                {% csrf_token %}
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold" style="color: var(--sd-navy);">Refuser l'entreprise</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <label class="form-label">Motif du refus</label>
+                    <textarea name="motif" class="form-control" rows="3" required></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-sd-outline" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-sd-primary">Confirmer le refus</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════ MODAL — Suspendre ═══════════════════ -->
+<div class="modal fade" id="modalSuspendre" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" action="{% url 'apps_entreprise:admin_suspendre_entreprise' entreprise.pk %}">
+                {% csrf_token %}
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold" style="color: var(--sd-navy);">Suspendre l'entreprise</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <label class="form-label">Motif de la suspension</label>
+                    <textarea name="motif" class="form-control" rows="3" required></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-sd-outline" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-sd-primary">Confirmer la suspension</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════ MODAL — Créer un frais de gardiennage ═══════════════════ -->
+<div class="modal fade" id="modalGardiennage" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" action="{% url 'apps_entreprise:admin_creer_frais_gardiennage' entreprise.pk %}">
+                {% csrf_token %}
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold" style="color: var(--sd-navy);">Nouveau frais de gardiennage</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="{{ gardiennage_form.montant_du.id_for_label }}" class="form-label">{{ gardiennage_form.montant_du.label }}</label>
+                        {{ gardiennage_form.montant_du }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="{{ gardiennage_form.raison.id_for_label }}" class="form-label">{{ gardiennage_form.raison.label }}</label>
+                        {{ gardiennage_form.raison }}
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-sd-outline" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-sd-primary">Créer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

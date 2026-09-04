@@ -8,7 +8,7 @@
 
 {% block sidebar_menu %}
     <div class="sd-nav-section">Général</div>
-    <a href="{% url 'apps_livreur:dashboard' %}" class="sd-nav-link active"><i class="bi bi-grid-1x2"></i>Tableau de bord</a>
+    <a href="{% url 'apps_livreur:dashboard_livreur' %}" class="sd-nav-link active"><i class="bi bi-grid-1x2"></i>Tableau de bord</a>
 
     <div class="sd-nav-section">Courses</div>
     <a href="#" class="sd-nav-link"><i class="bi bi-truck"></i>Mes courses
@@ -20,7 +20,7 @@
     <div class="sd-nav-section">Compte</div>
     <a href="#" class="sd-nav-link"><i class="bi bi-cash-coin"></i>Mes revenus</a>
     <a href="#" class="sd-nav-link"><i class="bi bi-chat-dots"></i>Messagerie</a>
-    <a href="#" class="sd-nav-link"><i class="bi bi-person"></i>Mon profil</a>
+    <a href="{% url 'apps_livreur:modifier_profil' %}" class="sd-nav-link"><i class="bi bi-person"></i>Mon profil</a>
 {% endblock %}
 
 {% block dashboard_content %}
@@ -39,8 +39,14 @@
         </div>
     </div>
     <div class="d-flex gap-2">
-        <button class="btn btn-sd-primary px-4"><i class="bi bi-play-fill me-1"></i>Passer actif</button>
-        <button class="btn btn-sd-outline px-4"><i class="bi bi-pause-fill me-1"></i>Pause</button>
+        <form method="post" action="{% url 'apps_livreur:changer_statut' statut='ACTIF' %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-sd-primary px-4"><i class="bi bi-play-fill me-1"></i>Passer actif</button>
+        </form>
+        <form method="post" action="{% url 'apps_livreur:changer_statut' statut='PAUSE' %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-sd-outline px-4"><i class="bi bi-pause-fill me-1"></i>Pause</button>
+        </form>
     </div>
 </div>
 

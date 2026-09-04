@@ -1,0 +1,75 @@
+{% extends 'navigateur/base_dashboard.html' %}
+
+{% block title %}Frais de gardiennage – SwiftDrop{% endblock %}
+{% block page_title %}Frais de gardiennage{% endblock %}
+{% block user_initiales %}{{ entreprise.nom_affichage|slice:":2"|upper }}{% endblock %}
+{% block user_nom %}{{ entreprise.nom_affichage }}{% endblock %}
+{% block user_role %}Entreprise{% endblock %}
+
+{% block sidebar_menu %}
+    <div class="sd-nav-section">Général</div>
+    <a href="{% url 'apps_entreprise:dashboard' %}" class="sd-nav-link"><i class="bi bi-grid-1x2"></i>Tableau de bord</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-chat-dots"></i>Messagerie</a>
+
+    <div class="sd-nav-section">Mon entreprise</div>
+    <a href="{% url 'apps_entreprise:modifier_profil' %}" class="sd-nav-link"><i class="bi bi-building-gear"></i>Mon profil</a>
+    <a href="{% url 'apps_entreprise:mes_documents' %}" class="sd-nav-link"><i class="bi bi-file-earmark-text"></i>Mes documents</a>
+    <a href="{% url 'apps_entreprise:mes_contacts' %}" class="sd-nav-link"><i class="bi bi-person-lines-fill"></i>Mes contacts</a>
+    <a href="{% url 'apps_entreprise:mes_frais_gardiennage' %}" class="sd-nav-link active"><i class="bi bi-shield-lock"></i>Frais de gardiennage</a>
+
+    <div class="sd-nav-section">Activité</div>
+    <a href="#" class="sd-nav-link"><i class="bi bi-boxes"></i>Mes produits</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-box-seam"></i>Mes livraisons</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-cash-stack"></i>Mes paiements</a>
+{% endblock %}
+
+{% block extra_css %}
+    .sd-badge-paye { background: #E5F7EC; color: #1FAA59; font-size: .72rem; font-weight: 700; padding: .2rem .6rem; border-radius: 50px; }
+    .sd-badge-impaye { background: #FDEBEA; color: #E23D32; font-size: .72rem; font-weight: 700; padding: .2rem .6rem; border-radius: 50px; }
+{% endblock %}
+
+{% block dashboard_content %}
+
+<div class="alert alert-light border small mb-3">
+    <i class="bi bi-info-circle me-1" style="color: var(--sd-orange);"></i>
+    Ces frais s'appliquent après <strong>30 jours d'inactivité</strong> (aucune livraison), pour éviter ou annuler le retour de vos produits en stock, ou pour réactiver votre compte. Le paiement se confirme uniquement par notre équipe — contactez l'administration une fois le règlement effectué.
+</div>
+
+<div class="sd-panel">
+    <div class="sd-panel-title mb-3">Historique des frais</div>
+
+    {% if frais %}
+        <div class="table-responsive">
+            <table class="table sd-table align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Montant dû</th>
+                        <th>Montant payé</th>
+                        <th>Statut</th>
+                        <th>Raison</th>
+                        <th>Créé le</th>
+                        <th>Payé le</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for f in frais %}
+                        <tr>
+                            <td class="fw-semibold">{{ f.montant_du }} FCFA</td>
+                            <td>{{ f.montant_paye }} FCFA</td>
+                            <td>
+                                {% if f.paye %}<span class="sd-badge-paye">Payé</span>{% else %}<span class="sd-badge-impaye">Impayé</span>{% endif %}
+                            </td>
+                            <td class="text-muted small">{{ f.raison|default:"—" }}</td>
+                            <td class="text-muted small">{{ f.date_creation|date:"d/m/Y" }}</td>
+                            <td class="text-muted small">{{ f.date_paiement|date:"d/m/Y"|default:"—" }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p class="text-muted small mb-0">Aucun frais de gardiennage n'a été appliqué à votre entreprise.</p>
+    {% endif %}
+</div>
+
+{% endblock %}

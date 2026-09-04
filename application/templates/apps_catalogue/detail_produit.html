@@ -1,0 +1,191 @@
+{% extends 'navigateur/base_dashboard.html' %}
+
+{% block title %}{{ produit.nom }} – SwiftDrop{% endblock %}
+{% block page_title %}Fiche produit{% endblock %}
+{% block user_initiales %}{{ entreprise.nom_affichage|slice:":2"|upper }}{% endblock %}
+{% block user_nom %}{{ entreprise.nom_affichage }}{% endblock %}
+{% block user_role %}Entreprise{% endblock %}
+
+{% block sidebar_menu %}
+    <div class="sd-nav-section">Général</div>
+    <a href="{% url 'apps_entreprise:dashboard' %}" class="sd-nav-link"><i class="bi bi-grid-1x2"></i>Tableau de bord</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-chat-dots"></i>Messagerie</a>
+
+    <div class="sd-nav-section">Mon entreprise</div>
+    <a href="{% url 'apps_entreprise:modifier_profil' %}" class="sd-nav-link"><i class="bi bi-building-gear"></i>Mon profil</a>
+    <a href="{% url 'apps_entreprise:mes_documents' %}" class="sd-nav-link"><i class="bi bi-file-earmark-text"></i>Mes documents</a>
+    <a href="{% url 'apps_entreprise:mes_contacts' %}" class="sd-nav-link"><i class="bi bi-person-lines-fill"></i>Mes contacts</a>
+    <a href="{% url 'apps_entreprise:mes_frais_gardiennage' %}" class="sd-nav-link"><i class="bi bi-shield-lock"></i>Frais de gardiennage</a>
+    <a href="{% url 'apps_entreprise:mes_entrepots' %}" class="sd-nav-link"><i class="bi bi-building"></i>Mes entrepôts</a>
+
+    <div class="sd-nav-section">Activité</div>
+    <a href="{% url 'apps_catalogue:mes_produits' %}" class="sd-nav-link active"><i class="bi bi-boxes"></i>Mes produits</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-box-seam"></i>Mes livraisons</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-cash-stack"></i>Mes paiements</a>
+{% endblock %}
+
+{% block extra_css %}
+    .sd-badge-statut { font-size: .75rem; font-weight: 700; padding: .3rem .75rem; border-radius: 50px; }
+    .sd-badge-statut.valide { background: #E5F7EC; color: #1FAA59; }
+    .sd-badge-statut.attente { background: #FFF4E5; color: #E88A00; }
+    .sd-badge-statut.refuse, .sd-badge-statut.epuise { background: #FDEBEA; color: #E23D32; }
+    .sd-badge-statut.archive { background: #F1F2F6; color: var(--sd-gris); }
+    .sd-info-row { display: flex; justify-content: space-between; padding: .5rem 0; border-bottom: 1px dashed #EDEFF4; font-size: .88rem; }
+    .sd-info-row:last-child { border-bottom: none; }
+    .sd-info-row .label { color: var(--sd-gris); }
+    .sd-info-row .value { font-weight: 600; color: var(--sd-navy); text-align: right; }
+    .sd-produit-photo { width: 100%; height: 260px; object-fit: cover; border-radius: 14px; background: var(--sd-fond); }
+    .sd-photo-thumb-wrap { position: relative; }
+    .sd-photo-thumb { width: 100%; height: 90px; object-fit: cover; border-radius: 10px; }
+    .sd-photo-supprimer {
+        position: absolute; top: 4px; right: 4px;
+        width: 24px; height: 24px; border-radius: 50%;
+        background: rgba(0,0,0,0.55); color: #fff;
+        display: flex; align-items: center; justify-content: center;
+        border: none; font-size: .75rem;
+    }
+    .sd-back-link { color: var(--sd-gris); font-size: .88rem; }
+    .sd-back-link:hover { color: var(--sd-orange); }
+    .modal .form-control { border-radius: 10px; padding: .55rem .8rem; border: 1.5px solid #EDEFF4; }
+{% endblock %}
+
+{% block dashboard_content %}
+
+<a href="{% url 'apps_catalogue:mes_produits' %}" class="sd-back-link d-inline-flex align-items-center gap-1 mb-3">
+    <i class="bi bi-arrow-left"></i> Retour à mes produits
+</a>
+
+<div class="row g-3">
+    <div class="col-lg-4">
+        {% if produit.photo_principale %}
+            <img src="{{ produit.photo_principale.url }}" class="sd-produit-photo mb-3" alt="{{ produit.nom }}">
+        {% else %}
+            <div class="sd-produit-photo mb-3 d-flex align-items-center justify-content-center text-muted">
+                <i class="bi bi-image" style="font-size:2rem;"></i>
+            </div>
+        {% endif %}
+
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <span class="fw-semibold small">Photos ({{ photos|length }})</span>
+            <a href="{% url 'apps_catalogue:ajouter_photo_produit' produit.pk %}" class="btn btn-sd-outline btn-sm">
+                <i class="bi bi-plus-lg me-1"></i>Ajouter
+            </a>
+        </div>
+        {% if photos %}
+            <div class="row g-2">
+                {% for photo in photos %}
+                    <div class="col-4 sd-photo-thumb-wrap">
+                        <img src="{{ photo.photo.url }}" class="sd-photo-thumb" alt="{{ photo.legende }}">
+                        <form method="post" action="{% url 'apps_catalogue:supprimer_photo_produit' photo.pk %}" onsubmit="return confirm('Supprimer cette photo ?');">
+                            {% csrf_token %}
+                            <button type="submit" class="sd-photo-supprimer" title="Supprimer"><i class="bi bi-x"></i></button>
+                        </form>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+
+    <div class="col-lg-8">
+        <div class="sd-panel mb-3">
+            <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
+                <div>
+                    <h5 class="fw-bold mb-1" style="color: var(--sd-navy);">{{ produit.nom }}</h5>
+                    <p class="text-muted small mb-0">{{ produit.categorie.nom|default:"Sans catégorie" }}</p>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    {% if produit.statut == 'VALIDE' %}
+                        <span class="sd-badge-statut valide">Validé</span>
+                    {% elif produit.statut == 'EN_ATTENTE' %}
+                        <span class="sd-badge-statut attente">En attente de votre validation</span>
+                    {% elif produit.statut == 'REFUSE' or produit.statut == 'EPUISE' %}
+                        <span class="sd-badge-statut refuse">{{ produit.get_statut_display }}</span>
+                    {% else %}
+                        <span class="sd-badge-statut archive">{{ produit.get_statut_display }}</span>
+                    {% endif %}
+                    <a href="{% url 'apps_catalogue:modifier_produit' produit.pk %}" class="btn btn-sd-outline btn-sm">
+                        <i class="bi bi-pencil me-1"></i>Modifier
+                    </a>
+                </div>
+            </div>
+
+            {% if produit.statut == 'EN_ATTENTE' %}
+                <div class="alert alert-light border d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                    <span class="small"><i class="bi bi-info-circle me-1" style="color: var(--sd-orange);"></i>Ce produit a été enregistré en votre nom — vérifiez les informations puis validez ou refusez-le.</span>
+                    <div class="d-flex gap-2">
+                        <form method="post" action="{% url 'apps_catalogue:valider_produit' produit.pk %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sd-primary btn-sm"><i class="bi bi-check2 me-1"></i>Valider</button>
+                        </form>
+                        <button type="button" class="btn btn-sd-outline btn-sm text-danger" data-bs-toggle="modal" data-bs-target="#modalRefuser">
+                            <i class="bi bi-x-lg me-1"></i>Refuser
+                        </button>
+                    </div>
+                </div>
+            {% endif %}
+
+            {% if produit.description %}<p class="text-muted small">{{ produit.description }}</p>{% endif %}
+
+            <div class="row g-4 mt-1">
+                <div class="col-md-6">
+                    <div class="sd-info-row"><span class="label">Prix unitaire</span><span class="value">{{ produit.prix_unitaire }} FCFA / {{ produit.get_unite_display }}</span></div>
+                    <div class="sd-info-row"><span class="label">Référence SKU</span><span class="value">{{ produit.reference_sku|default:"—" }}</span></div>
+                    <div class="sd-info-row"><span class="label">Vendu en ligne</span><span class="value">{% if produit.vendu_en_ligne %}Oui (Yopishop){% else %}Non{% endif %}</span></div>
+                </div>
+                <div class="col-md-6">
+                    <div class="sd-info-row"><span class="label">Qualité</span><span class="value">{{ produit.get_qualite_produit_display }}</span></div>
+                    <div class="sd-info-row"><span class="label">Véhicule minimum</span><span class="value">{{ produit.get_vehicule_minimum_requis_display }}</span></div>
+                    <div class="sd-info-row"><span class="label">Poids</span><span class="value">{{ produit.poids_kg|default:"—" }} kg</span></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="sd-panel">
+            <div class="sd-panel-title mb-3">Stock par entrepôt</div>
+            {% if stocks %}
+                <div class="table-responsive">
+                    <table class="table sd-table align-middle mb-0">
+                        <thead><tr><th>Entrepôt</th><th>Stock</th><th>Réservé</th><th>Disponible</th></tr></thead>
+                        <tbody>
+                            {% for stock in stocks %}
+                                <tr>
+                                    <td>{{ stock.entrepot.nom }}</td>
+                                    <td>{{ stock.quantite_stock }}</td>
+                                    <td>{{ stock.quantite_reservee }}</td>
+                                    <td class="fw-semibold">{{ stock.quantite_disponible }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p class="text-muted small mb-0">Aucun stock pour ce produit.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════ MODAL — Refuser ═══════════════════ -->
+<div class="modal fade" id="modalRefuser" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" action="{% url 'apps_catalogue:refuser_produit' produit.pk %}">
+                {% csrf_token %}
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold" style="color: var(--sd-navy);">Refuser ce produit</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <label class="form-label fw-semibold" style="font-size:.85rem;">Motif du refus</label>
+                    <textarea name="motif" class="form-control" rows="3" required></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-sd-outline" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-sd-primary">Confirmer le refus</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

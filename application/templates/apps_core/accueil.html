@@ -178,12 +178,12 @@
                 <div class="d-flex flex-wrap gap-3 mt-4">
                     <!-- TODO : remplacer par un formulaire d'inscription Entreprise dédié
                          (créera en plus le profil apps_entreprise.Entreprise) -->
-                    <a href="{% url 'apps_core:inscription' %}" class="btn btn-sd-primary btn-lg px-4">
+                    <a href="{% url 'apps_entreprise:inscription_entreprise' %}" class="btn btn-sd-primary btn-lg px-4">
                         <i class="bi bi-building me-2"></i>Créer mon compte entreprise
                     </a>
                     <!-- TODO : remplacer par un formulaire d'inscription Livreur dédié
                          (créera en plus le profil apps_livreur.Livreur) -->
-                    <a href="{% url 'apps_core:inscription' %}" class="btn btn-outline-light btn-lg px-4">
+                    <a href="{% url 'apps_livreur:inscription' %}" class="btn btn-outline-light btn-lg px-4">
                         <i class="bi bi-bicycle me-2"></i>Devenir livreur partenaire
                     </a>
                 </div>
@@ -492,7 +492,7 @@
                         <li class="mb-0"><i class="bi bi-check2 text-success me-2"></i>Vente en ligne (Yopishop) ou physique</li>
                     </ul>
                     <!-- TODO : formulaire d'inscription Entreprise dédié -->
-                    <a href="{% url 'apps_core:inscription' %}" class="btn btn-sd-primary w-100">Créer un compte entreprise</a>
+                    <a href="{% url 'apps_entreprise:inscription_entreprise' %}" class="btn btn-sd-primary w-100">Créer un compte entreprise</a>
                 </div>
             </div>
             <!-- Livreurs -->
@@ -508,7 +508,7 @@
                         <li class="mb-0"><i class="bi bi-check2 text-success me-2"></i>Moto, voiture ou camionnette acceptées</li>
                     </ul>
                     <!-- TODO : formulaire d'inscription Livreur dédié -->
-                    <a href="{% url 'apps_core:inscription' %}" class="btn btn-sd-outline w-100">Devenir livreur partenaire</a>
+                    <a href="{% url 'apps_livreur:inscription' %}" class="btn btn-sd-outline w-100">Devenir livreur partenaire</a>
                 </div>
             </div>
             <!-- Clients -->

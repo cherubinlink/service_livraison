@@ -1,0 +1,122 @@
+{% extends 'navigateur/base_dashboard.html' %}
+
+{% block title %}Modifier mon profil – SwiftDrop{% endblock %}
+{% block page_title %}Modifier mon profil{% endblock %}
+{% block user_initiales %}{{ request.user.nom|default:"LV"|slice:":2"|upper }}{% endblock %}
+{% block user_nom %}{{ request.user.nom|default:"Livreur" }}{% endblock %}
+{% block user_role %}Livreur{% if livreur %} · {{ livreur.get_type_vehicule_display }}{% endif %}{% endblock %}
+
+{% block sidebar_menu %}
+    <div class="sd-nav-section">Général</div>
+    <a href="{% url 'apps_livreur:dashboard_livreur' %}" class="sd-nav-link"><i class="bi bi-grid-1x2"></i>Tableau de bord</a>
+
+    <div class="sd-nav-section">Courses</div>
+    <a href="#" class="sd-nav-link"><i class="bi bi-truck"></i>Mes courses</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-clock-history"></i>Historique</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-geo-alt"></i>Ma position</a>
+
+    <div class="sd-nav-section">Compte</div>
+    <a href="#" class="sd-nav-link"><i class="bi bi-cash-coin"></i>Mes revenus</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-chat-dots"></i>Messagerie</a>
+    <a href="{% url 'apps_livreur:modifier_profil' %}" class="sd-nav-link active"><i class="bi bi-person"></i>Mon profil</a>
+{% endblock %}
+
+{% block extra_css %}
+    .sd-form-section-title {
+        text-transform: uppercase;
+        font-size: .72rem;
+        font-weight: 700;
+        letter-spacing: .06em;
+        color: var(--sd-orange);
+        margin-bottom: .9rem;
+    }
+    .sd-form-section { margin-bottom: 1.8rem; }
+    .sd-panel .form-label { font-weight: 600; color: var(--sd-navy); font-size: .87rem; }
+    .sd-panel .form-control,
+    .sd-panel .form-select {
+        border-radius: 10px; border: 1.5px solid #EDEFF4;
+    }
+    .sd-panel .form-control:focus,
+    .sd-panel .form-select:focus {
+        border-color: var(--sd-orange); box-shadow: 0 0 0 .2rem rgba(255,107,53,0.15);
+    }
+    .sd-readonly-note {
+        background: var(--sd-fond);
+        border: 1px dashed #DDE2EC;
+        border-radius: 10px;
+        padding: .8rem 1rem;
+        font-size: .83rem;
+        color: var(--sd-gris);
+    }
+{% endblock %}
+
+{% block dashboard_content %}
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="sd-panel">
+
+            <div class="sd-readonly-note mb-4">
+                <i class="bi bi-info-circle me-1"></i>
+                Le numéro de CNI n'est pas modifiable ici — c'est un document d'identité, tout changement
+                doit passer par l'administration.
+            </div>
+
+            {% if form.non_field_errors %}
+                <div class="alert alert-danger">
+                    {% for erreur in form.non_field_errors %}{{ erreur }}{% endfor %}
+                </div>
+            {% endif %}
+
+            <form method="post" enctype="multipart/form-data" novalidate>
+                {% csrf_token %}
+
+                <!-- ═══════════════ Véhicule ═══════════════ -->
+                <div class="sd-form-section">
+                    <div class="sd-form-section-title">Véhicule</div>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="{{ form.type_vehicule.id_for_label }}" class="form-label">{{ form.type_vehicule.label }}</label>
+                            {{ form.type_vehicule }}
+                            {% if form.type_vehicule.errors %}<div class="text-danger small mt-1">{{ form.type_vehicule.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="{{ form.immatriculation.id_for_label }}" class="form-label">{{ form.immatriculation.label }}</label>
+                            {{ form.immatriculation }}
+                            {% if form.immatriculation.errors %}<div class="text-danger small mt-1">{{ form.immatriculation.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="{{ form.capacite_charge_kg.id_for_label }}" class="form-label">{{ form.capacite_charge_kg.label }}</label>
+                            {{ form.capacite_charge_kg }}
+                            {% if form.capacite_charge_kg.errors %}<div class="text-danger small mt-1">{{ form.capacite_charge_kg.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="{{ form.photo_cni.id_for_label }}" class="form-label">{{ form.photo_cni.label }}</label>
+                            {% if livreur.photo_cni %}
+                                <div class="mb-2"><a href="{{ livreur.photo_cni.url }}" target="_blank" class="small">Voir le document actuel</a></div>
+                            {% endif %}
+                            {{ form.photo_cni }}
+                            {% if form.photo_cni.errors %}<div class="text-danger small mt-1">{{ form.photo_cni.errors.0 }}</div>{% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ═══════════════ Zones de travail ═══════════════ -->
+                <div class="sd-form-section">
+                    <div class="sd-form-section-title">Zones de travail</div>
+                    <label for="{{ form.zones_travail.id_for_label }}" class="form-label">{{ form.zones_travail.label }}</label>
+                    {{ form.zones_travail }}
+                    <div class="form-text small">Maintenez Ctrl (Cmd sur Mac) pour sélectionner plusieurs zones.</div>
+                    {% if form.zones_travail.errors %}<div class="text-danger small mt-1">{{ form.zones_travail.errors.0 }}</div>{% endif %}
+                </div>
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-sd-primary px-4">Enregistrer</button>
+                    <a href="{% url 'apps_livreur:dashboard_livreur' %}" class="btn btn-sd-outline px-4">Annuler</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
