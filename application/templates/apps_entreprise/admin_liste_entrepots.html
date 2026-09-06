@@ -115,6 +115,8 @@
                                 <div class="btn-group btn-group-sm">
                                     <a href="{% url 'apps_entreprise:admin_detail_entrepot' pk=entrepot.pk %}"
                                        class="btn btn-sd-outline" title="Voir"><i class="bi bi-eye"></i></a>
+                                    <a href="{% url 'apps_catalogue:admin_liste_stocks_entrepot' entrepot_pk=entrepot.pk %}"
+                                       class="btn btn-light" title="Voir les stocks"><i class="bi bi-boxes"></i></a>
                                     <a href="{% url 'apps_entreprise:admin_modifier_entrepot' pk=entrepot.pk %}"
                                        class="btn btn-light" title="Modifier"><i class="bi bi-pencil"></i></a>
                                 </div>

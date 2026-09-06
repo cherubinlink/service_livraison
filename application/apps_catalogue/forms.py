@@ -1,7 +1,7 @@
 from django import forms
 from django.core.exceptions import ValidationError
 
-from apps_catalogue.models import Categorie, Produit, PhotoProduit
+from apps_catalogue.models import Categorie, Produit, PhotoProduit, MouvementStock
 from apps_entreprise.models import Entrepot
 
 
@@ -130,3 +130,59 @@ class PhotoProduitForm(forms.ModelForm):
             'legende': forms.TextInput(attrs={'class': 'form-control'}),
             'ordre': forms.NumberInput(attrs={'class': 'form-control'}),
         }
+
+
+class ReapprovisionnementForm(forms.Form):
+    quantite = forms.IntegerField(
+        label='Quantité ajoutée', min_value=1,
+        widget=forms.NumberInput(attrs={'class': 'form-control'})
+    )
+    cout_unitaire = forms.DecimalField(
+        label='Coût unitaire (FCFA)', required=False, min_value=0, max_digits=12, decimal_places=2,
+        widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'})
+    )
+    note = forms.CharField(
+        label='Note', required=False,
+        widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 2})
+    )
+
+
+class TransfertStockForm(forms.Form):
+    entrepot_destination = forms.ModelChoiceField(
+        label='Entrepôt de destination',
+        queryset=Entrepot.objects.filter(est_actif=True).order_by('nom'),
+        widget=forms.Select(attrs={'class': 'form-select'})
+    )
+    quantite = forms.IntegerField(
+        label='Quantité à transférer', min_value=1,
+        widget=forms.NumberInput(attrs={'class': 'form-control'})
+    )
+    note = forms.CharField(
+        label='Note', required=False,
+        widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 2})
+    )
+
+
+class AjustementStockForm(forms.Form):
+    """
+    Réunit les 4 types de mouvements manuels (positifs et négatifs) sous
+    un seul formulaire — la vue applique le bon signe selon le type choisi.
+    """
+    TYPE_CHOICES = [
+        (MouvementStock.TypeMouvement.AJUSTEMENT_PLUS, 'Ajustement positif (inventaire)'),
+        (MouvementStock.TypeMouvement.AJUSTEMENT_MOINS, 'Ajustement négatif (inventaire)'),
+        (MouvementStock.TypeMouvement.PERTE, 'Perte / Casse / Vol'),
+        (MouvementStock.TypeMouvement.PEREMPTION, 'Péremption / Retrait'),
+    ]
+    type_mouvement = forms.ChoiceField(
+        label="Type d'ajustement", choices=TYPE_CHOICES,
+        widget=forms.Select(attrs={'class': 'form-select'})
+    )
+    quantite = forms.IntegerField(
+        label='Quantité concernée', min_value=1,
+        widget=forms.NumberInput(attrs={'class': 'form-control'})
+    )
+    note = forms.CharField(
+        label='Justification', required=True,
+        widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 2})
+    )

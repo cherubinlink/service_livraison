@@ -1,0 +1,104 @@
+{% extends 'navigateur/base_dashboard.html' %}
+
+{% block title %}Retours de stock – Administration SwiftDrop{% endblock %}
+{% block page_title %}Retours de stock{% endblock %}
+{% block user_initiales %}AD{% endblock %}
+{% block user_nom %}Administration{% endblock %}
+{% block user_role %}Administrateur{% endblock %}
+
+{% block sidebar_menu %}
+    <div class="sd-nav-section">Général</div>
+    <a href="{% url 'apps_core:dashboard_admin' %}" class="sd-nav-link"><i class="bi bi-grid-1x2"></i>Tableau de bord</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-chat-dots"></i>Messagerie</a>
+
+    <div class="sd-nav-section">Acteurs</div>
+    <a href="{% url 'apps_entreprise:admin_liste_entreprises' %}" class="sd-nav-link"><i class="bi bi-building"></i>Entreprises</a>
+    <a href="{% url 'apps_livreur:admin_liste_livreurs' %}" class="sd-nav-link"><i class="bi bi-bicycle"></i>Livreurs</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-person-heart"></i>Clients</a>
+
+    <div class="sd-nav-section">Opérations</div>
+    <a href="#" class="sd-nav-link"><i class="bi bi-box-seam"></i>Livraisons B2B</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-signpost-2"></i>Livraisons directes</a>
+    <a href="{% url 'apps_entreprise:admin_liste_entrepots' %}" class="sd-nav-link"><i class="bi bi-building-gear"></i>Entrepôts</a>
+    <a href="{% url 'apps_catalogue:admin_liste_produits' %}" class="sd-nav-link"><i class="bi bi-boxes"></i>Produits</a>
+    <a href="{% url 'apps_catalogue:admin_liste_alertes_stock' %}" class="sd-nav-link"><i class="bi bi-exclamation-triangle"></i>Alertes stock</a>
+    <a href="{% url 'apps_catalogue:admin_liste_retours_stock' %}" class="sd-nav-link active"><i class="bi bi-arrow-return-left"></i>Retours de stock</a>
+
+    <div class="sd-nav-section">Finance</div>
+    <a href="#" class="sd-nav-link"><i class="bi bi-cash-stack"></i>Lots de paiement</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-gift"></i>Bonus</a>
+
+    <div class="sd-nav-section">Système</div>
+    <a href="{% url 'apps_core:configuration_geographie' %}" class="sd-nav-link"><i class="bi bi-geo"></i>Zones géographiques</a>
+    <a href="{% url 'apps_core:gerer_coefficients_vehicule' %}" class="sd-nav-link"><i class="bi bi-truck-front"></i>Coefficients véhicule</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-sliders"></i>Paramètres</a>
+{% endblock %}
+
+{% block extra_css %}
+    .sd-badge-statut { font-size: .72rem; font-weight: 700; padding: .25rem .65rem; border-radius: 50px; }
+    .sd-badge-statut.valide { background: #E5F7EC; color: #1FAA59; }
+    .sd-badge-statut.attente { background: #FFF4E5; color: #E88A00; }
+{% endblock %}
+
+{% block dashboard_content %}
+
+<div class="sd-filtre-bar mb-3 d-flex justify-content-between align-items-center" style="background:#fff; border:1px solid #EDEFF4; border-radius:14px; padding:1rem 1.25rem;">
+    <div class="form-check">
+        <input class="form-check-input" type="checkbox" id="filtreNonConfirmes"
+               {% if request.GET.non_confirmes == '1' %}checked{% endif %}
+               onchange="window.location.href = this.checked ? '?non_confirmes=1' : '{% url 'apps_catalogue:admin_liste_retours_stock' %}';">
+        <label class="form-check-label small fw-semibold" for="filtreNonConfirmes">
+            Afficher uniquement les retraits non confirmés
+        </label>
+    </div>
+    {% if request.GET.non_confirmes == '1' %}
+        <a href="{% url 'apps_catalogue:admin_liste_retours_stock' %}" class="btn btn-sm btn-sd-outline">
+            <i class="bi bi-x-lg"></i> Réinitialiser
+        </a>
+    {% endif %}
+</div>
+
+<div class="sd-panel">
+    {% if retours %}
+        <div class="table-responsive">
+            <table class="table sd-table align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Entreprise</th>
+                        <th>Produit</th>
+                        <th>Entrepôt</th>
+                        <th>Quantité</th>
+                        <th>Motif</th>
+                        <th>Créé le</th>
+                        <th>Retrait confirmé</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for retour in retours %}
+                        <tr>
+                            <td class="fw-semibold">{{ retour.entreprise.nom_affichage }}</td>
+                            <td>{{ retour.produit.nom }}</td>
+                            <td>{{ retour.entrepot.nom|default:"—" }}</td>
+                            <td>{{ retour.quantite_retournee }}</td>
+                            <td>{{ retour.get_motif_display }}</td>
+                            <td class="text-muted small">{{ retour.date_creation|date:"d/m/Y H:i" }}</td>
+                            <td>
+                                {% if retour.confirme_retire_par_entreprise %}
+                                    <span class="sd-badge-statut valide">
+                                        <i class="bi bi-check2 me-1"></i>Confirmé le {{ retour.date_confirmation|date:"d/m/Y" }}
+                                    </span>
+                                {% else %}
+                                    <span class="sd-badge-statut attente">En attente</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p class="text-muted small mb-0">Aucun retour de stock ne correspond à ces critères.</p>
+    {% endif %}
+</div>
+
+{% endblock %}

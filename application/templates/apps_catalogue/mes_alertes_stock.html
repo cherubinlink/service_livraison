@@ -1,0 +1,66 @@
+{% extends 'navigateur/base_dashboard.html' %}
+
+{% block title %}Mes alertes stock – SwiftDrop{% endblock %}
+{% block page_title %}Mes alertes de stock{% endblock %}
+{% block user_initiales %}{{ request.user.entreprise.nom_affichage|slice:":2"|upper }}{% endblock %}
+{% block user_nom %}{{ request.user.entreprise.nom_affichage }}{% endblock %}
+{% block user_role %}Entreprise{% endblock %}
+
+{% block sidebar_menu %}
+    <div class="sd-nav-section">Général</div>
+    <a href="{% url 'apps_entreprise:dashboard' %}" class="sd-nav-link"><i class="bi bi-grid-1x2"></i>Tableau de bord</a>
+
+    <div class="sd-nav-section">Catalogue</div>
+    <a href="{% url 'apps_catalogue:mes_produits' %}" class="sd-nav-link"><i class="bi bi-boxes"></i>Mes produits</a>
+    <a href="{% url 'apps_catalogue:mes_stocks' %}" class="sd-nav-link"><i class="bi bi-archive"></i>Mes stocks</a>
+    <a href="{% url 'apps_catalogue:mes_alertes_stock' %}" class="sd-nav-link active"><i class="bi bi-exclamation-triangle"></i>Mes alertes stock</a>
+    <a href="{% url 'apps_catalogue:mes_retours_stock' %}" class="sd-nav-link"><i class="bi bi-arrow-return-left"></i>Mes retours de stock</a>
+    <a href="{% url 'apps_entreprise:mes_entrepots' %}" class="sd-nav-link"><i class="bi bi-building-gear"></i>Mes entrepôts</a>
+{% endblock %}
+
+{% block extra_css %}
+    .sd-badge-alerte { font-size: .72rem; font-weight: 700; padding: .2rem .6rem; border-radius: 50px; }
+    .sd-badge-alerte.bas { background: #FFF4E5; color: #E88A00; }
+    .sd-badge-alerte.rupture { background: #FDEBEA; color: #E23D32; }
+{% endblock %}
+
+{% block dashboard_content %}
+
+<div class="sd-panel">
+    {% if alertes %}
+        <div class="table-responsive">
+            <table class="table sd-table align-middle mb-0">
+                <thead><tr><th>Produit</th><th>Entrepôt</th><th>Type</th><th>Quantité au moment</th><th>Déclenchée le</th><th class="text-end">Action</th></tr></thead>
+                <tbody>
+                    {% for alerte in alertes %}
+                        <tr>
+                            <td class="fw-semibold">{{ alerte.stock_entrepot.produit.nom }}</td>
+                            <td>{{ alerte.stock_entrepot.entrepot.nom }}</td>
+                            <td>
+                                {% if alerte.type_alerte == 'RUPTURE' %}
+                                    <span class="sd-badge-alerte rupture">Rupture</span>
+                                {% else %}
+                                    <span class="sd-badge-alerte bas">Stock bas</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ alerte.quantite_au_moment }}</td>
+                            <td class="text-muted small">{{ alerte.date|date:"d/m/Y H:i" }}</td>
+                            <td class="text-end">
+                                <a href="{% url 'apps_catalogue:detail_stock_entrepot' alerte.stock_entrepot.pk %}" class="btn btn-sm btn-sd-primary">
+                                    <i class="bi bi-box-arrow-in-down me-1"></i>Réapprovisionner
+                                </a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="text-center py-4">
+            <i class="bi bi-check2-circle" style="font-size: 2.2rem; color: #1FAA59;"></i>
+            <p class="text-muted mt-2 mb-0">Aucune alerte active. Vos stocks sont sous contrôle.</p>
+        </div>
+    {% endif %}
+</div>
+
+{% endblock %}

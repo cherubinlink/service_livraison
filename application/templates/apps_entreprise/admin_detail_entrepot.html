@@ -68,6 +68,9 @@
             </div>
         </div>
         <div class="d-flex gap-2">
+            <a href="{% url 'apps_catalogue:admin_liste_stocks_entrepot' entrepot_pk=entrepot.pk %}" class="btn btn-sm btn-sd-outline">
+                <i class="bi bi-boxes"></i> Voir les stocks
+            </a>
             <a href="{% url 'apps_entreprise:admin_modifier_entrepot' pk=entrepot.pk %}" class="btn btn-sm btn-sd-outline">
                 <i class="bi bi-pencil"></i> Modifier
             </a>

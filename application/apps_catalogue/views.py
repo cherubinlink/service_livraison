@@ -303,3 +303,321 @@ def supprimer_photo_produit(request, pk):
         messages.success(request, "Photo supprimée.")
     return redirect('apps_catalogue:detail_produit', pk=produit_pk)
  
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# STOCKS PAR ENTREPÔT
+# ═══════════════════════════════════════════════════════════════════════
+
+@login_required
+def mes_stocks(request):
+    """Vue d'ensemble des stocks de l'entreprise connectée, tous entrepôts confondus."""
+    from apps_catalogue.models import StockEntrepot
+
+    entreprise = getattr(request.user, 'entreprise', None)
+    if entreprise is None:
+        messages.error(request, "Aucune entreprise associée à ce compte.")
+        return redirect('apps_entreprise:dashboard')
+
+    stocks = StockEntrepot.objects.filter(
+        produit__entreprise=entreprise
+    ).select_related('produit', 'entrepot').order_by('produit__nom', 'entrepot__nom')
+
+    return render(request, 'apps_catalogue/mes_stocks.html', {'stocks': stocks})
+
+
+@login_required
+def admin_liste_stocks_entrepot(request, entrepot_pk):
+    """Vue admin : tout ce qui est stocké dans un entrepôt donné."""
+    from apps_catalogue.models import StockEntrepot
+    from apps_entreprise.models import Entrepot
+
+    entrepot = get_object_or_404(Entrepot, pk=entrepot_pk)
+    stocks = StockEntrepot.objects.filter(entrepot=entrepot).select_related('produit', 'produit__entreprise')
+
+    return render(request, 'apps_catalogue/admin_stocks_entrepot.html', {'entrepot': entrepot, 'stocks': stocks})
+
+
+@login_required
+def detail_stock_entrepot(request, pk):
+    """
+    Détail d'une ligne StockEntrepot : mouvements, alertes, et actions
+    (réapprovisionner, transférer, ajuster) — accessible à l'admin ou à
+    l'entreprise propriétaire du produit concerné (vérifié explicitement).
+    """
+    from apps_catalogue.models import StockEntrepot
+    from apps_catalogue.forms import ReapprovisionnementForm, TransfertStockForm, AjustementStockForm
+
+    stock = get_object_or_404(StockEntrepot.objects.select_related('produit', 'entrepot'), pk=pk)
+
+    entreprise = getattr(request.user, 'entreprise', None)
+    if entreprise is not None and stock.produit.entreprise_id != entreprise.id:
+        messages.error(request, "Ce stock n'appartient pas à votre entreprise.")
+        return redirect('apps_catalogue:mes_stocks')
+
+    mouvements = stock.mouvements.select_related('effectue_par')[:30]
+    alertes = stock.alertes.filter(traitee=False)
+
+    return render(request, 'apps_catalogue/detail_stock_entrepot.html', {
+        'stock': stock,
+        'mouvements': mouvements,
+        'alertes': alertes,
+        'reappro_form': ReapprovisionnementForm(),
+        'transfert_form': TransfertStockForm(),
+        'ajustement_form': AjustementStockForm(),
+    })
+
+
+@login_required
+def reapprovisionner_stock(request, pk):
+    """Ajoute de la quantité à un stock existant (réception de marchandise)."""
+    from apps_catalogue.models import StockEntrepot, MouvementStock, Produit
+    from apps_catalogue.forms import ReapprovisionnementForm
+
+    stock = get_object_or_404(StockEntrepot, pk=pk)
+    if request.method == 'POST':
+        form = ReapprovisionnementForm(request.POST)
+        if form.is_valid():
+            quantite = form.cleaned_data['quantite']
+            avant = stock.quantite_stock
+            stock.quantite_stock += quantite
+            stock.save(update_fields=['quantite_stock'])
+
+            MouvementStock.objects.create(
+                stock_entrepot=stock,
+                type_mouvement=MouvementStock.TypeMouvement.ENTREE_REAPPRO,
+                quantite=quantite,
+                stock_avant=avant,
+                stock_apres=stock.quantite_stock,
+                cout_unitaire=form.cleaned_data.get('cout_unitaire'),
+                note=form.cleaned_data.get('note', ''),
+                effectue_par=request.user,
+            )
+
+            # Un réappro peut faire sortir le produit de rupture.
+            if stock.produit.statut == Produit.StatutProduit.EPUISE and stock.produit.stock_total_disponible > 0:
+                stock.produit.statut = Produit.StatutProduit.VALIDE
+                stock.produit.save(update_fields=['statut'])
+
+            messages.success(request, f"+{quantite} unité(s) ajoutée(s) à {stock.produit.nom} @ {stock.entrepot.nom}.")
+        else:
+            messages.error(request, "Merci de corriger les erreurs du formulaire.")
+    return redirect('apps_catalogue:detail_stock_entrepot', pk=pk)
+
+
+@login_required
+def transferer_stock(request, pk):
+    """
+    Transfère une quantité d'un entrepôt vers un autre pour le même
+    produit — décrémente la ligne source, crée ou incrémente la ligne
+    destination, journalise un MouvementStock des deux côtés.
+    """
+    from apps_catalogue.models import StockEntrepot, MouvementStock
+    from apps_catalogue.forms import TransfertStockForm
+
+    stock_source = get_object_or_404(StockEntrepot, pk=pk)
+    if request.method == 'POST':
+        form = TransfertStockForm(request.POST)
+        if form.is_valid():
+            quantite = form.cleaned_data['quantite']
+            entrepot_dest = form.cleaned_data['entrepot_destination']
+
+            if entrepot_dest == stock_source.entrepot:
+                messages.error(request, "L'entrepôt de destination doit être différent de l'entrepôt source.")
+                return redirect('apps_catalogue:detail_stock_entrepot', pk=pk)
+
+            if quantite > stock_source.quantite_disponible:
+                messages.error(
+                    request, f"Stock insuffisant : {stock_source.quantite_disponible} disponible(s) seulement."
+                )
+                return redirect('apps_catalogue:detail_stock_entrepot', pk=pk)
+
+            # Sortie côté source
+            avant_source = stock_source.quantite_stock
+            stock_source.quantite_stock -= quantite
+            stock_source.save(update_fields=['quantite_stock'])
+            MouvementStock.objects.create(
+                stock_entrepot=stock_source,
+                type_mouvement=MouvementStock.TypeMouvement.TRANSFERT_ENTREPOT,
+                quantite=-quantite,
+                stock_avant=avant_source,
+                stock_apres=stock_source.quantite_stock,
+                note=form.cleaned_data.get('note', '') or f"Transfert vers {entrepot_dest.nom}",
+                effectue_par=request.user,
+            )
+
+            # Entrée côté destination (créée si elle n'existe pas encore)
+            stock_dest, _cree = StockEntrepot.objects.get_or_create(
+                produit=stock_source.produit, entrepot=entrepot_dest,
+                defaults={'seuil_alerte': stock_source.seuil_alerte, 'seuil_rupture': stock_source.seuil_rupture},
+            )
+            avant_dest = stock_dest.quantite_stock
+            stock_dest.quantite_stock += quantite
+            stock_dest.save(update_fields=['quantite_stock'])
+            MouvementStock.objects.create(
+                stock_entrepot=stock_dest,
+                type_mouvement=MouvementStock.TypeMouvement.TRANSFERT_ENTREPOT,
+                quantite=quantite,
+                stock_avant=avant_dest,
+                stock_apres=stock_dest.quantite_stock,
+                note=form.cleaned_data.get('note', '') or f"Transfert depuis {stock_source.entrepot.nom}",
+                effectue_par=request.user,
+            )
+
+            messages.success(request, f"{quantite} unité(s) transférée(s) vers {entrepot_dest.nom}.")
+        else:
+            messages.error(request, "Merci de corriger les erreurs du formulaire.")
+    return redirect('apps_catalogue:detail_stock_entrepot', pk=pk)
+
+
+@login_required
+def ajuster_stock(request, pk):
+    """Ajustement manuel après inventaire physique, ou signalement de perte/péremption."""
+    from apps_catalogue.models import StockEntrepot, MouvementStock
+    from apps_catalogue.forms import AjustementStockForm
+
+    stock = get_object_or_404(StockEntrepot, pk=pk)
+    if request.method == 'POST':
+        form = AjustementStockForm(request.POST)
+        if form.is_valid():
+            type_mouvement = form.cleaned_data['type_mouvement']
+            quantite = form.cleaned_data['quantite']
+            est_negatif = type_mouvement in (
+                MouvementStock.TypeMouvement.AJUSTEMENT_MOINS,
+                MouvementStock.TypeMouvement.PERTE,
+                MouvementStock.TypeMouvement.PEREMPTION,
+            )
+
+            if est_negatif and quantite > stock.quantite_stock:
+                messages.error(request, f"Impossible : seulement {stock.quantite_stock} en stock.")
+                return redirect('apps_catalogue:detail_stock_entrepot', pk=pk)
+
+            avant = stock.quantite_stock
+            stock.quantite_stock += -quantite if est_negatif else quantite
+            stock.save(update_fields=['quantite_stock'])
+
+            MouvementStock.objects.create(
+                stock_entrepot=stock,
+                type_mouvement=type_mouvement,
+                quantite=-quantite if est_negatif else quantite,
+                stock_avant=avant,
+                stock_apres=stock.quantite_stock,
+                note=form.cleaned_data['note'],
+                effectue_par=request.user,
+            )
+            stock._verifier_alertes()
+
+            messages.success(request, "Ajustement enregistré.")
+        else:
+            messages.error(request, "Merci de corriger les erreurs du formulaire (une justification est obligatoire).")
+    return redirect('apps_catalogue:detail_stock_entrepot', pk=pk)
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# ALERTES DE STOCK
+# ═══════════════════════════════════════════════════════════════════════
+
+@login_required
+def mes_alertes_stock(request):
+    """Alertes actives (non traitées) sur les produits de l'entreprise connectée."""
+    from apps_catalogue.models import AlerteStock
+
+    entreprise = getattr(request.user, 'entreprise', None)
+    if entreprise is None:
+        messages.error(request, "Aucune entreprise associée à ce compte.")
+        return redirect('apps_entreprise:dashboard')
+
+    alertes = AlerteStock.objects.filter(
+        stock_entrepot__produit__entreprise=entreprise, traitee=False
+    ).select_related('stock_entrepot__produit', 'stock_entrepot__entrepot').order_by('-date')
+
+    return render(request, 'apps_catalogue/mes_alertes_stock.html', {'alertes': alertes})
+
+
+@login_required
+def admin_liste_alertes_stock(request):
+    """Toutes les alertes actives, tous produits/entreprises confondus."""
+    from apps_catalogue.models import AlerteStock
+
+    alertes = AlerteStock.objects.filter(traitee=False).select_related(
+        'stock_entrepot__produit__entreprise', 'stock_entrepot__entrepot'
+    ).order_by('-date')
+
+    return render(request, 'apps_catalogue/admin_alertes_stock.html', {'alertes': alertes})
+
+
+@login_required
+def traiter_alerte_stock(request, pk):
+    """Marque une alerte comme traitée (réapprovisionnement effectué, ou faux positif accepté)."""
+    from apps_catalogue.models import AlerteStock
+    from django.utils import timezone
+
+    alerte = get_object_or_404(AlerteStock, pk=pk)
+    if request.method == 'POST':
+        alerte.traitee = True
+        alerte.traitee_par = request.user
+        alerte.date_traitement = timezone.now()
+        alerte.save(update_fields=['traitee', 'traitee_par', 'date_traitement'])
+        messages.success(request, "Alerte marquée comme traitée.")
+
+    if getattr(request.user, 'entreprise', None):
+        return redirect('apps_catalogue:mes_alertes_stock')
+    return redirect('apps_catalogue:admin_liste_alertes_stock')
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# RETOURS DE STOCK AU PROPRIÉTAIRE (inactivité 30 jours, etc.)
+# ═══════════════════════════════════════════════════════════════════════
+
+@login_required
+def mes_retours_stock(request):
+    """
+    Liste, côté entreprise, les produits qui lui ont été retournés (ex :
+    suite à une désactivation pour inactivité — cf. apps_entreprise.
+    Entreprise.desactiver_pour_inactivite). L'entreprise confirme ici
+    être passée récupérer physiquement la marchandise.
+    """
+    from apps_catalogue.models import RetourStockProprietaire
+
+    entreprise = getattr(request.user, 'entreprise', None)
+    if entreprise is None:
+        messages.error(request, "Aucune entreprise associée à ce compte.")
+        return redirect('apps_entreprise:dashboard')
+
+    retours = RetourStockProprietaire.objects.filter(entreprise=entreprise).select_related(
+        'produit', 'entrepot'
+    ).order_by('-date_creation')
+
+    return render(request, 'apps_catalogue/mes_retours_stock.html', {'retours': retours})
+
+
+@login_required
+def confirmer_retrait_stock(request, pk):
+    """L'entreprise confirme être passée récupérer la marchandise retournée."""
+    from apps_catalogue.models import RetourStockProprietaire
+    from django.utils import timezone
+
+    entreprise = getattr(request.user, 'entreprise', None)
+    retour = get_object_or_404(RetourStockProprietaire, pk=pk, entreprise=entreprise)
+
+    if request.method == 'POST':
+        retour.confirme_retire_par_entreprise = True
+        retour.date_confirmation = timezone.now()
+        retour.save(update_fields=['confirme_retire_par_entreprise', 'date_confirmation'])
+        messages.success(request, "Retrait confirmé.")
+    return redirect('apps_catalogue:mes_retours_stock')
+
+
+@login_required
+def admin_liste_retours_stock(request):
+    """Vue admin de tous les retours de stock, avec filtre sur les retraits non encore confirmés."""
+    from apps_catalogue.models import RetourStockProprietaire
+
+    retours = RetourStockProprietaire.objects.select_related(
+        'entreprise', 'produit', 'entrepot'
+    ).order_by('-date_creation')
+
+    if request.GET.get('non_confirmes') == '1':
+        retours = retours.filter(confirme_retire_par_entreprise=False)
+
+    return render(request, 'apps_catalogue/admin_retours_stock.html', {'retours': retours})

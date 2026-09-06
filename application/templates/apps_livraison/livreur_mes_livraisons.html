@@ -1,0 +1,70 @@
+{% extends 'navigateur/base_dashboard.html' %}
+
+{% block title %}Mes courses – SwiftDrop{% endblock %}
+{% block page_title %}Mes courses{% endblock %}
+{% block user_initiales %}{{ livreur.utilisateur.nom|default:"LI"|slice:":2"|upper }}{% endblock %}
+{% block user_nom %}{{ livreur.utilisateur.nom|default:"Livreur" }}{% endblock %}
+{% block user_role %}Livreur{% endblock %}
+
+{% block sidebar_menu %}
+    <div class="sd-nav-section">Général</div>
+    <a href="{% url 'apps_livreur:dashboard_livreur' %}" class="sd-nav-link"><i class="bi bi-grid-1x2"></i>Tableau de bord</a>
+
+    <div class="sd-nav-section">Courses</div>
+    <a href="{% url 'apps_livraison:livreur_mes_livraisons' %}" class="sd-nav-link active"><i class="bi bi-truck"></i>Mes courses</a>
+
+    <div class="sd-nav-section">Compte</div>
+    <a href="{% url 'apps_livreur:modifier_profil' %}" class="sd-nav-link"><i class="bi bi-person-gear"></i>Mon profil</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-chat-dots"></i>Messagerie</a>
+{% endblock %}
+
+{% block dashboard_content %}
+
+<div class="sd-panel">
+    {% if livraisons %}
+        <div class="table-responsive">
+            <table class="table sd-table align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Numéro</th>
+                        <th>Entreprise</th>
+                        <th>Client</th>
+                        <th>Statut</th>
+                        <th>Attribuée le</th>
+                        <th class="text-end">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for l in livraisons %}
+                        <tr>
+                            <td class="fw-semibold">{{ l.numero }}</td>
+                            <td>{{ l.entreprise.nom_affichage|default:"—" }}</td>
+                            <td>{{ l.nom_client }}</td>
+                            <td>
+                                {% if l.statut == 'LIVREE' %}
+                                    <span class="sd-badge-statut succes">Livrée</span>
+                                {% elif l.statut == 'EN_COURS' %}
+                                    <span class="sd-badge-statut cours">En cours</span>
+                                {% elif l.statut == 'ECHEC' %}
+                                    <span class="sd-badge-statut echec">Échec</span>
+                                {% else %}
+                                    <span class="sd-badge-statut attente">{{ l.get_statut_display }}</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-muted small">{{ l.date_attribution|date:"d/m/Y H:i"|default:"—" }}</td>
+                            <td class="text-end">
+                                <a href="{% url 'apps_livraison:livreur_detail_livraison' pk=l.pk %}" class="btn btn-sm btn-sd-outline">
+                                    <i class="bi bi-eye me-1"></i>Voir
+                                </a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p class="text-muted small mb-0">Aucune course pour le moment.</p>
+    {% endif %}
+</div>
+
+{% endblock %}

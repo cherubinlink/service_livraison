@@ -1,0 +1,63 @@
+{% extends 'navigateur/base_dashboard.html' %}
+
+{% block title %}Terminer la course {{ livraison.numero }} – SwiftDrop{% endblock %}
+{% block page_title %}Terminer la course{% endblock %}
+{% block user_initiales %}{{ livreur.utilisateur.nom|default:"LI"|slice:":2"|upper }}{% endblock %}
+{% block user_nom %}{{ livraison.livreur.utilisateur.nom|default:"Livreur" }}{% endblock %}
+{% block user_role %}Livreur{% endblock %}
+
+{% block sidebar_menu %}
+    <div class="sd-nav-section">Général</div>
+    <a href="{% url 'apps_livreur:dashboard_livreur' %}" class="sd-nav-link"><i class="bi bi-grid-1x2"></i>Tableau de bord</a>
+
+    <div class="sd-nav-section">Courses</div>
+    <a href="{% url 'apps_livraison:livreur_mes_livraisons' %}" class="sd-nav-link active"><i class="bi bi-truck"></i>Mes courses</a>
+
+    <div class="sd-nav-section">Compte</div>
+    <a href="{% url 'apps_livreur:modifier_profil' %}" class="sd-nav-link"><i class="bi bi-person-gear"></i>Mon profil</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-chat-dots"></i>Messagerie</a>
+{% endblock %}
+
+{% block dashboard_content %}
+
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="sd-panel">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div class="sd-panel-title mb-0"><i class="bi bi-check2-circle me-2"></i>Terminer la course {{ livraison.numero }}</div>
+                <a href="{% url 'apps_livraison:livreur_detail_livraison' pk=livraison.pk %}" class="small">
+                    <i class="bi bi-arrow-left me-1"></i>Retour
+                </a>
+            </div>
+
+            <p class="text-muted small mb-3">
+                Une preuve de livraison est obligatoire pour clôturer cette course — prenez une photo du colis
+                remis et, si possible, la signature du client.
+            </p>
+
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+
+                {% for field in form %}
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.help_text %}<div class="form-text small">{{ field.help_text }}</div>{% endif %}
+                        {% if field.errors %}<div class="text-danger small mt-1">{{ field.errors|join:", " }}</div>{% endif %}
+                    </div>
+                {% endfor %}
+
+                {% if form.non_field_errors %}
+                    <div class="text-danger small mb-3">{{ form.non_field_errors|join:", " }}</div>
+                {% endif %}
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-sd-primary flex-grow-1">Confirmer la livraison</button>
+                    <a href="{% url 'apps_livraison:livreur_detail_livraison' pk=livraison.pk %}" class="btn btn-sd-outline">Annuler</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

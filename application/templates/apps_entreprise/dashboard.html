@@ -11,13 +11,16 @@
     <a href="{% url 'apps_entreprise:dashboard' %}" class="sd-nav-link active"><i class="bi bi-grid-1x2"></i>Tableau de bord</a>
 
     <div class="sd-nav-section">Catalogue</div>
-    <a href="{% url 'apps_catalogue:mes_produits' %}" class="sd-nav-link"><i class="bi bi-boxes"></i>Mes produits
+    <a href="{% url 'apps_catalogue:mes_produits' %}" class="sd-nav-link"><i class="bi bi-boxes"></i>Mes produits</a>
+    <a href="{% url 'apps_catalogue:mes_stocks' %}" class="sd-nav-link"><i class="bi bi-archive"></i>Mes stocks</a>
+    <a href="{% url 'apps_catalogue:mes_alertes_stock' %}" class="sd-nav-link"><i class="bi bi-exclamation-triangle"></i>Mes alertes stock
         {% if nb_produits_stock_bas %}<span class="sd-nav-badge">{{ nb_produits_stock_bas }}</span>{% endif %}
     </a>
-    <a href="{% url 'apps_entreprise:mes_entrepots' %}" class="sd-nav-link"><i class="bi bi-building-gear"></i>Mes entrepôts & stocks</a>
+    <a href="{% url 'apps_catalogue:mes_retours_stock' %}" class="sd-nav-link"><i class="bi bi-arrow-return-left"></i>Mes retours de stock</a>
+    <a href="{% url 'apps_entreprise:mes_entrepots' %}" class="sd-nav-link"><i class="bi bi-building-gear"></i>Mes entrepôts</a>
 
     <div class="sd-nav-section">Livraisons</div>
-    <a href="#" class="sd-nav-link"><i class="bi bi-truck"></i>Mes livraisons</a>
+    <a href="{% url 'apps_livraison:mes_livraisons' %}" class="sd-nav-link"><i class="bi bi-truck"></i>Mes livraisons</a>
     <a href="{% url 'apps_entreprise:zones_livraisons' %}" class="sd-nav-link"><i class="bi bi-truck"></i>Zones livraisons</a>
 
     <div class="sd-nav-section">Finance</div>
@@ -78,7 +81,7 @@
         <div class="sd-panel h-100">
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <div class="sd-panel-title mb-0"><i class="bi bi-exclamation-triangle me-2 text-warning"></i>Alertes de stock</div>
-                <a href="#" class="small">Tout voir</a>
+                <a href="{% url 'apps_catalogue:mes_alertes_stock' %}" class="small">Tout voir</a>
             </div>
             {% if alertes_stock %}
                 <ul class="list-unstyled mb-0">
@@ -137,6 +140,29 @@
             </div>
         </div>
     </div>
+</div>
+
+<!-- ═══════════════════ Retours de stock ═══════════════════ -->
+<div class="sd-panel mt-3">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div class="sd-panel-title mb-0"><i class="bi bi-arrow-return-left me-2" style="color: var(--sd-orange);"></i>Retours de stock à récupérer</div>
+        <a href="{% url 'apps_catalogue:mes_retours_stock' %}" class="small">Tout voir</a>
+    </div>
+    {% if retours_stock_a_confirmer %}
+        <ul class="list-unstyled mb-0">
+            {% for retour in retours_stock_a_confirmer %}
+                <li class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                    <div>
+                        <div class="fw-semibold small">{{ retour.produit.nom }} × {{ retour.quantite_retournee }}</div>
+                        <div class="text-muted" style="font-size:.78rem;">{{ retour.entrepot.nom|default:"—" }} · {{ retour.get_motif_display }}</div>
+                    </div>
+                    <span class="sd-badge-statut attente">À récupérer</span>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p class="text-muted small mb-0">Aucun produit à récupérer pour le moment.</p>
+    {% endif %}
 </div>
 
 <!-- ═══════════════════ Prochain paiement ═══════════════════ -->

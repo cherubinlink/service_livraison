@@ -1,0 +1,71 @@
+{% extends 'navigateur/base_dashboard.html' %}
+
+{% block title %}Mes retours de stock – SwiftDrop{% endblock %}
+{% block page_title %}Mes retours de stock{% endblock %}
+{% block user_initiales %}{{ request.user.entreprise.nom_affichage|slice:":2"|upper }}{% endblock %}
+{% block user_nom %}{{ request.user.entreprise.nom_affichage }}{% endblock %}
+{% block user_role %}Entreprise{% endblock %}
+
+{% block sidebar_menu %}
+    <div class="sd-nav-section">Général</div>
+    <a href="{% url 'apps_entreprise:dashboard' %}" class="sd-nav-link"><i class="bi bi-grid-1x2"></i>Tableau de bord</a>
+
+    <div class="sd-nav-section">Catalogue</div>
+    <a href="{% url 'apps_catalogue:mes_produits' %}" class="sd-nav-link"><i class="bi bi-boxes"></i>Mes produits</a>
+    <a href="{% url 'apps_catalogue:mes_stocks' %}" class="sd-nav-link"><i class="bi bi-archive"></i>Mes stocks</a>
+    <a href="{% url 'apps_catalogue:mes_alertes_stock' %}" class="sd-nav-link"><i class="bi bi-exclamation-triangle"></i>Mes alertes stock</a>
+    <a href="{% url 'apps_catalogue:mes_retours_stock' %}" class="sd-nav-link active"><i class="bi bi-arrow-return-left"></i>Mes retours de stock</a>
+    <a href="{% url 'apps_entreprise:mes_entrepots' %}" class="sd-nav-link"><i class="bi bi-building-gear"></i>Mes entrepôts</a>
+{% endblock %}
+
+{% block extra_css %}
+    .sd-badge-etat { font-size: .72rem; font-weight: 700; padding: .2rem .6rem; border-radius: 50px; }
+    .sd-badge-etat.attente { background: #FFF4E5; color: #E88A00; }
+    .sd-badge-etat.confirme { background: #E5F7EC; color: #1FAA59; }
+{% endblock %}
+
+{% block dashboard_content %}
+
+<div class="alert alert-light border small mb-3">
+    <i class="bi bi-info-circle me-1" style="color: var(--sd-orange);"></i>
+    Ces produits vous ont été retournés (généralement suite à 30 jours d'inactivité). Confirmez leur récupération une fois passés les récupérer physiquement à l'entrepôt indiqué.
+</div>
+
+<div class="sd-panel">
+    {% if retours %}
+        <div class="table-responsive">
+            <table class="table sd-table align-middle mb-0">
+                <thead><tr><th>Produit</th><th>Quantité</th><th>Entrepôt</th><th>Motif</th><th>Statut</th><th class="text-end">Action</th></tr></thead>
+                <tbody>
+                    {% for retour in retours %}
+                        <tr>
+                            <td class="fw-semibold">{{ retour.produit.nom }}</td>
+                            <td>{{ retour.quantite_retournee }}</td>
+                            <td>{{ retour.entrepot.nom|default:"—" }}</td>
+                            <td class="text-muted small">{{ retour.get_motif_display }}</td>
+                            <td>
+                                {% if retour.confirme_retire_par_entreprise %}
+                                    <span class="sd-badge-etat confirme">Récupéré le {{ retour.date_confirmation|date:"d/m/Y" }}</span>
+                                {% else %}
+                                    <span class="sd-badge-etat attente">À récupérer</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end">
+                                {% if not retour.confirme_retire_par_entreprise %}
+                                    <form method="post" action="{% url 'apps_catalogue:confirmer_retrait_stock' retour.pk %}" onsubmit="return confirm('Confirmez-vous avoir récupéré ce produit ?');">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-sm btn-sd-primary"><i class="bi bi-check2 me-1"></i>Confirmer le retrait</button>
+                                    </form>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p class="text-muted small mb-0">Aucun produit ne vous a été retourné pour le moment.</p>
+    {% endif %}
+</div>
+
+{% endblock %}

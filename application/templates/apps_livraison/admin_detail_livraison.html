@@ -1,0 +1,193 @@
+{% extends 'navigateur/base_dashboard.html' %}
+
+{% block title %}{{ livraison.numero }} – Administration SwiftDrop{% endblock %}
+{% block page_title %}Commande {{ livraison.numero }}{% endblock %}
+{% block user_initiales %}AD{% endblock %}
+{% block user_nom %}Administration{% endblock %}
+{% block user_role %}Administrateur{% endblock %}
+
+{% block sidebar_menu %}
+    <div class="sd-nav-section">Général</div>
+    <a href="{% url 'apps_core:dashboard_admin' %}" class="sd-nav-link"><i class="bi bi-grid-1x2"></i>Tableau de bord</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-chat-dots"></i>Messagerie</a>
+
+    <div class="sd-nav-section">Acteurs</div>
+    <a href="{% url 'apps_entreprise:admin_liste_entreprises' %}" class="sd-nav-link"><i class="bi bi-building"></i>Entreprises</a>
+    <a href="{% url 'apps_livreur:admin_liste_livreurs' %}" class="sd-nav-link"><i class="bi bi-bicycle"></i>Livreurs</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-person-heart"></i>Clients</a>
+
+    <div class="sd-nav-section">Opérations</div>
+    <a href="{% url 'apps_livraison:admin_liste_livraisons' %}" class="sd-nav-link active"><i class="bi bi-box-seam"></i>Livraisons</a>
+    <a href="{% url 'apps_entreprise:admin_liste_entrepots' %}" class="sd-nav-link"><i class="bi bi-building-gear"></i>Entrepôts</a>
+    <a href="{% url 'apps_catalogue:admin_liste_produits' %}" class="sd-nav-link"><i class="bi bi-boxes"></i>Produits</a>
+
+    <div class="sd-nav-section">Stocks</div>
+    <a href="{% url 'apps_catalogue:admin_liste_alertes_stock' %}" class="sd-nav-link"><i class="bi bi-exclamation-triangle"></i>Alertes stock</a>
+    <a href="{% url 'apps_catalogue:admin_liste_retours_stock' %}" class="sd-nav-link"><i class="bi bi-arrow-return-left"></i>Retours de stock</a>
+
+    <div class="sd-nav-section">Système</div>
+    <a href="{% url 'apps_core:configuration_geographie' %}" class="sd-nav-link"><i class="bi bi-geo"></i>Zones géographiques</a>
+    <a href="{% url 'apps_core:gerer_coefficients_vehicule' %}" class="sd-nav-link"><i class="bi bi-truck-front"></i>Coefficients véhicule</a>
+{% endblock %}
+
+{% block dashboard_content %}
+
+{% if messages %}
+    {% for message in messages %}
+        <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    {% endfor %}
+{% endif %}
+
+<!-- ═══════════════════ En-tête ═══════════════════ -->
+<div class="sd-panel mb-3">
+    <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+        <div>
+            <div class="sd-panel-title mb-1">Commande {{ livraison.numero }}</div>
+            <p class="text-muted small mb-1">
+                <i class="bi bi-building me-1"></i>{{ livraison.entreprise.nom_affichage|default:"—" }}
+            </p>
+            <p class="text-muted small mb-1">
+                <i class="bi bi-person me-1"></i>{{ livraison.nom_client }} — {{ livraison.telephone_client }}
+            </p>
+            <p class="text-muted small mb-0">
+                <i class="bi bi-geo-alt me-1"></i>{{ livraison.adresse_exacte }}
+                ({{ livraison.ville_livraison.nom }} — {{ livraison.zone_livraison.nom }})
+            </p>
+            {% if livraison.livreur %}
+                <p class="text-muted small mb-0 mt-1">
+                    <i class="bi bi-bicycle me-1"></i>Livreur : {{ livraison.livreur.utilisateur.nom }}
+                </p>
+            {% endif %}
+            {% if livraison.code_confirmation %}
+                <p class="text-muted small mb-0 mt-1">
+                    <i class="bi bi-key me-1"></i>Code de confirmation : <span class="fw-semibold">{{ livraison.code_confirmation }}</span>
+                </p>
+            {% endif %}
+        </div>
+        <div class="text-end">
+            {% if livraison.statut == 'LIVREE' %}
+                <span class="sd-badge-statut succes">Livrée</span>
+            {% elif livraison.statut == 'EN_COURS' %}
+                <span class="sd-badge-statut cours">En cours</span>
+            {% elif livraison.statut == 'ECHEC' or livraison.statut == 'REFUSEE' or livraison.statut == 'ANNULEE' %}
+                <span class="sd-badge-statut echec">{{ livraison.get_statut_display }}</span>
+            {% else %}
+                <span class="sd-badge-statut attente">{{ livraison.get_statut_display }}</span>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Actions admin selon statut -->
+    <div class="d-flex gap-2 flex-wrap mt-3">
+        {% if livraison.statut == 'EN_ATTENTE' %}
+            <form method="post" action="{% url 'apps_livraison:admin_valider_livraison' pk=livraison.pk %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-sm btn-sd-primary"><i class="bi bi-check2 me-1"></i>Valider</button>
+            </form>
+            <button type="button" class="btn btn-sm btn-sd-outline text-danger" data-bs-toggle="modal" data-bs-target="#modalRefus">
+                <i class="bi bi-x-lg me-1"></i>Refuser
+            </button>
+        {% endif %}
+        {% if livraison.statut == 'VALIDEE' and not livraison.code_confirmation %}
+            <form method="post" action="{% url 'apps_livraison:generer_code_confirmation' pk=livraison.pk %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-sm btn-sd-outline"><i class="bi bi-key me-1"></i>Générer le code de confirmation</button>
+            </form>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row g-3">
+    <!-- Lignes produit -->
+    <div class="col-lg-7">
+        <div class="sd-panel h-100">
+            <div class="sd-panel-title mb-3"><i class="bi bi-box-seam me-2"></i>Produits de la commande</div>
+            {% if lignes %}
+                <div class="table-responsive mb-0">
+                    <table class="table sd-table align-middle mb-0">
+                        <thead>
+                            <tr><th>Produit</th><th>Entrepôt</th><th>Quantité</th></tr>
+                        </thead>
+                        <tbody>
+                            {% for ligne in lignes %}
+                                <tr>
+                                    <td class="fw-semibold">{{ ligne.produit.nom }}</td>
+                                    <td class="text-muted small">{{ ligne.stock_entrepot.entrepot.nom }}</td>
+                                    <td>{{ ligne.quantite }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p class="text-muted small mb-0">Aucun produit sur cette commande.</p>
+            {% endif %}
+        </div>
+
+        <!-- Attribution livreur -->
+        {% if livraison.statut == 'VALIDEE' and not livraison.livreur %}
+            <div class="sd-panel mt-3">
+                <div class="sd-panel-title mb-3"><i class="bi bi-bicycle me-2"></i>Attribuer un livreur</div>
+                <form method="post" action="{% url 'apps_livraison:admin_attribuer_livreur' pk=livraison.pk %}" class="d-flex gap-2">
+                    {% csrf_token %}
+                    <div class="flex-grow-1">
+                        {{ attribution_form.livreur }}
+                        {% if attribution_form.livreur.errors %}
+                            <div class="text-danger small mt-1">{{ attribution_form.livreur.errors|join:", " }}</div>
+                        {% endif %}
+                    </div>
+                    <button type="submit" class="btn btn-sd-primary">Attribuer</button>
+                </form>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Historique -->
+    <div class="col-lg-5">
+        <div class="sd-panel h-100">
+            <div class="sd-panel-title mb-3"><i class="bi bi-clock-history me-2"></i>Historique</div>
+            {% if historique %}
+                <ul class="list-unstyled mb-0">
+                    {% for h in historique %}
+                        <li class="d-flex justify-content-between align-items-start py-2 border-bottom">
+                            <div>
+                                <div class="fw-semibold small">{{ h.get_statut_display }}</div>
+                                {% if h.motif %}<div class="text-muted small">{{ h.motif }}</div>{% endif %}
+                                <div class="text-muted" style="font-size:.75rem;">{{ h.effectue_par|default:"Système" }}</div>
+                            </div>
+                            <span class="text-muted small">{{ h.date|date:"d/m/Y H:i" }}</span>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p class="text-muted small mb-0">Aucun historique pour le moment.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Modal refus -->
+<div class="modal fade" id="modalRefus" tabindex="-1" aria-labelledby="modalRefusLabel">
+    <div class="modal-dialog">
+        <form method="post" action="{% url 'apps_livraison:admin_refuser_livraison' pk=livraison.pk %}" class="modal-content">
+            {% csrf_token %}
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalRefusLabel">Refuser la commande</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <label class="form-label small fw-semibold">Motif du refus</label>
+                <textarea name="motif" class="form-control" rows="3" required></textarea>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-sd-outline" data-bs-dismiss="modal">Annuler</button>
+                <button type="submit" class="btn btn-sd-primary">Confirmer le refus</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}

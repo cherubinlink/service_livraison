@@ -1,0 +1,234 @@
+{% extends 'navigateur/base_dashboard.html' %}
+
+{% block title %}Stock — {{ stock.produit.nom }} – SwiftDrop{% endblock %}
+{% block page_title %}Détail du stock{% endblock %}
+{% block user_initiales %}{% if request.user.entreprise %}{{ request.user.entreprise.nom_affichage|slice:":2"|upper }}{% else %}AD{% endif %}{% endblock %}
+{% block user_nom %}{% if request.user.entreprise %}{{ request.user.entreprise.nom_affichage }}{% else %}Administration{% endif %}{% endblock %}
+{% block user_role %}{% if request.user.entreprise %}Entreprise{% else %}Administrateur{% endif %}{% endblock %}
+
+{% block sidebar_menu %}
+    {% if request.user.entreprise %}
+        <div class="sd-nav-section">Général</div>
+        <a href="{% url 'apps_entreprise:dashboard' %}" class="sd-nav-link"><i class="bi bi-grid-1x2"></i>Tableau de bord</a>
+        <div class="sd-nav-section">Catalogue</div>
+        <a href="{% url 'apps_catalogue:mes_produits' %}" class="sd-nav-link"><i class="bi bi-boxes"></i>Mes produits</a>
+        <a href="{% url 'apps_catalogue:mes_stocks' %}" class="sd-nav-link active"><i class="bi bi-archive"></i>Mes stocks</a>
+        <a href="{% url 'apps_catalogue:mes_alertes_stock' %}" class="sd-nav-link"><i class="bi bi-exclamation-triangle"></i>Mes alertes stock</a>
+        <a href="{% url 'apps_catalogue:mes_retours_stock' %}" class="sd-nav-link"><i class="bi bi-arrow-return-left"></i>Mes retours de stock</a>
+    {% else %}
+        <div class="sd-nav-section">Général</div>
+        <a href="{% url 'apps_core:dashboard_admin' %}" class="sd-nav-link"><i class="bi bi-grid-1x2"></i>Tableau de bord</a>
+        <div class="sd-nav-section">Stocks</div>
+        <a href="{% url 'apps_catalogue:admin_liste_alertes_stock' %}" class="sd-nav-link"><i class="bi bi-exclamation-triangle"></i>Alertes stock</a>
+        <a href="{% url 'apps_catalogue:admin_liste_retours_stock' %}" class="sd-nav-link"><i class="bi bi-arrow-return-left"></i>Retours de stock</a>
+    {% endif %}
+{% endblock %}
+
+{% block extra_css %}
+    .sd-badge-etat { font-size: .75rem; font-weight: 700; padding: .3rem .75rem; border-radius: 50px; }
+    .sd-badge-etat.ok { background: #E5F7EC; color: #1FAA59; }
+    .sd-badge-etat.bas { background: #FFF4E5; color: #E88A00; }
+    .sd-badge-etat.rupture { background: #FDEBEA; color: #E23D32; }
+    .sd-info-row { display: flex; justify-content: space-between; padding: .5rem 0; border-bottom: 1px dashed #EDEFF4; font-size: .88rem; }
+    .sd-info-row:last-child { border-bottom: none; }
+    .sd-info-row .label { color: var(--sd-gris); }
+    .sd-info-row .value { font-weight: 600; color: var(--sd-navy); }
+    .sd-mouvement-row { display: flex; justify-content: space-between; align-items: center; padding: .6rem 0; border-bottom: 1px dashed #EDEFF4; }
+    .sd-mouvement-row:last-child { border-bottom: none; }
+    .sd-mouvement-qte { font-weight: 700; }
+    .sd-mouvement-qte.positif { color: #1FAA59; }
+    .sd-mouvement-qte.negatif { color: #E23D32; }
+    .sd-back-link { color: var(--sd-gris); font-size: .88rem; }
+    .sd-back-link:hover { color: var(--sd-orange); }
+    .modal .form-label { font-weight: 600; color: var(--sd-navy); font-size: .85rem; }
+    .modal .form-control, .modal .form-select { border-radius: 10px; padding: .55rem .8rem; border: 1.5px solid #EDEFF4; }
+{% endblock %}
+
+{% block dashboard_content %}
+
+<a href="{% if request.user.entreprise %}{% url 'apps_catalogue:mes_stocks' %}{% else %}{% url 'apps_entreprise:admin_detail_entrepot' stock.entrepot.pk %}{% endif %}" class="sd-back-link d-inline-flex align-items-center gap-1 mb-3">
+    <i class="bi bi-arrow-left"></i> Retour
+</a>
+
+<div class="row g-3">
+    <div class="col-lg-5">
+        <div class="sd-panel mb-3">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <div>
+                    <h5 class="fw-bold mb-1" style="color: var(--sd-navy);">{{ stock.produit.nom }}</h5>
+                    <p class="text-muted small mb-0">{{ stock.entrepot.nom }} · {{ stock.entrepot.ville.nom }}</p>
+                </div>
+                {% if stock.en_rupture %}
+                    <span class="sd-badge-etat rupture">Rupture</span>
+                {% elif stock.stock_bas %}
+                    <span class="sd-badge-etat bas">Stock bas</span>
+                {% else %}
+                    <span class="sd-badge-etat ok">OK</span>
+                {% endif %}
+            </div>
+
+            <div class="sd-info-row"><span class="label">Stock total</span><span class="value">{{ stock.quantite_stock }}</span></div>
+            <div class="sd-info-row"><span class="label">Réservé</span><span class="value">{{ stock.quantite_reservee }}</span></div>
+            <div class="sd-info-row"><span class="label">Disponible</span><span class="value">{{ stock.quantite_disponible }}</span></div>
+            <div class="sd-info-row"><span class="label">Seuil d'alerte</span><span class="value">{{ stock.seuil_alerte }}</span></div>
+            <div class="sd-info-row"><span class="label">Seuil de rupture</span><span class="value">{{ stock.seuil_rupture }}</span></div>
+            {% if stock.emplacement_precis %}
+                <div class="sd-info-row"><span class="label">Emplacement</span><span class="value">{{ stock.emplacement_precis }}</span></div>
+            {% endif %}
+        </div>
+
+        <div class="d-flex flex-column gap-2">
+            <button type="button" class="btn btn-sd-primary" data-bs-toggle="modal" data-bs-target="#modalReappro">
+                <i class="bi bi-box-arrow-in-down me-1"></i>Réapprovisionner
+            </button>
+            <button type="button" class="btn btn-sd-outline" data-bs-toggle="modal" data-bs-target="#modalTransfert">
+                <i class="bi bi-arrow-left-right me-1"></i>Transférer vers un autre entrepôt
+            </button>
+            <button type="button" class="btn btn-sd-outline" data-bs-toggle="modal" data-bs-target="#modalAjustement">
+                <i class="bi bi-sliders me-1"></i>Ajustement manuel
+            </button>
+        </div>
+
+        {% if alertes %}
+            <div class="sd-panel mt-3">
+                <div class="sd-panel-title mb-2"><i class="bi bi-exclamation-triangle me-2 text-warning"></i>Alertes actives</div>
+                {% for alerte in alertes %}
+                    <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                        <span class="small">{{ alerte.get_type_alerte_display }} — {{ alerte.date|date:"d/m/Y" }}</span>
+                        <form method="post" action="{% url 'apps_catalogue:traiter_alerte_stock' alerte.pk %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-sd-outline py-1 px-2">Traiter</button>
+                        </form>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+
+    <div class="col-lg-7">
+        <div class="sd-panel">
+            <div class="sd-panel-title mb-3">Historique des mouvements (30 derniers)</div>
+            {% if mouvements %}
+                {% for mvt in mouvements %}
+                    <div class="sd-mouvement-row">
+                        <div>
+                            <div class="fw-semibold small">{{ mvt.get_type_mouvement_display }}</div>
+                            <div class="text-muted" style="font-size:.78rem;">
+                                {{ mvt.date|date:"d/m/Y H:i" }} · {{ mvt.effectue_par.nom|default:"Système" }}
+                                {% if mvt.note %} · {{ mvt.note }}{% endif %}
+                            </div>
+                        </div>
+                        <span class="sd-mouvement-qte {% if mvt.quantite > 0 %}positif{% else %}negatif{% endif %}">
+                            {% if mvt.quantite > 0 %}+{% endif %}{{ mvt.quantite }}
+                        </span>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <p class="text-muted small mb-0">Aucun mouvement enregistré pour ce stock.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════ MODAL — Réapprovisionner ═══════════════════ -->
+<div class="modal fade" id="modalReappro" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" action="{% url 'apps_catalogue:reapprovisionner_stock' stock.pk %}">
+                {% csrf_token %}
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold" style="color: var(--sd-navy);">Réapprovisionner</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="{{ reappro_form.quantite.id_for_label }}" class="form-label">{{ reappro_form.quantite.label }}</label>
+                        {{ reappro_form.quantite }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="{{ reappro_form.cout_unitaire.id_for_label }}" class="form-label">{{ reappro_form.cout_unitaire.label }}</label>
+                        {{ reappro_form.cout_unitaire }}
+                    </div>
+                    <div class="mb-1">
+                        <label for="{{ reappro_form.note.id_for_label }}" class="form-label">{{ reappro_form.note.label }}</label>
+                        {{ reappro_form.note }}
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-sd-outline" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-sd-primary">Ajouter au stock</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════ MODAL — Transférer ═══════════════════ -->
+<div class="modal fade" id="modalTransfert" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" action="{% url 'apps_catalogue:transferer_stock' stock.pk %}">
+                {% csrf_token %}
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold" style="color: var(--sd-navy);">Transférer vers un autre entrepôt</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted small">Disponible ici : <strong>{{ stock.quantite_disponible }}</strong></p>
+                    <div class="mb-3">
+                        <label for="{{ transfert_form.entrepot_destination.id_for_label }}" class="form-label">{{ transfert_form.entrepot_destination.label }}</label>
+                        {{ transfert_form.entrepot_destination }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="{{ transfert_form.quantite.id_for_label }}" class="form-label">{{ transfert_form.quantite.label }}</label>
+                        {{ transfert_form.quantite }}
+                    </div>
+                    <div class="mb-1">
+                        <label for="{{ transfert_form.note.id_for_label }}" class="form-label">{{ transfert_form.note.label }}</label>
+                        {{ transfert_form.note }}
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-sd-outline" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-sd-primary">Transférer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════ MODAL — Ajustement manuel ═══════════════════ -->
+<div class="modal fade" id="modalAjustement" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" action="{% url 'apps_catalogue:ajuster_stock' stock.pk %}">
+                {% csrf_token %}
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold" style="color: var(--sd-navy);">Ajustement manuel</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="{{ ajustement_form.type_mouvement.id_for_label }}" class="form-label">{{ ajustement_form.type_mouvement.label }}</label>
+                        {{ ajustement_form.type_mouvement }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="{{ ajustement_form.quantite.id_for_label }}" class="form-label">{{ ajustement_form.quantite.label }}</label>
+                        {{ ajustement_form.quantite }}
+                    </div>
+                    <div class="mb-1">
+                        <label for="{{ ajustement_form.note.id_for_label }}" class="form-label">{{ ajustement_form.note.label }}</label>
+                        {{ ajustement_form.note }}
+                        <div class="form-text">Obligatoire — précisez la raison de cet ajustement.</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-sd-outline" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-sd-primary">Enregistrer l'ajustement</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

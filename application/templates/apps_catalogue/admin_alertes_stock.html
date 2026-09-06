@@ -1,0 +1,84 @@
+{% extends 'navigateur/base_dashboard.html' %}
+
+{% block title %}Alertes stock – Administration SwiftDrop{% endblock %}
+{% block page_title %}Alertes de stock{% endblock %}
+{% block user_initiales %}AD{% endblock %}
+{% block user_nom %}Administration{% endblock %}
+{% block user_role %}Administrateur{% endblock %}
+
+{% block sidebar_menu %}
+    <div class="sd-nav-section">Général</div>
+    <a href="{% url 'apps_core:dashboard_admin' %}" class="sd-nav-link"><i class="bi bi-grid-1x2"></i>Tableau de bord</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-chat-dots"></i>Messagerie</a>
+
+    <div class="sd-nav-section">Acteurs</div>
+    <a href="{% url 'apps_entreprise:admin_liste_entreprises' %}" class="sd-nav-link"><i class="bi bi-building"></i>Entreprises</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-bicycle"></i>Livreurs</a>
+
+    <div class="sd-nav-section">Opérations</div>
+    <a href="{% url 'apps_entreprise:admin_liste_entrepots' %}" class="sd-nav-link"><i class="bi bi-building-gear"></i>Entrepôts</a>
+    <a href="{% url 'apps_catalogue:admin_liste_produits' %}" class="sd-nav-link"><i class="bi bi-boxes"></i>Produits</a>
+
+    <div class="sd-nav-section">Stocks</div>
+    <a href="{% url 'apps_catalogue:admin_liste_alertes_stock' %}" class="sd-nav-link active"><i class="bi bi-exclamation-triangle"></i>Alertes stock</a>
+    <a href="{% url 'apps_catalogue:admin_liste_retours_stock' %}" class="sd-nav-link"><i class="bi bi-arrow-return-left"></i>Retours de stock</a>
+
+    <div class="sd-nav-section">Système</div>
+    <a href="{% url 'apps_core:configuration_geographie' %}" class="sd-nav-link"><i class="bi bi-geo-alt"></i>Configuration pays</a>
+{% endblock %}
+
+{% block extra_css %}
+    .sd-badge-alerte { font-size: .72rem; font-weight: 700; padding: .2rem .6rem; border-radius: 50px; }
+    .sd-badge-alerte.bas { background: #FFF4E5; color: #E88A00; }
+    .sd-badge-alerte.rupture { background: #FDEBEA; color: #E23D32; }
+{% endblock %}
+
+{% block dashboard_content %}
+
+<div class="sd-panel">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div class="sd-panel-title mb-0">{{ alertes|length }} alerte{{ alertes|length|pluralize }} active{{ alertes|length|pluralize }}</div>
+    </div>
+
+    {% if alertes %}
+        <div class="table-responsive">
+            <table class="table sd-table align-middle mb-0">
+                <thead><tr><th>Produit</th><th>Entreprise</th><th>Entrepôt</th><th>Type</th><th>Quantité</th><th>Déclenchée le</th><th class="text-end">Action</th></tr></thead>
+                <tbody>
+                    {% for alerte in alertes %}
+                        <tr>
+                            <td class="fw-semibold">{{ alerte.stock_entrepot.produit.nom }}</td>
+                            <td>{{ alerte.stock_entrepot.produit.entreprise.nom_affichage }}</td>
+                            <td>{{ alerte.stock_entrepot.entrepot.nom }}</td>
+                            <td>
+                                {% if alerte.type_alerte == 'RUPTURE' %}
+                                    <span class="sd-badge-alerte rupture">Rupture</span>
+                                {% else %}
+                                    <span class="sd-badge-alerte bas">Stock bas</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ alerte.quantite_au_moment }}</td>
+                            <td class="text-muted small">{{ alerte.date|date:"d/m/Y H:i" }}</td>
+                            <td class="text-end d-flex gap-1 justify-content-end">
+                                <a href="{% url 'apps_catalogue:detail_stock_entrepot' alerte.stock_entrepot.pk %}" class="btn btn-sm btn-sd-outline">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <form method="post" action="{% url 'apps_catalogue:traiter_alerte_stock' alerte.pk %}">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-sd-primary">Traiter</button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="text-center py-4">
+            <i class="bi bi-check2-circle" style="font-size: 2.2rem; color: #1FAA59;"></i>
+            <p class="text-muted mt-2 mb-0">Aucune alerte active pour le moment.</p>
+        </div>
+    {% endif %}
+</div>
+
+{% endblock %}

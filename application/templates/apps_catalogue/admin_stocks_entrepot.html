@@ -1,0 +1,89 @@
+{% extends 'navigateur/base_dashboard.html' %}
+
+{% block title %}Stocks — {{ entrepot.nom }} – Administration SwiftDrop{% endblock %}
+{% block page_title %}Stocks de l'entrepôt{% endblock %}
+{% block user_initiales %}AD{% endblock %}
+{% block user_nom %}Administration{% endblock %}
+{% block user_role %}Administrateur{% endblock %}
+
+{% block sidebar_menu %}
+    <div class="sd-nav-section">Général</div>
+    <a href="{% url 'apps_core:dashboard_admin' %}" class="sd-nav-link"><i class="bi bi-grid-1x2"></i>Tableau de bord</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-chat-dots"></i>Messagerie</a>
+
+    <div class="sd-nav-section">Acteurs</div>
+    <a href="{% url 'apps_entreprise:admin_liste_entreprises' %}" class="sd-nav-link"><i class="bi bi-building"></i>Entreprises</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-bicycle"></i>Livreurs</a>
+
+    <div class="sd-nav-section">Opérations</div>
+    <a href="{% url 'apps_entreprise:admin_liste_entrepots' %}" class="sd-nav-link active"><i class="bi bi-building-gear"></i>Entrepôts</a>
+    <a href="{% url 'apps_catalogue:admin_liste_produits' %}" class="sd-nav-link"><i class="bi bi-boxes"></i>Produits</a>
+
+    <div class="sd-nav-section">Stocks</div>
+    <a href="{% url 'apps_catalogue:admin_liste_alertes_stock' %}" class="sd-nav-link"><i class="bi bi-exclamation-triangle"></i>Alertes stock</a>
+    <a href="{% url 'apps_catalogue:admin_liste_retours_stock' %}" class="sd-nav-link"><i class="bi bi-arrow-return-left"></i>Retours de stock</a>
+
+    <div class="sd-nav-section">Système</div>
+    <a href="{% url 'apps_core:configuration_geographie' %}" class="sd-nav-link"><i class="bi bi-geo-alt"></i>Configuration pays</a>
+{% endblock %}
+
+{% block extra_css %}
+    .sd-badge-etat { font-size: .72rem; font-weight: 700; padding: .2rem .6rem; border-radius: 50px; }
+    .sd-badge-etat.ok { background: #E5F7EC; color: #1FAA59; }
+    .sd-badge-etat.bas { background: #FFF4E5; color: #E88A00; }
+    .sd-badge-etat.rupture { background: #FDEBEA; color: #E23D32; }
+    .sd-back-link { color: var(--sd-gris); font-size: .88rem; }
+    .sd-back-link:hover { color: var(--sd-orange); }
+{% endblock %}
+
+{% block dashboard_content %}
+
+<a href="{% url 'apps_entreprise:admin_detail_entrepot' entrepot.pk %}" class="sd-back-link d-inline-flex align-items-center gap-1 mb-3">
+    <i class="bi bi-arrow-left"></i> Retour à la fiche entrepôt
+</a>
+
+<div class="sd-panel mb-3">
+    <h5 class="fw-bold mb-1" style="color: var(--sd-navy);">{{ entrepot.nom }}</h5>
+    <p class="text-muted small mb-0">{{ entrepot.code }} · {{ entrepot.ville.nom }}</p>
+</div>
+
+<div class="sd-panel">
+    {% if stocks %}
+        <div class="table-responsive">
+            <table class="table sd-table align-middle mb-0">
+                <thead>
+                    <tr><th>Produit</th><th>Entreprise</th><th>Stock</th><th>Réservé</th><th>Disponible</th><th>État</th><th class="text-end">Action</th></tr>
+                </thead>
+                <tbody>
+                    {% for stock in stocks %}
+                        <tr>
+                            <td class="fw-semibold">{{ stock.produit.nom }}</td>
+                            <td>{{ stock.produit.entreprise.nom_affichage }}</td>
+                            <td>{{ stock.quantite_stock }}</td>
+                            <td>{{ stock.quantite_reservee }}</td>
+                            <td class="fw-semibold">{{ stock.quantite_disponible }}</td>
+                            <td>
+                                {% if stock.en_rupture %}
+                                    <span class="sd-badge-etat rupture">Rupture</span>
+                                {% elif stock.stock_bas %}
+                                    <span class="sd-badge-etat bas">Stock bas</span>
+                                {% else %}
+                                    <span class="sd-badge-etat ok">OK</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end">
+                                <a href="{% url 'apps_catalogue:detail_stock_entrepot' stock.pk %}" class="btn btn-sm btn-sd-outline">
+                                    <i class="bi bi-eye me-1"></i>Détail
+                                </a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p class="text-muted small mb-0">Aucun produit stocké dans cet entrepôt pour le moment.</p>
+    {% endif %}
+</div>
+
+{% endblock %}
