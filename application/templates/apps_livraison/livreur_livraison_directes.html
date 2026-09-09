@@ -1,0 +1,71 @@
+{% extends 'navigateur/base_dashboard.html' %}
+
+{% block title %}Mes courses directes – SwiftDrop{% endblock %}
+{% block page_title %}Mes courses directes{% endblock %}
+{% block user_initiales %}{{ livreur.utilisateur.nom|default:"LI"|slice:":2"|upper }}{% endblock %}
+{% block user_nom %}{{ livreur.utilisateur.nom|default:"Livreur" }}{% endblock %}
+{% block user_role %}Livreur{% endblock %}
+
+{% block sidebar_menu %}
+    <div class="sd-nav-section">Général</div>
+    <a href="{% url 'apps_livreur:dashboard_livreur' %}" class="sd-nav-link"><i class="bi bi-grid-1x2"></i>Tableau de bord</a>
+
+    <div class="sd-nav-section">Courses</div>
+    <a href="{% url 'apps_livraison:livreur_mes_livraisons' %}" class="sd-nav-link"><i class="bi bi-truck"></i>Mes courses B2B</a>
+    <a href="{% url 'apps_livraison:livreur_livraisons_directes' %}" class="sd-nav-link active"><i class="bi bi-signpost-2"></i>Courses directes</a>
+
+    <div class="sd-nav-section">Compte</div>
+    <a href="{% url 'apps_livreur:modifier_profil_livreur' %}" class="sd-nav-link"><i class="bi bi-person-gear"></i>Mon profil</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-chat-dots"></i>Messagerie</a>
+{% endblock %}
+
+{% block dashboard_content %}
+
+<div class="sd-panel">
+    {% if livraisons %}
+        <div class="table-responsive">
+            <table class="table sd-table align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Numéro</th>
+                        <th>Destinataire</th>
+                        <th>Trajet</th>
+                        <th>Prix</th>
+                        <th>Statut</th>
+                        <th class="text-end">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for l in livraisons %}
+                        <tr>
+                            <td class="fw-semibold">{{ l.numero }}</td>
+                            <td>{{ l.nom_destinataire }}</td>
+                            <td class="text-muted small">{{ l.ville_collecte.nom }} → {{ l.ville_livraison.nom }}</td>
+                            <td class="fw-semibold">{{ l.prix_total|default:"—" }} FCFA</td>
+                            <td>
+                                {% if l.statut == 'LIVREE' %}
+                                    <span class="sd-badge-statut succes">Livrée</span>
+                                {% elif l.statut == 'EN_COURS' %}
+                                    <span class="sd-badge-statut cours">En cours</span>
+                                {% elif l.statut == 'ECHEC' %}
+                                    <span class="sd-badge-statut echec">Échec</span>
+                                {% else %}
+                                    <span class="sd-badge-statut attente">{{ l.get_statut_display }}</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end">
+                                <a href="{% url 'apps_livraison:livreur_detail_livraison_directe' pk=l.pk %}" class="btn btn-sm btn-sd-outline">
+                                    <i class="bi bi-eye me-1"></i>Voir
+                                </a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p class="text-muted small mb-0">Aucune course directe pour le moment.</p>
+    {% endif %}
+</div>
+
+{% endblock %}

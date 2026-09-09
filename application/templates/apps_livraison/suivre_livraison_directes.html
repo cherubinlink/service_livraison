@@ -1,0 +1,139 @@
+{% extends 'navigateur/base.html' %}
+
+{% block title %}Suivi de votre course {{ livraison.numero }} – SwiftDrop{% endblock %}
+
+{% block extra_css %}
+    .sd-suivi-hero {
+        background: linear-gradient(135deg, var(--sd-navy) 0%, var(--sd-navy-light) 100%);
+        color: #fff;
+    }
+    .sd-suivi-card {
+        border: 1px solid #EDEFF4;
+        border-radius: 18px;
+        background: #fff;
+        margin-top: -60px;
+        position: relative;
+        z-index: 2;
+    }
+    .sd-timeline { list-style: none; padding-left: 0; margin: 0; }
+    .sd-timeline li {
+        position: relative;
+        padding-left: 2rem;
+        padding-bottom: 1.5rem;
+    }
+    .sd-timeline li::before {
+        content: "";
+        position: absolute;
+        left: 6px; top: 4px;
+        width: 12px; height: 12px;
+        border-radius: 50%;
+        background: #EDEFF4;
+    }
+    .sd-timeline li.actif::before { background: var(--sd-orange); }
+    .sd-timeline li:not(:last-child)::after {
+        content: "";
+        position: absolute;
+        left: 11px; top: 18px;
+        width: 2px; height: calc(100% - 10px);
+        background: #EDEFF4;
+    }
+    .sd-badge-statut { font-size: .8rem; font-weight: 700; padding: .35rem .9rem; border-radius: 50px; }
+    .sd-badge-statut.succes { background: #E5F7EC; color: #1FAA59; }
+    .sd-badge-statut.cours { background: #E8F0FF; color: #2D6CDF; }
+    .sd-badge-statut.echec { background: #FDEBEA; color: #E23D32; }
+    .sd-badge-statut.attente { background: #FFF4E5; color: #E88A00; }
+{% endblock %}
+
+{% block content %}
+
+<section class="sd-suivi-hero py-5">
+    <div class="container py-4 text-center">
+        <span class="hero-badge mb-2"><i class="bi bi-geo-alt-fill me-1"></i>Suivi de course</span>
+        <h1 class="display-6 fw-brand mt-3 mb-0">Course {{ livraison.numero }}</h1>
+    </div>
+</section>
+
+<div class="container">
+    <div class="sd-suivi-card p-4 p-lg-5 mb-5">
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <div class="row g-4">
+            <div class="col-lg-7">
+                <div class="d-flex justify-content-between align-items-start mb-4">
+                    <div>
+                        <h5 class="fw-semibold mb-1">{{ livraison.nom_expediteur }} → {{ livraison.nom_destinataire }}</h5>
+                        <p class="text-muted small mb-0">{{ livraison.ville_collecte.nom }} — {{ livraison.ville_livraison.nom }}</p>
+                    </div>
+                    {% if livraison.statut == 'LIVREE' %}
+                        <span class="sd-badge-statut succes">Livrée</span>
+                    {% elif livraison.statut == 'EN_COURS' %}
+                        <span class="sd-badge-statut cours">En cours</span>
+                    {% elif livraison.statut == 'ECHEC' or livraison.statut == 'ANNULEE' %}
+                        <span class="sd-badge-statut echec">{{ livraison.get_statut_display }}</span>
+                    {% else %}
+                        <span class="sd-badge-statut attente">{{ livraison.get_statut_display }}</span>
+                    {% endif %}
+                </div>
+
+                <ul class="sd-timeline">
+                    <li class="actif">
+                        <div class="fw-semibold small">Demande enregistrée</div>
+                        <div class="text-muted small">{{ livraison.date_creation|date:"d/m/Y H:i" }}</div>
+                    </li>
+                    <li class="{% if livraison.statut != 'EN_ATTENTE' %}actif{% endif %}">
+                        <div class="fw-semibold small">Confirmée par SwiftDrop</div>
+                    </li>
+                    <li class="{% if livraison.statut == 'EN_COURS' or livraison.statut == 'LIVREE' %}actif{% endif %}">
+                        <div class="fw-semibold small">En route vers le destinataire</div>
+                        {% if livraison.livreur %}
+                            <div class="text-muted small">Livreur : {{ livraison.livreur.utilisateur.nom }}</div>
+                        {% endif %}
+                    </li>
+                    <li class="{% if livraison.statut == 'LIVREE' %}actif{% endif %}">
+                        <div class="fw-semibold small">Livrée</div>
+                        {% if livraison.date_livraison %}
+                            <div class="text-muted small">{{ livraison.date_livraison|date:"d/m/Y H:i" }}</div>
+                        {% endif %}
+                    </li>
+                </ul>
+
+                {% if livraison.statut == 'EN_ATTENTE' %}
+                    <form method="post" onsubmit="return confirm('Annuler cette demande de livraison ?');" class="mt-3">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="annuler">
+                        <button type="submit" class="btn btn-sd-outline text-danger btn-sm">
+                            <i class="bi bi-x-lg me-1"></i>Annuler ma demande
+                        </button>
+                    </form>
+                {% endif %}
+            </div>
+
+            <div class="col-lg-5">
+                <div class="p-4 rounded-4" style="background: var(--sd-fond);">
+                    <h6 class="fw-semibold mb-3">Détails du colis</h6>
+                    <ul class="list-unstyled small text-muted mb-0">
+                        <li class="mb-2"><i class="bi bi-box-seam me-2"></i>{{ livraison.description_colis }}</li>
+                        {% if livraison.poids_kg %}<li class="mb-2"><i class="bi bi-speedometer2 me-2"></i>{{ livraison.poids_kg }} kg</li>{% endif %}
+                        <li class="mb-2"><i class="bi bi-geo-alt me-2"></i>{{ livraison.adresse_collecte }}</li>
+                        <li class="mb-0"><i class="bi bi-geo-alt-fill me-2"></i>{{ livraison.adresse_livraison }}</li>
+                    </ul>
+                    <hr>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="text-muted small">Prix estimé</span>
+                        <span class="fw-bold fs-5" style="color: var(--sd-navy);">{{ livraison.prix_total|default:"—" }} FCFA</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

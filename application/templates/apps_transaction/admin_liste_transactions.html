@@ -1,0 +1,95 @@
+{% extends 'navigateur/base_dashboard.html' %}
+
+{% block title %}Transactions – Administration SwiftDrop{% endblock %}
+{% block page_title %}Transactions{% endblock %}
+{% block user_initiales %}AD{% endblock %}
+{% block user_nom %}Administration{% endblock %}
+{% block user_role %}Administrateur{% endblock %}
+
+{% block sidebar_menu %}
+    <div class="sd-nav-section">Général</div>
+    <a href="{% url 'apps_core:dashboard_admin' %}" class="sd-nav-link"><i class="bi bi-grid-1x2"></i>Tableau de bord</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-chat-dots"></i>Messagerie</a>
+
+    <div class="sd-nav-section">Acteurs</div>
+    <a href="{% url 'apps_entreprise:admin_liste_entreprises' %}" class="sd-nav-link"><i class="bi bi-building"></i>Entreprises</a>
+    <a href="{% url 'apps_livreur:admin_liste_livreurs' %}" class="sd-nav-link"><i class="bi bi-bicycle"></i>Livreurs</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-person-heart"></i>Clients</a>
+
+    <div class="sd-nav-section">Opérations</div>
+    <a href="{% url 'apps_livraison:admin_liste_livraisons' %}" class="sd-nav-link"><i class="bi bi-box-seam"></i>Livraisons B2B</a>
+    <a href="{% url 'apps_livraison:admin_liste_livraisons_directes' %}" class="sd-nav-link"><i class="bi bi-signpost-2"></i>Livraisons directes</a>
+    <a href="{% url 'apps_entreprise:admin_liste_entrepots' %}" class="sd-nav-link"><i class="bi bi-building-gear"></i>Entrepôts</a>
+    <a href="{% url 'apps_catalogue:admin_liste_produits' %}" class="sd-nav-link"><i class="bi bi-boxes"></i>Produits</a>
+
+    <div class="sd-nav-section">Stocks</div>
+    <a href="{% url 'apps_catalogue:admin_liste_alertes_stock' %}" class="sd-nav-link"><i class="bi bi-exclamation-triangle"></i>Alertes stock</a>
+    <a href="{% url 'apps_catalogue:admin_liste_retours_stock' %}" class="sd-nav-link"><i class="bi bi-arrow-return-left"></i>Retours de stock</a>
+
+    <div class="sd-nav-section">Finance</div>
+    <a href="{% url 'apps_transaction:admin_liste_lots_paiement' %}" class="sd-nav-link"><i class="bi bi-cash-stack"></i>Lots de paiement</a>
+    <a href="{% url 'apps_transaction:admin_liste_transactions' %}" class="sd-nav-link active"><i class="bi bi-journal-text"></i>Transactions</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-gift"></i>Bonus</a>
+
+    <div class="sd-nav-section">Système</div>
+    <a href="{% url 'apps_core:configuration_geographie' %}" class="sd-nav-link"><i class="bi bi-geo"></i>Zones géographiques</a>
+    <a href="{% url 'apps_core:gerer_coefficients_vehicule' %}" class="sd-nav-link"><i class="bi bi-truck-front"></i>Coefficients véhicule</a>
+{% endblock %}
+
+{% block extra_css %}
+    .sd-filtre-bar { background: #fff; border: 1px solid #EDEFF4; border-radius: 14px; padding: 1rem 1.25rem; }
+    .sd-filtre-bar .form-select { border-radius: 10px; border: 1.5px solid #EDEFF4; }
+{% endblock %}
+
+{% block dashboard_content %}
+
+<div class="sd-filtre-bar mb-3">
+    <form method="get" class="row g-2 align-items-end">
+        <div class="col-md-4">
+            <label class="form-label small fw-semibold mb-1">Type de transaction</label>
+            <select name="type" class="form-select form-select-sm">
+                <option value="">Tous les types</option>
+                {% for valeur, libelle in types %}
+                    <option value="{{ valeur }}" {% if filtre_type == valeur %}selected{% endif %}>{{ libelle }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-2 d-flex gap-2">
+            <button type="submit" class="btn btn-sd-primary btn-sm flex-grow-1"><i class="bi bi-search"></i></button>
+            <a href="{% url 'apps_transaction:admin_liste_transactions' %}" class="btn btn-sd-outline btn-sm" title="Réinitialiser"><i class="bi bi-x-lg"></i></a>
+        </div>
+    </form>
+</div>
+
+<div class="sd-panel">
+    {% if transactions %}
+        <div class="table-responsive">
+            <table class="table sd-table align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Entreprise</th>
+                        <th>Type</th>
+                        <th>Note</th>
+                        <th class="text-end">Montant</th>
+                        <th class="text-end">Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for t in transactions %}
+                        <tr>
+                            <td class="fw-semibold">{{ t.entreprise.nom_affichage|default:"—" }}</td>
+                            <td><span class="badge bg-light text-dark border">{{ t.get_type_transaction_display }}</span></td>
+                            <td class="text-muted small">{{ t.note|default:"—" }}</td>
+                            <td class="text-end fw-semibold">{{ t.montant }} FCFA</td>
+                            <td class="text-end text-muted small">{{ t.date|date:"d/m/Y H:i" }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p class="text-muted small mb-0">Aucune transaction ne correspond à ces critères.</p>
+    {% endif %}
+</div>
+
+{% endblock %}

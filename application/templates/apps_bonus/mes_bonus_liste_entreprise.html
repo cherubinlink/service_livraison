@@ -1,0 +1,114 @@
+{% extends 'navigateur/base_dashboard_entreprise.html' %}
+{# ⚠️ Adapte le chemin ci-dessus + le bloc sidebar_menu au vrai template de base entreprise #}
+
+{% block title %}Mes bonus – Espace Entreprise{% endblock %}
+{% block page_title %}Mes bonus{% endblock %}
+{% block user_initiales %}{{ request.user.nom|slice:":2"|upper }}{% endblock %}
+{% block user_nom %}{{ request.user.nom }}{% endblock %}
+{% block user_role %}Entreprise{% endblock %}
+
+{% block sidebar_menu %}
+    <div class="sd-nav-section">Général</div>
+    <a href="{% url 'apps_entreprise:dashboard_entreprise' %}" class="sd-nav-link"><i class="bi bi-grid-1x2"></i>Tableau de bord</a>
+    <a href="{% url 'apps_messagerie:conversation_liste' %}" class="sd-nav-link"><i class="bi bi-chat-dots"></i>Messagerie</a>
+
+    <div class="sd-nav-section">Fidélité</div>
+    <a href="{% url 'apps_bonus:mes_bonus' %}" class="sd-nav-link active"><i class="bi bi-gift"></i>Mes bonus</a>
+{% endblock %}
+
+{% block extra_css %}
+    .sd-filtre-bar { background: #fff; border: 1px solid #EDEFF4; border-radius: 14px; padding: 1rem 1.25rem; }
+    .sd-filtre-bar .form-select { border-radius: 10px; border: 1.5px solid #EDEFF4; }
+    .sd-badge-statut { font-size: .72rem; font-weight: 700; padding: .25rem .65rem; border-radius: 50px; }
+    .sd-badge-statut.actif   { background: #E5F7EC; color: #1FAA59; }
+    .sd-badge-statut.utilise { background: #EEF2FF; color: #2E5CFF; }
+    .sd-badge-statut.expire  { background: #FFF4E5; color: #E88A00; }
+    .sd-badge-statut.annule  { background: #FDEBEA; color: #E23D32; }
+    .sd-categorie-pill { background: #F1F2F6; color: var(--sd-gris); font-size: .72rem; font-weight: 600;
+                          padding: .25rem .65rem; border-radius: 50px; white-space: nowrap; }
+    .sd-quota-txt { font-size: .78rem; color: var(--sd-gris); }
+    .sd-bonus-card { background: #fff; border: 1px solid #EDEFF4; border-radius: 14px; padding: 1rem 1.25rem;
+                      transition: box-shadow .15s ease; }
+    .sd-bonus-card:hover { box-shadow: 0 4px 14px rgba(20, 25, 40, .06); }
+{% endblock %}
+
+{% block dashboard_content %}
+
+<div class="sd-filtre-bar mb-3">
+    <form method="get" class="row g-2 align-items-end">
+        <div class="col-md-4">
+            <label class="form-label small fw-semibold mb-1">Statut</label>
+            <select name="statut" class="form-select form-select-sm" onchange="this.form.submit()">
+                <option value="">Tous les statuts</option>
+                {% for valeur, libelle in statuts %}
+                    <option value="{{ valeur }}" {% if statut_actif == valeur %}selected{% endif %}>{{ libelle }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        {% if statut_actif %}
+            <div class="col-md-2">
+                <a href="{% url 'apps_bonus:mes_bonus' %}" class="btn btn-sd-outline btn-sm">
+                    <i class="bi bi-x-lg me-1"></i>Réinitialiser
+                </a>
+            </div>
+        {% endif %}
+    </form>
+</div>
+
+{% if bonus_liste %}
+    <div class="d-flex flex-column gap-2">
+        {% for bonus in bonus_liste %}
+            <a href="{% url 'apps_bonus:mon_bonus_detail' bonus.pk %}" class="text-decoration-none">
+                <div class="sd-bonus-card d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <div>
+                        <div class="fw-semibold text-dark">{{ bonus.type_bonus.nom }}</div>
+                        <div class="d-flex align-items-center gap-2 mt-1">
+                            <span class="sd-categorie-pill">{{ bonus.type_bonus.get_categorie_display }}</span>
+                            {% if bonus.zone_cible %}
+                                <span class="text-muted small"><i class="bi bi-geo-alt"></i> {{ bonus.zone_cible.nom }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="text-muted small text-center">
+                        <div>{{ bonus.date_debut|date:"d/m/Y" }} → {{ bonus.date_expiration|date:"d/m/Y" }}</div>
+                        <div class="sd-quota-txt">
+                            {% if bonus.nb_utilisations_max %}
+                                {{ bonus.nb_utilisations_actuelles }} / {{ bonus.nb_utilisations_max }} utilisations
+                            {% else %}
+                                {{ bonus.nb_utilisations_actuelles }} utilisation(s) — illimité
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <span class="sd-badge-statut {{ bonus.statut|lower }}">{{ bonus.get_statut_display }}</span>
+                </div>
+            </a>
+        {% endfor %}
+    </div>
+
+    {% if is_paginated %}
+        <nav class="d-flex justify-content-center py-3">
+            <ul class="pagination pagination-sm mb-0">
+                {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if statut_actif %}&statut={{ statut_actif }}{% endif %}">Précédent</a>
+                    </li>
+                {% endif %}
+                <li class="page-item disabled"><span class="page-link">Page {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span></li>
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if statut_actif %}&statut={{ statut_actif }}{% endif %}">Suivant</a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+    {% endif %}
+{% else %}
+    <div class="sd-panel text-center py-5">
+        <i class="bi bi-gift fs-1 text-muted"></i>
+        <p class="text-muted small mb-0 mt-2">Aucun bonus ne correspond à ce filtre.</p>
+    </div>
+{% endif %}
+
+{% endblock %}

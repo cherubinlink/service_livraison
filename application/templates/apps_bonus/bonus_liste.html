@@ -1,0 +1,148 @@
+{% extends 'navigateur/base_dashboard.html' %}
+
+{% block title %}Bonus entreprises – Administration SwiftDrop{% endblock %}
+{% block page_title %}Bonus entreprises{% endblock %}
+{% block user_initiales %}AD{% endblock %}
+{% block user_nom %}Administration{% endblock %}
+{% block user_role %}Administrateur{% endblock %}
+
+{% block sidebar_menu %}
+    <div class="sd-nav-section">Général</div>
+    <a href="{% url 'apps_core:dashboard_admin' %}" class="sd-nav-link"><i class="bi bi-grid-1x2"></i>Tableau de bord</a>
+    <a href="{% url 'apps_messagerie:conversation_liste' %}" class="sd-nav-link"><i class="bi bi-chat-dots"></i>Messagerie</a>
+
+    <div class="sd-nav-section">Acteurs</div>
+    <a href="{% url 'apps_entreprise:admin_liste_entreprises' %}" class="sd-nav-link"><i class="bi bi-building"></i>Entreprises</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-bicycle"></i>Livreurs</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-person-heart"></i>Clients</a>
+
+    <div class="sd-nav-section">Catalogue</div>
+    <a href="{% url 'apps_catalogue:admin_liste_produits' %}" class="sd-nav-link"><i class="bi bi-boxes"></i>Produits</a>
+    <a href="{% url 'apps_catalogue:admin_liste_categories' %}" class="sd-nav-link"><i class="bi bi-tags"></i>Catégories</a>
+    <a href="{% url 'apps_entreprise:admin_liste_entrepots' %}" class="sd-nav-link"><i class="bi bi-building-gear"></i>Entrepôts</a>
+
+    <div class="sd-nav-section">Fidélité</div>
+    <a href="{% url 'apps_bonus:bonus_liste' %}" class="sd-nav-link active"><i class="bi bi-gift"></i>Bonus entreprises</a>
+    <a href="{% url 'apps_bonus:type_bonus_liste' %}" class="sd-nav-link"><i class="bi bi-stars"></i>Types de bonus</a>
+
+    <div class="sd-nav-section">Opérations</div>
+    <a href="#" class="sd-nav-link"><i class="bi bi-box-seam"></i>Livraisons B2B</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-signpost-2"></i>Livraisons directes</a>
+
+    <div class="sd-nav-section">Système</div>
+    <a href="{% url 'apps_core:configuration_geographie' %}" class="sd-nav-link"><i class="bi bi-geo"></i>Zones géographiques</a>
+    <a href="{% url 'apps_core:gerer_coefficients_vehicule' %}" class="sd-nav-link"><i class="bi bi-truck-front"></i>Coefficients véhicule</a>
+{% endblock %}
+
+{% block extra_css %}
+    .sd-filtre-bar { background: #fff; border: 1px solid #EDEFF4; border-radius: 14px; padding: 1rem 1.25rem; }
+    .sd-filtre-bar .form-select, .sd-filtre-bar .form-control { border-radius: 10px; border: 1.5px solid #EDEFF4; }
+    .sd-badge-statut { font-size: .72rem; font-weight: 700; padding: .25rem .65rem; border-radius: 50px; }
+    .sd-badge-statut.actif   { background: #E5F7EC; color: #1FAA59; }
+    .sd-badge-statut.utilise { background: #EEF2FF; color: #2E5CFF; }
+    .sd-badge-statut.expire  { background: #FFF4E5; color: #E88A00; }
+    .sd-badge-statut.annule  { background: #FDEBEA; color: #E23D32; }
+    .sd-categorie-pill { background: #F1F2F6; color: var(--sd-gris); font-size: .72rem; font-weight: 600;
+                          padding: .25rem .65rem; border-radius: 50px; white-space: nowrap; }
+    .sd-quota-txt { font-size: .78rem; color: var(--sd-gris); }
+{% endblock %}
+
+{% block dashboard_content %}
+
+<div class="sd-filtre-bar mb-3">
+    <form method="get" class="row g-2 align-items-end">
+        <div class="col-md-5">
+            <label class="form-label small fw-semibold mb-1">Recherche</label>
+            <input type="text" name="q" value="{{ form.q.value|default:'' }}" class="form-control form-control-sm" placeholder="Entreprise, type de bonus…">
+        </div>
+        <div class="col-md-3">
+            <label class="form-label small fw-semibold mb-1">Statut</label>
+            <select name="statut" class="form-select form-select-sm">
+                {% for valeur, libelle in form.fields.statut.choices %}
+                    <option value="{{ valeur }}" {% if form.statut.value == valeur %}selected{% endif %}>{{ libelle }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label class="form-label small fw-semibold mb-1">Catégorie</label>
+            <select name="categorie" class="form-select form-select-sm">
+                {% for valeur, libelle in form.fields.categorie.choices %}
+                    <option value="{{ valeur }}" {% if form.categorie.value == valeur %}selected{% endif %}>{{ libelle }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-2 d-flex gap-2">
+            <button type="submit" class="btn btn-sd-primary btn-sm flex-grow-1"><i class="bi bi-search"></i></button>
+            <a href="{% url 'apps_bonus:bonus_liste' %}" class="btn btn-sd-outline btn-sm" title="Réinitialiser"><i class="bi bi-x-lg"></i></a>
+        </div>
+    </form>
+</div>
+
+<div class="d-flex justify-content-end mb-2">
+    <a href="{% url 'apps_bonus:bonus_attribuer' %}" class="btn btn-sd-primary btn-sm">
+        <i class="bi bi-plus-lg me-1"></i>Attribuer un bonus
+    </a>
+</div>
+
+<div class="sd-panel">
+    {% if bonus_liste %}
+        <div class="table-responsive">
+            <table class="table sd-table align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Entreprise</th><th>Type de bonus</th><th>Zone</th>
+                        <th>Période</th><th>Utilisation</th><th>Statut</th><th class="text-end">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for bonus in bonus_liste %}
+                        <tr>
+                            <td class="fw-semibold">{{ bonus.entreprise.raison_sociale }}</td>
+                            <td>
+                                {{ bonus.type_bonus.nom }}
+                                <div><span class="sd-categorie-pill">{{ bonus.type_bonus.get_categorie_display }}</span></div>
+                            </td>
+                            <td class="text-muted small">{{ bonus.zone_cible.nom|default:"Toutes zones" }}</td>
+                            <td class="text-muted small">
+                                {{ bonus.date_debut|date:"d/m/Y" }} → {{ bonus.date_expiration|date:"d/m/Y" }}
+                            </td>
+                            <td class="sd-quota-txt">
+                                {% if bonus.nb_utilisations_max %}
+                                    {{ bonus.nb_utilisations_actuelles }} / {{ bonus.nb_utilisations_max }}
+                                {% else %}
+                                    {{ bonus.nb_utilisations_actuelles }} (illimité)
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="sd-badge-statut {{ bonus.statut|lower }}">{{ bonus.get_statut_display }}</span>
+                            </td>
+                            <td class="text-end">
+                                <a href="{% url 'apps_bonus:bonus_detail' bonus.pk %}" class="btn btn-sm btn-sd-outline">
+                                    <i class="bi bi-eye me-1"></i>Voir
+                                </a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if is_paginated %}
+            <nav class="d-flex justify-content-center py-3">
+                <ul class="pagination pagination-sm mb-0">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">Précédent</a></li>
+                    {% endif %}
+                    <li class="page-item disabled"><span class="page-link">Page {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span></li>
+                    {% if page_obj.has_next %}
+                        <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">Suivant</a></li>
+                    {% endif %}
+                </ul>
+            </nav>
+        {% endif %}
+    {% else %}
+        <p class="text-muted small mb-0">Aucun bonus ne correspond à ces critères.</p>
+    {% endif %}
+</div>
+
+{% endblock %}

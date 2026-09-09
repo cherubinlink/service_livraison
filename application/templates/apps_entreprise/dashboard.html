@@ -24,8 +24,8 @@
     <a href="{% url 'apps_entreprise:zones_livraisons' %}" class="sd-nav-link"><i class="bi bi-truck"></i>Zones livraisons</a>
 
     <div class="sd-nav-section">Finance</div>
-    <a href="#" class="sd-nav-link"><i class="bi bi-cash-stack"></i>Paiements & lots</a>
-    <a href="#" class="sd-nav-link"><i class="bi bi-gift"></i>Mes bonus</a>
+    <a href="{% url 'apps_transaction:mes_lots_paiement' %}" class="sd-nav-link"><i class="bi bi-cash-stack"></i>Paiements & lots</a>
+    <a href="{% url 'apps_bonus:mes_bonus' %}" class="sd-nav-link"><i class="bi bi-gift"></i>Mes bonus</a>
 
     <div class="sd-nav-section">Entreprise</div>
     <a href="{% url 'apps_entreprise:modifier_profil' %}" class="sd-nav-link"><i class="bi bi-building"></i>Modifier le profil</a>
@@ -34,7 +34,7 @@
     <a href="{% url 'apps_entreprise:mes_frais_gardiennage' %}" class="sd-nav-link"><i class="bi bi-shield-lock"></i>Frais de gardiennage</a>
 
     <div class="sd-nav-section">Compte</div>
-    <a href="#" class="sd-nav-link"><i class="bi bi-chat-dots"></i>Messagerie</a>
+    <a href="{% url 'apps_messagerie:conversation_liste' %}" class="sd-nav-link"><i class="bi bi-chat-dots"></i>Messagerie</a>
 {% endblock %}
 
 {% block dashboard_content %}

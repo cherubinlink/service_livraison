@@ -1,0 +1,99 @@
+{% extends 'navigateur/base_dashboard.html' %}
+
+{% block title %}Mes paiements – SwiftDrop{% endblock %}
+{% block page_title %}Mes paiements{% endblock %}
+{% block user_initiales %}{{ entreprise.nom_affichage|default:"EN"|slice:":2"|upper }}{% endblock %}
+{% block user_nom %}{{ entreprise.nom_affichage|default:"Mon entreprise" }}{% endblock %}
+{% block user_role %}Entreprise{% endblock %}
+
+{% block sidebar_menu %}
+    <div class="sd-nav-section">Général</div>
+    <a href="{% url 'apps_entreprise:dashboard' %}" class="sd-nav-link"><i class="bi bi-grid-1x2"></i>Tableau de bord</a>
+
+    <div class="sd-nav-section">Catalogue</div>
+    <a href="{% url 'apps_catalogue:mes_produits' %}" class="sd-nav-link"><i class="bi bi-boxes"></i>Mes produits</a>
+    <a href="{% url 'apps_entreprise:mes_entrepots' %}" class="sd-nav-link"><i class="bi bi-building-gear"></i>Mes entrepôts & stocks</a>
+
+    <div class="sd-nav-section">Livraisons</div>
+    <a href="{% url 'apps_livraison:mes_livraisons' %}" class="sd-nav-link"><i class="bi bi-truck"></i>Mes livraisons</a>
+    <a href="{% url 'apps_livraison:mes_livraisons_directes' %}" class="sd-nav-link"><i class="bi bi-signpost-2"></i>Courses directes</a>
+    <a href="{% url 'apps_entreprise:zones_livraisons' %}" class="sd-nav-link"><i class="bi bi-geo-alt"></i>Zones & tarifs</a>
+
+    <div class="sd-nav-section">Finance</div>
+    <a href="{% url 'apps_transaction:mes_lots_paiement' %}" class="sd-nav-link active"><i class="bi bi-cash-stack"></i>Paiements & lots</a>
+    <a href="{% url 'apps_transaction:mes_transactions' %}" class="sd-nav-link"><i class="bi bi-journal-text"></i>Mes transactions</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-gift"></i>Mes bonus</a>
+
+    <div class="sd-nav-section">Entreprise</div>
+    <a href="{% url 'apps_entreprise:modifier_profil' %}" class="sd-nav-link"><i class="bi bi-building"></i>Modifier le profil</a>
+    <a href="{% url 'apps_entreprise:mes_documents' %}" class="sd-nav-link"><i class="bi bi-file-earmark-text"></i>Mes documents</a>
+    <a href="{% url 'apps_entreprise:mes_contacts' %}" class="sd-nav-link"><i class="bi bi-person-lines-fill"></i>Mes contacts</a>
+    <a href="{% url 'apps_entreprise:mes_frais_gardiennage' %}" class="sd-nav-link"><i class="bi bi-shield-lock"></i>Frais de gardiennage</a>
+
+    <div class="sd-nav-section">Compte</div>
+    <a href="#" class="sd-nav-link"><i class="bi bi-chat-dots"></i>Messagerie</a>
+{% endblock %}
+
+{% block extra_css %}
+    .sd-badge-statut.succes { background: #E5F7EC; color: #1FAA59; }
+    .sd-badge-statut.cours { background: #E8F0FF; color: #2D6CDF; }
+    .sd-badge-statut.attente { background: #FFF4E5; color: #E88A00; }
+{% endblock %}
+
+{% block dashboard_content %}
+
+{% if messages %}
+    {% for message in messages %}
+        <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    {% endfor %}
+{% endif %}
+
+<div class="sd-panel">
+    {% if lots %}
+        <div class="table-responsive">
+            <table class="table sd-table align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Référence</th>
+                        <th>Période</th>
+                        <th>Montant net</th>
+                        <th>Statut</th>
+                        <th>Créé le</th>
+                        <th class="text-end">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for lot in lots %}
+                        <tr>
+                            <td class="fw-semibold">{{ lot.reference }}</td>
+                            <td class="text-muted small">{{ lot.periode_debut|date:"d/m/Y" }} → {{ lot.periode_fin|date:"d/m/Y" }}</td>
+                            <td class="fw-semibold">{{ lot.montant_net_a_payer }} FCFA</td>
+                            <td>
+                                {% if lot.statut == 'CONFIRME' %}
+                                    <span class="sd-badge-statut succes">Confirmé</span>
+                                {% elif lot.statut == 'ENVOYE' %}
+                                    <span class="sd-badge-statut cours">Envoyé</span>
+                                {% else %}
+                                    <span class="sd-badge-statut attente">{{ lot.get_statut_display }}</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-muted small">{{ lot.date_creation|date:"d/m/Y" }}</td>
+                            <td class="text-end">
+                                <a href="{% url 'apps_transaction:detail_lot_paiement' pk=lot.pk %}" class="btn btn-sm btn-sd-outline">
+                                    <i class="bi bi-eye me-1"></i>Voir
+                                </a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p class="text-muted small mb-0">Aucun lot de paiement pour le moment.</p>
+    {% endif %}
+</div>
+
+{% endblock %}

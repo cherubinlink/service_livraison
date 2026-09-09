@@ -1,0 +1,147 @@
+{% extends 'navigateur/base_dashboard.html' %}
+
+{% block title %}{{ lot.reference }} – SwiftDrop{% endblock %}
+{% block page_title %}Lot {{ lot.reference }}{% endblock %}
+{% block user_initiales %}{{ entreprise.nom_affichage|default:"EN"|slice:":2"|upper }}{% endblock %}
+{% block user_nom %}{{ lot.entreprise.nom_affichage|default:"Mon entreprise" }}{% endblock %}
+{% block user_role %}Entreprise{% endblock %}
+
+{% block sidebar_menu %}
+    <div class="sd-nav-section">Général</div>
+    <a href="{% url 'apps_entreprise:dashboard' %}" class="sd-nav-link"><i class="bi bi-grid-1x2"></i>Tableau de bord</a>
+
+    <div class="sd-nav-section">Catalogue</div>
+    <a href="{% url 'apps_catalogue:mes_produits' %}" class="sd-nav-link"><i class="bi bi-boxes"></i>Mes produits</a>
+    <a href="{% url 'apps_entreprise:mes_entrepots' %}" class="sd-nav-link"><i class="bi bi-building-gear"></i>Mes entrepôts & stocks</a>
+
+    <div class="sd-nav-section">Livraisons</div>
+    <a href="{% url 'apps_livraison:mes_livraisons' %}" class="sd-nav-link"><i class="bi bi-truck"></i>Mes livraisons</a>
+    <a href="{% url 'apps_livraison:mes_livraisons_directes' %}" class="sd-nav-link"><i class="bi bi-signpost-2"></i>Courses directes</a>
+    <a href="{% url 'apps_entreprise:zones_livraisons' %}" class="sd-nav-link"><i class="bi bi-geo-alt"></i>Zones & tarifs</a>
+
+    <div class="sd-nav-section">Finance</div>
+    <a href="{% url 'apps_transaction:mes_lots_paiement' %}" class="sd-nav-link active"><i class="bi bi-cash-stack"></i>Paiements & lots</a>
+    <a href="{% url 'apps_transaction:mes_transactions' %}" class="sd-nav-link"><i class="bi bi-journal-text"></i>Mes transactions</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-gift"></i>Mes bonus</a>
+
+    <div class="sd-nav-section">Entreprise</div>
+    <a href="{% url 'apps_entreprise:modifier_profil' %}" class="sd-nav-link"><i class="bi bi-building"></i>Modifier le profil</a>
+    <a href="{% url 'apps_entreprise:mes_documents' %}" class="sd-nav-link"><i class="bi bi-file-earmark-text"></i>Mes documents</a>
+    <a href="{% url 'apps_entreprise:mes_contacts' %}" class="sd-nav-link"><i class="bi bi-person-lines-fill"></i>Mes contacts</a>
+    <a href="{% url 'apps_entreprise:mes_frais_gardiennage' %}" class="sd-nav-link"><i class="bi bi-shield-lock"></i>Frais de gardiennage</a>
+
+    <div class="sd-nav-section">Compte</div>
+    <a href="#" class="sd-nav-link"><i class="bi bi-chat-dots"></i>Messagerie</a>
+{% endblock %}
+
+{% block extra_css %}
+    .sd-badge-statut.succes { background: #E5F7EC; color: #1FAA59; }
+    .sd-badge-statut.cours { background: #E8F0FF; color: #2D6CDF; }
+    .sd-badge-statut.attente { background: #FFF4E5; color: #E88A00; }
+{% endblock %}
+
+{% block dashboard_content %}
+
+{% if messages %}
+    {% for message in messages %}
+        <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    {% endfor %}
+{% endif %}
+
+<!-- ═══════════════════ En-tête ═══════════════════ -->
+<div class="sd-panel mb-3">
+    <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+        <div>
+            <div class="sd-panel-title mb-1">Lot {{ lot.reference }}</div>
+            <p class="text-muted small mb-0">
+                Période : {{ lot.periode_debut|date:"d/m/Y" }} → {{ lot.periode_fin|date:"d/m/Y" }}
+            </p>
+            <p class="text-muted small mb-0">
+                Méthode : {{ lot.get_methode_paiement_display }} — {{ lot.numero_compte_destination|default:"—" }}
+            </p>
+            {% if lot.reference_transaction_externe %}
+                <p class="text-muted small mb-0">Référence transaction : {{ lot.reference_transaction_externe }}</p>
+            {% endif %}
+        </div>
+        <div class="text-end">
+            {% if lot.statut == 'CONFIRME' %}
+                <span class="sd-badge-statut succes">Confirmé</span>
+            {% elif lot.statut == 'ENVOYE' %}
+                <span class="sd-badge-statut cours">Envoyé</span>
+            {% else %}
+                <span class="sd-badge-statut attente">{{ lot.get_statut_display }}</span>
+            {% endif %}
+            <div class="fw-bold fs-4 mt-2" style="color: var(--sd-navy);">{{ lot.montant_net_a_payer }} FCFA</div>
+        </div>
+    </div>
+
+    {% if lot.note_litige %}
+        <div class="alert alert-warning mt-3 mb-0 small">
+            <i class="bi bi-exclamation-triangle me-1"></i>Litige signalé : {{ lot.note_litige }}
+        </div>
+    {% endif %}
+
+    <!-- Actions selon statut -->
+    <div class="d-flex gap-2 flex-wrap mt-3">
+        {% if lot.statut == 'ENVOYE' %}
+            <form method="post" action="{% url 'apps_transaction:confirmer_reception_lot' pk=lot.pk %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-sm btn-sd-primary"><i class="bi bi-check2-circle me-1"></i>Confirmer la réception</button>
+            </form>
+            <button type="button" class="btn btn-sm btn-sd-outline text-danger" data-bs-toggle="modal" data-bs-target="#modalLitige">
+                <i class="bi bi-exclamation-triangle me-1"></i>Signaler un problème
+            </button>
+        {% endif %}
+    </div>
+</div>
+
+<div class="sd-panel">
+    <div class="sd-panel-title mb-3"><i class="bi bi-box-seam me-2"></i>Livraisons incluses dans ce lot</div>
+    {% if livraisons %}
+        <div class="table-responsive mb-0">
+            <table class="table sd-table align-middle mb-0">
+                <thead>
+                    <tr><th>Numéro</th><th>Client</th><th>Livrée le</th><th class="text-end">Gain</th></tr>
+                </thead>
+                <tbody>
+                    {% for l in livraisons %}
+                        <tr>
+                            <td class="fw-semibold">{{ l.numero }}</td>
+                            <td>{{ l.nom_client }}</td>
+                            <td class="text-muted small">{{ l.date_livraison_effective|date:"d/m/Y" }}</td>
+                            <td class="text-end fw-semibold">{{ l.gain_entreprise|default:"—" }} FCFA</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p class="text-muted small mb-0">Aucune livraison associée à ce lot.</p>
+    {% endif %}
+</div>
+
+<!-- Modal litige -->
+<div class="modal fade" id="modalLitige" tabindex="-1" aria-labelledby="modalLitigeLabel">
+    <div class="modal-dialog">
+        <form method="post" action="{% url 'apps_transaction:signaler_litige_lot' pk=lot.pk %}" class="modal-content">
+            {% csrf_token %}
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalLitigeLabel">Signaler un problème sur ce lot</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <label class="form-label small fw-semibold">Décrivez le problème rencontré</label>
+                <textarea name="note_litige" class="form-control" rows="4" required></textarea>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-sd-outline" data-bs-dismiss="modal">Annuler</button>
+                <button type="submit" class="btn btn-sd-primary">Envoyer</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}

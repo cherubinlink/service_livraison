@@ -1,0 +1,164 @@
+{% extends 'navigateur/base_dashboard.html' %}
+
+{% block title %}Nouvelle course directe – SwiftDrop{% endblock %}
+{% block page_title %}Nouvelle course directe{% endblock %}
+{% block user_initiales %}{{ entreprise.nom_affichage|default:"EN"|slice:":2"|upper }}{% endblock %}
+{% block user_nom %}{{ entreprise.nom_affichage|default:"Mon entreprise" }}{% endblock %}
+{% block user_role %}Entreprise{% endblock %}
+
+{% block sidebar_menu %}
+    <div class="sd-nav-section">Général</div>
+    <a href="{% url 'apps_entreprise:dashboard' %}" class="sd-nav-link"><i class="bi bi-grid-1x2"></i>Tableau de bord</a>
+
+    <div class="sd-nav-section">Catalogue</div>
+    <a href="{% url 'apps_catalogue:mes_produits' %}" class="sd-nav-link"><i class="bi bi-boxes"></i>Mes produits</a>
+    <a href="{% url 'apps_entreprise:mes_entrepots' %}" class="sd-nav-link"><i class="bi bi-building-gear"></i>Mes entrepôts & stocks</a>
+
+    <div class="sd-nav-section">Livraisons</div>
+    <a href="{% url 'apps_livraison:mes_livraisons' %}" class="sd-nav-link"><i class="bi bi-truck"></i>Mes livraisons</a>
+    <a href="{% url 'apps_livraison:mes_livraisons_directes' %}" class="sd-nav-link active"><i class="bi bi-signpost-2"></i>Courses directes</a>
+    <a href="{% url 'apps_entreprise:zones_livraison' %}" class="sd-nav-link"><i class="bi bi-geo-alt"></i>Zones & tarifs</a>
+
+    <div class="sd-nav-section">Finance</div>
+    <a href="#" class="sd-nav-link"><i class="bi bi-cash-stack"></i>Paiements & lots</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-gift"></i>Mes bonus</a>
+
+    <div class="sd-nav-section">Entreprise</div>
+    <a href="{% url 'apps_entreprise:modifier_profil' %}" class="sd-nav-link"><i class="bi bi-building"></i>Modifier le profil</a>
+    <a href="{% url 'apps_entreprise:mes_documents' %}" class="sd-nav-link"><i class="bi bi-file-earmark-text"></i>Mes documents</a>
+    <a href="{% url 'apps_entreprise:mes_contacts' %}" class="sd-nav-link"><i class="bi bi-person-lines-fill"></i>Mes contacts</a>
+    <a href="{% url 'apps_entreprise:mes_frais_gardiennage' %}" class="sd-nav-link"><i class="bi bi-shield-lock"></i>Frais de gardiennage</a>
+
+    <div class="sd-nav-section">Compte</div>
+    <a href="#" class="sd-nav-link"><i class="bi bi-chat-dots"></i>Messagerie</a>
+{% endblock %}
+
+{% block dashboard_content %}
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="sd-panel">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div class="sd-panel-title mb-0"><i class="bi bi-signpost-2 me-2"></i>Nouvelle course directe</div>
+                <a href="{% url 'apps_livraison:mes_livraisons_directes' %}" class="small">
+                    <i class="bi bi-arrow-left me-1"></i>Retour à la liste
+                </a>
+            </div>
+
+            <form method="post">
+                {% csrf_token %}
+
+                <p class="fw-semibold small text-uppercase text-muted mb-2" style="letter-spacing:.05em;">Expéditeur</p>
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label small fw-semibold">{{ form.nom_expediteur.label }}</label>
+                        {{ form.nom_expediteur }}
+                        {% if form.nom_expediteur.errors %}<div class="text-danger small mt-1">{{ form.nom_expediteur.errors|join:", " }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-semibold">{{ form.telephone_expediteur.label }}</label>
+                        {{ form.telephone_expediteur }}
+                        {% if form.telephone_expediteur.errors %}<div class="text-danger small mt-1">{{ form.telephone_expediteur.errors|join:", " }}</div>{% endif %}
+                    </div>
+                </div>
+
+                <p class="fw-semibold small text-uppercase text-muted mb-2" style="letter-spacing:.05em;">Colis</p>
+                <div class="row g-3 mb-3">
+                    <div class="col-12">
+                        <label class="form-label small fw-semibold">{{ form.description_colis.label }}</label>
+                        {{ form.description_colis }}
+                        {% if form.description_colis.errors %}<div class="text-danger small mt-1">{{ form.description_colis.errors|join:", " }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-semibold">{{ form.poids_kg.label }}</label>
+                        {{ form.poids_kg }}
+                        {% if form.poids_kg.errors %}<div class="text-danger small mt-1">{{ form.poids_kg.errors|join:", " }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-semibold">{{ form.valeur_declaree.label }}</label>
+                        {{ form.valeur_declaree }}
+                        {% if form.valeur_declaree.errors %}<div class="text-danger small mt-1">{{ form.valeur_declaree.errors|join:", " }}</div>{% endif %}
+                    </div>
+                </div>
+
+                <p class="fw-semibold small text-uppercase text-muted mb-2" style="letter-spacing:.05em;">Collecte</p>
+                <div class="row g-3 mb-3">
+                    <div class="col-12">
+                        <label class="form-label small fw-semibold">{{ form.adresse_collecte.label }}</label>
+                        {{ form.adresse_collecte }}
+                        {% if form.adresse_collecte.errors %}<div class="text-danger small mt-1">{{ form.adresse_collecte.errors|join:", " }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-semibold">{{ form.ville_collecte.label }}</label>
+                        {{ form.ville_collecte }}
+                        {% if form.ville_collecte.errors %}<div class="text-danger small mt-1">{{ form.ville_collecte.errors|join:", " }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-semibold">{{ form.zone_collecte.label }}</label>
+                        {{ form.zone_collecte }}
+                        {% if form.zone_collecte.errors %}<div class="text-danger small mt-1">{{ form.zone_collecte.errors|join:", " }}</div>{% endif %}
+                    </div>
+                </div>
+
+                <p class="fw-semibold small text-uppercase text-muted mb-2" style="letter-spacing:.05em;">Destinataire & livraison</p>
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label small fw-semibold">{{ form.nom_destinataire.label }}</label>
+                        {{ form.nom_destinataire }}
+                        {% if form.nom_destinataire.errors %}<div class="text-danger small mt-1">{{ form.nom_destinataire.errors|join:", " }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-semibold">{{ form.telephone_destinataire.label }}</label>
+                        {{ form.telephone_destinataire }}
+                        {% if form.telephone_destinataire.errors %}<div class="text-danger small mt-1">{{ form.telephone_destinataire.errors|join:", " }}</div>{% endif %}
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label small fw-semibold">{{ form.adresse_livraison.label }}</label>
+                        {{ form.adresse_livraison }}
+                        {% if form.adresse_livraison.errors %}<div class="text-danger small mt-1">{{ form.adresse_livraison.errors|join:", " }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-semibold">{{ form.ville_livraison.label }}</label>
+                        {{ form.ville_livraison }}
+                        {% if form.ville_livraison.errors %}<div class="text-danger small mt-1">{{ form.ville_livraison.errors|join:", " }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-semibold">{{ form.zone_livraison.label }}</label>
+                        {{ form.zone_livraison }}
+                        {% if form.zone_livraison.errors %}<div class="text-danger small mt-1">{{ form.zone_livraison.errors|join:", " }}</div>{% endif %}
+                    </div>
+                </div>
+
+                <p class="fw-semibold small text-uppercase text-muted mb-2" style="letter-spacing:.05em;">Tarification</p>
+                <div class="row g-3 mb-3">
+                    <div class="col-md-4">
+                        <label class="form-label small fw-semibold">{{ form.type_tarification.label }}</label>
+                        {{ form.type_tarification }}
+                        {% if form.type_tarification.errors %}<div class="text-danger small mt-1">{{ form.type_tarification.errors|join:", " }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small fw-semibold">{{ form.vehicule_requis.label }}</label>
+                        {{ form.vehicule_requis }}
+                        {% if form.vehicule_requis.errors %}<div class="text-danger small mt-1">{{ form.vehicule_requis.errors|join:", " }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small fw-semibold">{{ form.distance_km.label }}</label>
+                        {{ form.distance_km }}
+                        {% if form.distance_km.errors %}<div class="text-danger small mt-1">{{ form.distance_km.errors|join:", " }}</div>{% endif %}
+                    </div>
+                </div>
+
+                {% if form.non_field_errors %}
+                    <div class="text-danger small mb-3">{{ form.non_field_errors|join:", " }}</div>
+                {% endif %}
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-sd-primary flex-grow-1">Créer la course</button>
+                    <a href="{% url 'apps_livraison:mes_livraisons_directes' %}" class="btn btn-sd-outline">Annuler</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

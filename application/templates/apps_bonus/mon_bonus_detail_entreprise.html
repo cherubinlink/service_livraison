@@ -1,0 +1,103 @@
+{% extends 'navigateur/base_dashboard_entreprise.html' %}
+{# ⚠️ Adapte le chemin ci-dessus + le bloc sidebar_menu au vrai template de base entreprise #}
+
+{% block title %}{{ bonus.type_bonus.nom }} – Mes bonus{% endblock %}
+{% block page_title %}Mes bonus{% endblock %}
+{% block user_initiales %}{{ request.user.nom|slice:":2"|upper }}{% endblock %}
+{% block user_nom %}{{ request.user.nom }}{% endblock %}
+{% block user_role %}Entreprise{% endblock %}
+
+{% block sidebar_menu %}
+    <div class="sd-nav-section">Général</div>
+    <a href="{% url 'apps_entreprise:dashboard_entreprise' %}" class="sd-nav-link"><i class="bi bi-grid-1x2"></i>Tableau de bord</a>
+    <a href="{% url 'apps_messagerie:conversation_liste' %}" class="sd-nav-link"><i class="bi bi-chat-dots"></i>Messagerie</a>
+
+    <div class="sd-nav-section">Fidélité</div>
+    <a href="{% url 'apps_bonus:mes_bonus' %}" class="sd-nav-link active"><i class="bi bi-gift"></i>Mes bonus</a>
+{% endblock %}
+
+{% block extra_css %}
+    .sd-badge-statut { font-size: .74rem; font-weight: 700; padding: .3rem .75rem; border-radius: 50px; }
+    .sd-badge-statut.actif   { background: #E5F7EC; color: #1FAA59; }
+    .sd-badge-statut.utilise { background: #EEF2FF; color: #2E5CFF; }
+    .sd-badge-statut.expire  { background: #FFF4E5; color: #E88A00; }
+    .sd-badge-statut.annule  { background: #FDEBEA; color: #E23D32; }
+    .sd-detail-panel { background: #fff; border: 1px solid #EDEFF4; border-radius: 14px; padding: 1.5rem; }
+    .sd-detail-label { font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em;
+                        color: var(--sd-gris); margin-bottom: .25rem; }
+    .sd-detail-value { font-size: .95rem; color: #1B1D28; margin-bottom: 1.1rem; }
+    .sd-progress-quota { height: 8px; border-radius: 50px; background: #EDEFF4; overflow: hidden; }
+    .sd-progress-quota .bar { height: 100%; background: var(--sd-primary, #2E5CFF); border-radius: 50px; }
+    .sd-alert-expire { background: #FFF4E5; color: #E88A00; border-radius: 12px; padding: .8rem 1rem; font-size: .85rem; }
+    .sd-alert-annule { background: #FDEBEA; color: #E23D32; border-radius: 12px; padding: .8rem 1rem; font-size: .85rem; }
+{% endblock %}
+
+{% block dashboard_content %}
+
+<div class="mb-3">
+    <a href="{% url 'apps_bonus:mes_bonus' %}" class="btn btn-sd-outline btn-sm">
+        <i class="bi bi-arrow-left me-1"></i>Retour à mes bonus
+    </a>
+</div>
+
+{% if bonus.statut == 'EXPIRE' %}
+    <div class="sd-alert-expire mb-3"><i class="bi bi-clock-history me-1"></i>Ce bonus est arrivé à expiration et ne peut plus être utilisé.</div>
+{% elif bonus.statut == 'ANNULE' %}
+    <div class="sd-alert-annule mb-3"><i class="bi bi-x-circle me-1"></i>Ce bonus a été annulé par l'administration.</div>
+{% elif bonus.statut == 'UTILISE' %}
+    <div class="sd-alert-expire mb-3"><i class="bi bi-check2-all me-1"></i>Ce bonus a été entièrement utilisé.</div>
+{% endif %}
+
+<div class="row g-3">
+    <div class="col-lg-8">
+        <div class="sd-detail-panel">
+            <div class="d-flex justify-content-between align-items-start mb-4">
+                <div>
+                    <h5 class="fw-bold mb-1">{{ bonus.type_bonus.nom }}</h5>
+                    <div class="text-muted small">{{ bonus.type_bonus.get_categorie_display }}</div>
+                </div>
+                <span class="sd-badge-statut {{ bonus.statut|lower }}">{{ bonus.get_statut_display }}</span>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="sd-detail-label">Valeur du bonus</div>
+                    <div class="sd-detail-value">
+                        {{ bonus.type_bonus.valeur }}{% if bonus.type_bonus.categorie == 'RED_PCT' %}%{% else %} FCFA{% endif %}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="sd-detail-label">Zone concernée</div>
+                    <div class="sd-detail-value">{{ bonus.zone_cible.nom|default:"Toutes zones" }}</div>
+                </div>
+                <div class="col-md-6">
+                    <div class="sd-detail-label">Période de validité</div>
+                    <div class="sd-detail-value">{{ bonus.date_debut|date:"d/m/Y" }} → {{ bonus.date_expiration|date:"d/m/Y" }}</div>
+                </div>
+                <div class="col-md-6">
+                    <div class="sd-detail-label">Attribué le</div>
+                    <div class="sd-detail-value">{{ bonus.date_creation|date:"d/m/Y" }}</div>
+                </div>
+            </div>
+
+            <div class="sd-detail-label">Utilisation</div>
+            {% if bonus.nb_utilisations_max %}
+                <div class="sd-progress-quota mb-1">
+                    <div class="bar" style="width: {% widthratio bonus.nb_utilisations_actuelles bonus.nb_utilisations_max 100 %}%;"></div>
+                </div>
+                <div class="sd-detail-value">{{ bonus.nb_utilisations_actuelles }} / {{ bonus.nb_utilisations_max }} utilisations</div>
+            {% else %}
+                <div class="sd-detail-value">{{ bonus.nb_utilisations_actuelles }} utilisation(s) — quota illimité</div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="sd-detail-panel">
+            <div class="sd-detail-label">À propos de ce bonus</div>
+            <p class="small text-muted mb-0">{{ bonus.type_bonus.description|default:"Aucune description fournie." }}</p>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

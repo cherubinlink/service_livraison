@@ -1,0 +1,264 @@
+{% extends 'navigateur/base_dashboard.html' %}
+
+{% block title %}{{ autre_participant.nom }} – Messagerie{% endblock %}
+{% block page_title %}Messagerie{% endblock %}
+{% block user_initiales %}AD{% endblock %}
+{% block user_nom %}Administration{% endblock %}
+{% block user_role %}Administrateur{% endblock %}
+
+{% block sidebar_menu %}
+    <div class="sd-nav-section">Général</div>
+    <a href="{% url 'apps_core:dashboard_admin' %}" class="sd-nav-link"><i class="bi bi-grid-1x2"></i>Tableau de bord</a>
+    <a href="{% url 'apps_messagerie:conversation_liste' %}" class="sd-nav-link active"><i class="bi bi-chat-dots"></i>Messagerie</a>
+
+    <div class="sd-nav-section">Acteurs</div>
+    <a href="{% url 'apps_entreprise:admin_liste_entreprises' %}" class="sd-nav-link"><i class="bi bi-building"></i>Entreprises</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-bicycle"></i>Livreurs</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-person-heart"></i>Clients</a>
+
+    <div class="sd-nav-section">Catalogue</div>
+    <a href="{% url 'apps_catalogue:admin_liste_produits' %}" class="sd-nav-link"><i class="bi bi-boxes"></i>Produits</a>
+    <a href="{% url 'apps_catalogue:admin_liste_categories' %}" class="sd-nav-link"><i class="bi bi-tags"></i>Catégories</a>
+    <a href="{% url 'apps_entreprise:admin_liste_entrepots' %}" class="sd-nav-link"><i class="bi bi-building-gear"></i>Entrepôts</a>
+
+    <div class="sd-nav-section">Opérations</div>
+    <a href="#" class="sd-nav-link"><i class="bi bi-box-seam"></i>Livraisons B2B</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-signpost-2"></i>Livraisons directes</a>
+
+    <div class="sd-nav-section">Système</div>
+    <a href="{% url 'apps_core:configuration_geographie' %}" class="sd-nav-link"><i class="bi bi-geo"></i>Zones géographiques</a>
+    <a href="{% url 'apps_core:gerer_coefficients_vehicule' %}" class="sd-nav-link"><i class="bi bi-truck-front"></i>Coefficients véhicule</a>
+{% endblock %}
+
+{% block extra_css %}
+    .sd-chat-header { background: #fff; border: 1px solid #EDEFF4; border-radius: 14px 14px 0 0;
+                       padding: .9rem 1.25rem; display: flex; align-items: center; justify-content: space-between; }
+    .sd-conv-avatar { width: 42px; height: 42px; border-radius: 50%; background: var(--sd-fond);
+                       display: flex; align-items: center; justify-content: center; font-weight: 700;
+                       color: var(--sd-gris); font-size: .85rem; }
+    .sd-chat-body { background: var(--sd-fond, #F7F8FB); border-left: 1px solid #EDEFF4; border-right: 1px solid #EDEFF4;
+                    padding: 1.25rem; height: 55vh; overflow-y: auto; display: flex; flex-direction: column; gap: .6rem; }
+    .sd-bubble-wrap { display: flex; flex-direction: column; max-width: 65%; }
+    .sd-bubble-wrap.moi { align-self: flex-end; align-items: flex-end; }
+    .sd-bubble-wrap.autre { align-self: flex-start; align-items: flex-start; }
+    .sd-bubble { padding: .6rem .9rem; border-radius: 14px; font-size: .9rem; line-height: 1.4; }
+    .sd-bubble-wrap.moi .sd-bubble { background: var(--sd-primary, #2E5CFF); color: #fff; border-bottom-right-radius: 4px; }
+    .sd-bubble-wrap.autre .sd-bubble { background: #fff; color: #1B1D28; border: 1px solid #EDEFF4; border-bottom-left-radius: 4px; }
+    .sd-bubble-meta { font-size: .68rem; color: var(--sd-gris); margin-top: .2rem; }
+    .sd-bubble-fichier { display: flex; align-items: center; gap: .4rem; }
+    .sd-chat-footer { background: #fff; border: 1px solid #EDEFF4; border-radius: 0 0 14px 14px; padding: .9rem 1.25rem; }
+    .sd-chat-footer textarea { border-radius: 12px; border: 1.5px solid #EDEFF4; resize: none; }
+    .sd-msg-systeme { align-self: center; font-size: .72rem; color: var(--sd-gris); background: #EDEFF4;
+                       padding: .25rem .75rem; border-radius: 50px; }
+{% endblock %}
+
+{% block dashboard_content %}
+
+<div class="d-flex justify-content-between align-items-center mb-2">
+    <a href="{% url 'apps_messagerie:conversation_liste' %}" class="btn btn-sd-outline btn-sm">
+        <i class="bi bi-arrow-left me-1"></i>Retour
+    </a>
+    <form method="post" action="{% url 'apps_messagerie:conversation_archiver' conversation.pk %}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-sd-outline btn-sm">
+            {% if conversation.est_archivee %}
+                <i class="bi bi-archive-fill me-1"></i>Désarchiver
+            {% else %}
+                <i class="bi bi-archive me-1"></i>Archiver
+            {% endif %}
+        </button>
+    </form>
+</div>
+
+<div class="sd-chat-header">
+    <div class="d-flex align-items-center gap-2">
+        <div class="sd-conv-avatar">{{ autre_participant.nom|slice:":2"|upper }}</div>
+        <div>
+            <div class="fw-semibold">{{ autre_participant.nom }}</div>
+            <div class="text-muted small">{{ autre_participant.get_role_display }} · {{ conversation.get_type_conv_display }}</div>
+        </div>
+    </div>
+    {% if conversation.sujet %}
+        <span class="sd-badge-statut" style="background:#F1F2F6;color:var(--sd-gris);">{{ conversation.sujet }}</span>
+    {% endif %}
+</div>
+
+<div class="sd-chat-body" id="sd-chat-body" data-conversation-id="{{ conversation.pk }}">
+    {% if messages_page.has_previous %}
+        <div class="text-center">
+            <a href="?page={{ messages_page.previous_page_number }}" class="small">Voir les messages précédents</a>
+        </div>
+    {% endif %}
+
+    {% for message in messages_page %}
+        {% if message.type_contenu == 'SYSTEME' %}
+            <div class="sd-msg-systeme">{{ message.contenu }}</div>
+        {% else %}
+            <div class="sd-bubble-wrap {% if message.expediteur_id == request.user.id %}moi{% else %}autre{% endif %}"
+                 data-message-id="{{ message.id }}">
+                <div class="sd-bubble">
+                    {% if message.contenu %}<div>{{ message.contenu|linebreaksbr }}</div>{% endif %}
+                    {% if message.fichier_joint %}
+                        <div class="sd-bubble-fichier {% if message.contenu %}mt-2{% endif %}">
+                            <i class="bi bi-paperclip"></i>
+                            <a href="{{ message.fichier_joint.url }}" target="_blank"
+                               class="{% if message.expediteur_id == request.user.id %}text-white{% endif %}">
+                                Pièce jointe
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="sd-bubble-meta">
+                    {{ message.date_envoi|date:"d/m/Y H:i" }}
+                    {% if message.expediteur_id == request.user.id %}
+                        {% if message.lu %}<i class="bi bi-check2-all text-primary"></i>{% else %}<i class="bi bi-check2"></i>{% endif %}
+                    {% endif %}
+                </div>
+            </div>
+        {% endif %}
+    {% empty %}
+        <p class="text-muted small text-center mt-4" id="sd-chat-vide">Aucun message pour l'instant. Démarrez la conversation !</p>
+    {% endfor %}
+</div>
+
+<div class="sd-chat-footer">
+    <form method="post" enctype="multipart/form-data" id="sd-form-envoi"
+          data-url="{% url 'apps_messagerie:conversation_detail' conversation.pk %}">
+        {% csrf_token %}
+        <div id="sd-form-erreurs" class="text-danger small mb-2" style="display:none;"></div>
+        <div class="d-flex gap-2 align-items-end">
+            <div class="flex-grow-1">
+                {{ form.contenu }}
+            </div>
+            <label class="btn btn-sd-outline btn-sm mb-0" title="Joindre un fichier">
+                <i class="bi bi-paperclip"></i>
+                {{ form.fichier_joint }}
+            </label>
+            <button type="submit" class="btn btn-sd-primary btn-sm" id="sd-btn-envoyer">
+                <i class="bi bi-send me-1"></i>Envoyer
+            </button>
+        </div>
+    </form>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+    <script>
+    (function () {
+        var body = document.getElementById('sd-chat-body');
+        var form = document.getElementById('sd-form-envoi');
+        var textarea = form.querySelector('textarea[name="contenu"]');
+        var fileInput = form.querySelector('input[name="fichier_joint"]');
+        var erreursBox = document.getElementById('sd-form-erreurs');
+        var moiId = '{{ request.user.id }}';
+        var POLL_MS = 3000;
+
+        fileInput.style.display = 'none';
+
+        function scrollEnBas() {
+            body.scrollTop = body.scrollHeight;
+        }
+
+        function dernierMessageId() {
+            var bulles = body.querySelectorAll('.sd-bubble-wrap[data-message-id]');
+            if (!bulles.length) { return ''; }
+            return bulles[bulles.length - 1].getAttribute('data-message-id');
+        }
+
+        function construireBulleHtml(msg) {
+            var vide = document.getElementById('sd-chat-vide');
+            if (vide) { vide.remove(); }
+
+            var classe = msg.est_moi ? 'moi' : 'autre';
+            var html = '<div class="sd-bubble-wrap ' + classe + '" data-message-id="' + msg.id + '">';
+            html += '<div class="sd-bubble">';
+            if (msg.contenu) {
+                html += '<div>' + msg.contenu.replace(/\n/g, '<br>') + '</div>';
+            }
+            if (msg.fichier_url) {
+                html += '<div class="sd-bubble-fichier' + (msg.contenu ? ' mt-2' : '') + '">';
+                html += '<i class="bi bi-paperclip"></i> <a href="' + msg.fichier_url + '" target="_blank"' +
+                        (msg.est_moi ? ' class="text-white"' : '') + '>Pièce jointe</a></div>';
+            }
+            html += '</div>';
+            html += '<div class="sd-bubble-meta">' + msg.date_envoi;
+            if (msg.est_moi) {
+                html += msg.lu
+                    ? ' <i class="bi bi-check2-all text-primary"></i>'
+                    : ' <i class="bi bi-check2"></i>';
+            }
+            html += '</div></div>';
+            return html;
+        }
+
+        function ajouterMessage(msg) {
+            if (body.querySelector('[data-message-id="' + msg.id + '"]')) { return; }
+            body.insertAdjacentHTML('beforeend', construireBulleHtml(msg));
+        }
+
+        // --- Polling : récupère les nouveaux messages toutes les POLL_MS ---
+        function poller() {
+            var url = body.dataset.conversationId
+                ? "{% url 'apps_messagerie:messages_nouveaux' conversation.pk %}?depuis=" + encodeURIComponent(dernierMessageId())
+                : null;
+            if (!url) { return; }
+
+            fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                .then(function (r) { return r.json(); })
+                .then(function (data) {
+                    var etaitEnBas = (body.scrollTop + body.clientHeight) >= (body.scrollHeight - 40);
+                    (data.messages || []).forEach(ajouterMessage);
+                    if (data.messages && data.messages.length && etaitEnBas) {
+                        scrollEnBas();
+                    }
+                })
+                .catch(function () { /* silencieux : on retentera au prochain cycle */ });
+        }
+
+        // --- Envoi du message en AJAX (pas de rechargement de page) ---
+        form.addEventListener('submit', function (e) {
+            e.preventDefault();
+            erreursBox.style.display = 'none';
+
+            var donnees = new FormData(form);
+            fetch(form.dataset.url, {
+                method: 'POST',
+                body: donnees,
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            })
+                .then(function (r) { return r.json().then(function (data) { return { status: r.status, data: data }; }); })
+                .then(function (res) {
+                    if (res.status === 200 && res.data.ok) {
+                        ajouterMessage(res.data.message);
+                        scrollEnBas();
+                        textarea.value = '';
+                        fileInput.value = '';
+                    } else {
+                        var msgs = [];
+                        Object.keys(res.data.erreurs || {}).forEach(function (champ) {
+                            res.data.erreurs[champ].forEach(function (err) { msgs.push(err.message || err); });
+                        });
+                        erreursBox.textContent = msgs.join(' ') || "Une erreur est survenue.";
+                        erreursBox.style.display = 'block';
+                    }
+                })
+                .catch(function () {
+                    erreursBox.textContent = "Impossible d'envoyer le message. Vérifiez votre connexion.";
+                    erreursBox.style.display = 'block';
+                });
+        });
+
+        // Envoi avec Entrée (Shift+Entrée = nouvelle ligne)
+        textarea.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                form.requestSubmit();
+            }
+        });
+
+        scrollEnBas();
+        setInterval(poller, POLL_MS);
+    })();
+    </script>
+{% endblock %}

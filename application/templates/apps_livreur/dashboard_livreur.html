@@ -19,7 +19,7 @@
 
     <div class="sd-nav-section">Compte</div>
     <a href="#" class="sd-nav-link"><i class="bi bi-cash-coin"></i>Mes revenus</a>
-    <a href="#" class="sd-nav-link"><i class="bi bi-chat-dots"></i>Messagerie</a>
+    <a href="{% url 'apps_messagerie:conversation_liste' %}" class="sd-nav-link"><i class="bi bi-chat-dots"></i>Messagerie</a>
     <a href="{% url 'apps_livreur:modifier_profil' %}" class="sd-nav-link"><i class="bi bi-person"></i>Mon profil</a>
 {% endblock %}
 

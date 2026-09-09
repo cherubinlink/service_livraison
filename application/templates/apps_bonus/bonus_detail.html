@@ -1,0 +1,142 @@
+{% extends 'navigateur/base_dashboard.html' %}
+
+{% block title %}{{ bonus.type_bonus.nom }} – {{ bonus.entreprise.raison_sociale }}{% endblock %}
+{% block page_title %}Bonus entreprises{% endblock %}
+{% block user_initiales %}AD{% endblock %}
+{% block user_nom %}Administration{% endblock %}
+{% block user_role %}Administrateur{% endblock %}
+
+{% block sidebar_menu %}
+    <div class="sd-nav-section">Général</div>
+    <a href="{% url 'apps_core:dashboard_admin' %}" class="sd-nav-link"><i class="bi bi-grid-1x2"></i>Tableau de bord</a>
+    <a href="{% url 'apps_messagerie:conversation_liste' %}" class="sd-nav-link"><i class="bi bi-chat-dots"></i>Messagerie</a>
+
+    <div class="sd-nav-section">Acteurs</div>
+    <a href="{% url 'apps_entreprise:admin_liste_entreprises' %}" class="sd-nav-link"><i class="bi bi-building"></i>Entreprises</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-bicycle"></i>Livreurs</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-person-heart"></i>Clients</a>
+
+    <div class="sd-nav-section">Catalogue</div>
+    <a href="{% url 'apps_catalogue:admin_liste_produits' %}" class="sd-nav-link"><i class="bi bi-boxes"></i>Produits</a>
+    <a href="{% url 'apps_catalogue:admin_liste_categories' %}" class="sd-nav-link"><i class="bi bi-tags"></i>Catégories</a>
+    <a href="{% url 'apps_entreprise:admin_liste_entrepots' %}" class="sd-nav-link"><i class="bi bi-building-gear"></i>Entrepôts</a>
+
+    <div class="sd-nav-section">Fidélité</div>
+    <a href="{% url 'apps_bonus:bonus_liste' %}" class="sd-nav-link active"><i class="bi bi-gift"></i>Bonus entreprises</a>
+    <a href="{% url 'apps_bonus:type_bonus_liste' %}" class="sd-nav-link"><i class="bi bi-stars"></i>Types de bonus</a>
+
+    <div class="sd-nav-section">Opérations</div>
+    <a href="#" class="sd-nav-link"><i class="bi bi-box-seam"></i>Livraisons B2B</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-signpost-2"></i>Livraisons directes</a>
+
+    <div class="sd-nav-section">Système</div>
+    <a href="{% url 'apps_core:configuration_geographie' %}" class="sd-nav-link"><i class="bi bi-geo"></i>Zones géographiques</a>
+    <a href="{% url 'apps_core:gerer_coefficients_vehicule' %}" class="sd-nav-link"><i class="bi bi-truck-front"></i>Coefficients véhicule</a>
+{% endblock %}
+
+{% block extra_css %}
+    .sd-badge-statut { font-size: .74rem; font-weight: 700; padding: .3rem .75rem; border-radius: 50px; }
+    .sd-badge-statut.actif   { background: #E5F7EC; color: #1FAA59; }
+    .sd-badge-statut.utilise { background: #EEF2FF; color: #2E5CFF; }
+    .sd-badge-statut.expire  { background: #FFF4E5; color: #E88A00; }
+    .sd-badge-statut.annule  { background: #FDEBEA; color: #E23D32; }
+    .sd-detail-panel { background: #fff; border: 1px solid #EDEFF4; border-radius: 14px; padding: 1.5rem; }
+    .sd-detail-label { font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em;
+                        color: var(--sd-gris); margin-bottom: .25rem; }
+    .sd-detail-value { font-size: .95rem; color: #1B1D28; margin-bottom: 1.1rem; }
+    .sd-progress-quota { height: 8px; border-radius: 50px; background: #EDEFF4; overflow: hidden; }
+    .sd-progress-quota .bar { height: 100%; background: var(--sd-primary, #2E5CFF); border-radius: 50px; }
+    .sd-note-box { background: var(--sd-fond, #F7F8FB); border-radius: 12px; padding: .9rem 1.1rem; font-size: .88rem; }
+{% endblock %}
+
+{% block dashboard_content %}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <a href="{% url 'apps_bonus:bonus_liste' %}" class="btn btn-sd-outline btn-sm">
+        <i class="bi bi-arrow-left me-1"></i>Retour aux bonus
+    </a>
+    <div class="d-flex gap-2">
+        {% if bonus.statut == 'ACTIF' %}
+            <form method="post" action="{% url 'apps_bonus:bonus_utiliser' bonus.pk %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-sd-primary btn-sm">
+                    <i class="bi bi-check2-circle me-1"></i>Enregistrer une utilisation
+                </button>
+            </form>
+            <form method="post" action="{% url 'apps_bonus:bonus_annuler' bonus.pk %}"
+                  onsubmit="return confirm('Confirmer l\'annulation de ce bonus ? Cette action est irréversible.');">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-sd-outline btn-sm text-danger">
+                    <i class="bi bi-x-circle me-1"></i>Annuler le bonus
+                </button>
+            </form>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-8">
+        <div class="sd-detail-panel">
+            <div class="d-flex justify-content-between align-items-start mb-4">
+                <div>
+                    <h5 class="fw-bold mb-1">{{ bonus.type_bonus.nom }}</h5>
+                    <div class="text-muted small">{{ bonus.type_bonus.get_categorie_display }}</div>
+                </div>
+                <span class="sd-badge-statut {{ bonus.statut|lower }}">{{ bonus.get_statut_display }}</span>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="sd-detail-label">Entreprise bénéficiaire</div>
+                    <div class="sd-detail-value">{{ bonus.entreprise.raison_sociale }}</div>
+                </div>
+                <div class="col-md-6">
+                    <div class="sd-detail-label">Zone cible</div>
+                    <div class="sd-detail-value">{{ bonus.zone_cible.nom|default:"Toutes zones" }}</div>
+                </div>
+                <div class="col-md-6">
+                    <div class="sd-detail-label">Valeur du bonus</div>
+                    <div class="sd-detail-value">
+                        {{ bonus.type_bonus.valeur }}{% if bonus.type_bonus.categorie == 'RED_PCT' %}%{% else %} FCFA{% endif %}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="sd-detail-label">Période de validité</div>
+                    <div class="sd-detail-value">{{ bonus.date_debut|date:"d/m/Y" }} → {{ bonus.date_expiration|date:"d/m/Y" }}</div>
+                </div>
+                <div class="col-md-6">
+                    <div class="sd-detail-label">Attribué par</div>
+                    <div class="sd-detail-value">{{ bonus.attribue_par.nom|default:"—" }}</div>
+                </div>
+                <div class="col-md-6">
+                    <div class="sd-detail-label">Date d'attribution</div>
+                    <div class="sd-detail-value">{{ bonus.date_creation|date:"d/m/Y H:i" }}</div>
+                </div>
+            </div>
+
+            <div class="sd-detail-label">Utilisation</div>
+            {% if bonus.nb_utilisations_max %}
+                <div class="sd-progress-quota mb-1">
+                    <div class="bar" style="width: {% widthratio bonus.nb_utilisations_actuelles bonus.nb_utilisations_max 100 %}%;"></div>
+                </div>
+                <div class="sd-detail-value">{{ bonus.nb_utilisations_actuelles }} / {{ bonus.nb_utilisations_max }} utilisations</div>
+            {% else %}
+                <div class="sd-detail-value">{{ bonus.nb_utilisations_actuelles }} utilisation(s) — quota illimité</div>
+            {% endif %}
+
+            {% if bonus.note_interne %}
+                <div class="sd-detail-label mt-3">Note interne</div>
+                <div class="sd-note-box">{{ bonus.note_interne|linebreaksbr }}</div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="sd-detail-panel">
+            <div class="sd-detail-label">Description du type de bonus</div>
+            <p class="small text-muted mb-0">{{ bonus.type_bonus.description|default:"Aucune description." }}</p>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

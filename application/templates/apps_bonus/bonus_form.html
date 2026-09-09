@@ -1,0 +1,117 @@
+{% extends 'navigateur/base_dashboard.html' %}
+
+{% block title %}Attribuer un bonus – Administration SwiftDrop{% endblock %}
+{% block page_title %}Bonus entreprises{% endblock %}
+{% block user_initiales %}AD{% endblock %}
+{% block user_nom %}Administration{% endblock %}
+{% block user_role %}Administrateur{% endblock %}
+
+{% block sidebar_menu %}
+    <div class="sd-nav-section">Général</div>
+    <a href="{% url 'apps_core:dashboard_admin' %}" class="sd-nav-link"><i class="bi bi-grid-1x2"></i>Tableau de bord</a>
+    <a href="{% url 'apps_messagerie:conversation_liste' %}" class="sd-nav-link"><i class="bi bi-chat-dots"></i>Messagerie</a>
+
+    <div class="sd-nav-section">Acteurs</div>
+    <a href="{% url 'apps_entreprise:admin_liste_entreprises' %}" class="sd-nav-link"><i class="bi bi-building"></i>Entreprises</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-bicycle"></i>Livreurs</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-person-heart"></i>Clients</a>
+
+    <div class="sd-nav-section">Catalogue</div>
+    <a href="{% url 'apps_catalogue:admin_liste_produits' %}" class="sd-nav-link"><i class="bi bi-boxes"></i>Produits</a>
+    <a href="{% url 'apps_catalogue:admin_liste_categories' %}" class="sd-nav-link"><i class="bi bi-tags"></i>Catégories</a>
+    <a href="{% url 'apps_entreprise:admin_liste_entrepots' %}" class="sd-nav-link"><i class="bi bi-building-gear"></i>Entrepôts</a>
+
+    <div class="sd-nav-section">Fidélité</div>
+    <a href="{% url 'apps_bonus:bonus_liste' %}" class="sd-nav-link active"><i class="bi bi-gift"></i>Bonus entreprises</a>
+    <a href="{% url 'apps_bonus:type_bonus_liste' %}" class="sd-nav-link"><i class="bi bi-stars"></i>Types de bonus</a>
+
+    <div class="sd-nav-section">Opérations</div>
+    <a href="#" class="sd-nav-link"><i class="bi bi-box-seam"></i>Livraisons B2B</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-signpost-2"></i>Livraisons directes</a>
+
+    <div class="sd-nav-section">Système</div>
+    <a href="{% url 'apps_core:configuration_geographie' %}" class="sd-nav-link"><i class="bi bi-geo"></i>Zones géographiques</a>
+    <a href="{% url 'apps_core:gerer_coefficients_vehicule' %}" class="sd-nav-link"><i class="bi bi-truck-front"></i>Coefficients véhicule</a>
+{% endblock %}
+
+{% block extra_css %}
+    .sd-form-panel { background: #fff; border: 1px solid #EDEFF4; border-radius: 14px; padding: 1.5rem; max-width: 720px; }
+    .sd-form-panel .form-control, .sd-form-panel .form-select, .sd-form-panel textarea { border-radius: 10px; border: 1.5px solid #EDEFF4; }
+    .sd-form-panel label { font-weight: 600; font-size: .85rem; margin-bottom: .3rem; }
+    .sd-form-panel .text-danger { font-size: .78rem; }
+    .sd-form-panel .form-text { font-size: .78rem; }
+{% endblock %}
+
+{% block dashboard_content %}
+
+<div class="mb-3">
+    <a href="{% url 'apps_bonus:bonus_liste' %}" class="btn btn-sd-outline btn-sm">
+        <i class="bi bi-arrow-left me-1"></i>Retour aux bonus
+    </a>
+</div>
+
+<div class="sd-form-panel">
+    <h6 class="fw-bold mb-3"><i class="bi bi-gift me-2"></i>Attribuer un bonus à une entreprise</h6>
+
+    <form method="post">
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+            <div class="alert alert-danger py-2 small">{{ form.non_field_errors }}</div>
+        {% endif %}
+
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label for="{{ form.entreprise.id_for_label }}">Entreprise</label>
+                {{ form.entreprise }}
+                {% if form.entreprise.errors %}<div class="text-danger mt-1">{{ form.entreprise.errors }}</div>{% endif %}
+            </div>
+            <div class="col-md-6 mb-3">
+                <label for="{{ form.type_bonus.id_for_label }}">Type de bonus</label>
+                {{ form.type_bonus }}
+                {% if form.type_bonus.errors %}<div class="text-danger mt-1">{{ form.type_bonus.errors }}</div>{% endif %}
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <label for="{{ form.zone_cible.id_for_label }}">Zone cible <span class="text-muted fw-normal">(requis pour les réductions de zone)</span></label>
+            {{ form.zone_cible }}
+            {% if form.zone_cible.errors %}<div class="text-danger mt-1">{{ form.zone_cible.errors }}</div>{% endif %}
+        </div>
+
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label for="{{ form.date_debut.id_for_label }}">Date de début</label>
+                {{ form.date_debut }}
+                {% if form.date_debut.errors %}<div class="text-danger mt-1">{{ form.date_debut.errors }}</div>{% endif %}
+            </div>
+            <div class="col-md-6 mb-3">
+                <label for="{{ form.date_expiration.id_for_label }}">Date d'expiration</label>
+                {{ form.date_expiration }}
+                {% if form.date_expiration.errors %}<div class="text-danger mt-1">{{ form.date_expiration.errors }}</div>{% endif %}
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <label for="{{ form.nb_utilisations_max.id_for_label }}">Nombre d'utilisations max</label>
+            {{ form.nb_utilisations_max }}
+            <div class="form-text">{{ form.nb_utilisations_max.help_text }}</div>
+            {% if form.nb_utilisations_max.errors %}<div class="text-danger mt-1">{{ form.nb_utilisations_max.errors }}</div>{% endif %}
+        </div>
+
+        <div class="mb-4">
+            <label for="{{ form.note_interne.id_for_label }}">Note interne <span class="text-muted fw-normal">(optionnel)</span></label>
+            {{ form.note_interne }}
+            {% if form.note_interne.errors %}<div class="text-danger mt-1">{{ form.note_interne.errors }}</div>{% endif %}
+        </div>
+
+        <div class="d-flex justify-content-end gap-2">
+            <a href="{% url 'apps_bonus:bonus_liste' %}" class="btn btn-sd-outline btn-sm">Annuler</a>
+            <button type="submit" class="btn btn-sd-primary btn-sm">
+                <i class="bi bi-check-lg me-1"></i>Attribuer le bonus
+            </button>
+        </div>
+    </form>
+</div>
+
+{% endblock %}

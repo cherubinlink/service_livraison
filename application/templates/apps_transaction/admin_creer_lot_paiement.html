@@ -1,0 +1,81 @@
+{% extends 'navigateur/base_dashboard.html' %}
+
+{% block title %}Nouveau lot de paiement – Administration SwiftDrop{% endblock %}
+{% block page_title %}Nouveau lot de paiement{% endblock %}
+{% block user_initiales %}AD{% endblock %}
+{% block user_nom %}Administration{% endblock %}
+{% block user_role %}Administrateur{% endblock %}
+
+{% block sidebar_menu %}
+    <div class="sd-nav-section">Général</div>
+    <a href="{% url 'apps_core:dashboard_admin' %}" class="sd-nav-link"><i class="bi bi-grid-1x2"></i>Tableau de bord</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-chat-dots"></i>Messagerie</a>
+
+    <div class="sd-nav-section">Acteurs</div>
+    <a href="{% url 'apps_entreprise:admin_liste_entreprises' %}" class="sd-nav-link"><i class="bi bi-building"></i>Entreprises</a>
+    <a href="{% url 'apps_livreur:admin_liste_livreurs' %}" class="sd-nav-link"><i class="bi bi-bicycle"></i>Livreurs</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-person-heart"></i>Clients</a>
+
+    <div class="sd-nav-section">Opérations</div>
+    <a href="{% url 'apps_livraison:admin_liste_livraisons' %}" class="sd-nav-link"><i class="bi bi-box-seam"></i>Livraisons B2B</a>
+    <a href="{% url 'apps_livraison:admin_liste_livraisons_directes' %}" class="sd-nav-link"><i class="bi bi-signpost-2"></i>Livraisons directes</a>
+    <a href="{% url 'apps_entreprise:admin_liste_entrepots' %}" class="sd-nav-link"><i class="bi bi-building-gear"></i>Entrepôts</a>
+    <a href="{% url 'apps_catalogue:admin_liste_produits' %}" class="sd-nav-link"><i class="bi bi-boxes"></i>Produits</a>
+
+    <div class="sd-nav-section">Stocks</div>
+    <a href="{% url 'apps_catalogue:admin_liste_alertes_stock' %}" class="sd-nav-link"><i class="bi bi-exclamation-triangle"></i>Alertes stock</a>
+    <a href="{% url 'apps_catalogue:admin_liste_retours_stock' %}" class="sd-nav-link"><i class="bi bi-arrow-return-left"></i>Retours de stock</a>
+
+    <div class="sd-nav-section">Finance</div>
+    <a href="{% url 'apps_transaction:admin_liste_lots_paiement' %}" class="sd-nav-link active"><i class="bi bi-cash-stack"></i>Lots de paiement</a>
+    <a href="{% url 'apps_transaction:admin_liste_transactions' %}" class="sd-nav-link"><i class="bi bi-journal-text"></i>Transactions</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-gift"></i>Bonus</a>
+
+    <div class="sd-nav-section">Système</div>
+    <a href="{% url 'apps_core:configuration_geographie' %}" class="sd-nav-link"><i class="bi bi-geo"></i>Zones géographiques</a>
+    <a href="{% url 'apps_core:gerer_coefficients_vehicule' %}" class="sd-nav-link"><i class="bi bi-truck-front"></i>Coefficients véhicule</a>
+{% endblock %}
+
+{% block dashboard_content %}
+
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="sd-panel">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div class="sd-panel-title mb-0"><i class="bi bi-cash-stack me-2"></i>Nouveau lot de paiement</div>
+                <a href="{% url 'apps_transaction:admin_liste_lots_paiement' %}" class="small">
+                    <i class="bi bi-arrow-left me-1"></i>Retour à la liste
+                </a>
+            </div>
+
+            <p class="text-muted small mb-3">
+                Le montant net sera calculé automatiquement à partir des livraisons éligibles de l'entreprise
+                sur la période choisie, dès l'enregistrement de ce lot.
+            </p>
+
+            <form method="post">
+                {% csrf_token %}
+
+                {% for field in form %}
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.help_text %}<div class="form-text small">{{ field.help_text }}</div>{% endif %}
+                        {% if field.errors %}<div class="text-danger small mt-1">{{ field.errors|join:", " }}</div>{% endif %}
+                    </div>
+                {% endfor %}
+
+                {% if form.non_field_errors %}
+                    <div class="text-danger small mb-3">{{ form.non_field_errors|join:", " }}</div>
+                {% endif %}
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-sd-primary flex-grow-1">Créer le lot</button>
+                    <a href="{% url 'apps_transaction:admin_liste_lots_paiement' %}" class="btn btn-sd-outline">Annuler</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

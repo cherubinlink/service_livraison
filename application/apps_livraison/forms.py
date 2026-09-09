@@ -3,7 +3,7 @@ from django.core.exceptions import ValidationError
 
 from apps_catalogue.models import Produit, StockEntrepot
 from apps_livreur.models import Livreur
-from apps_livraison.models import Livraison
+from apps_livraison.models import Livraison, LivraisonDirecte
 
 
 class LivraisonCreationForm(forms.ModelForm):
@@ -129,3 +129,142 @@ class ConfirmationLivraisonForm(forms.ModelForm):
             'photo_preuve': forms.ClearableFileInput(attrs={'class': 'form-control'}),
             'signature_client_img': forms.ClearableFileInput(attrs={'class': 'form-control'}),
         }
+
+
+
+class LivraisonDirecteForm(forms.ModelForm):
+    """
+    Formulaire PUBLIC — aucun compte requis (cf. FAQ « Puis-je envoyer un
+    colis sans créer de compte ? »). Le tarif NÉGOCIÉ est volontairement
+    absent des choix proposés ici : une négociation se met en place via
+    l'admin après contact, jamais en libre-service depuis ce formulaire.
+    `prix_negocie` n'est donc pas non plus dans Meta.fields.
+    """
+    class Meta:
+        model = LivraisonDirecte
+        fields = [
+            'nom_expediteur', 'telephone_expediteur', 'description_colis', 'poids_kg', 'valeur_declaree',
+            'adresse_collecte', 'ville_collecte', 'zone_collecte',
+            'nom_destinataire', 'telephone_destinataire', 'adresse_livraison', 'ville_livraison', 'zone_livraison',
+            'type_tarification', 'vehicule_requis', 'distance_km',
+        ]
+        widgets = {
+            'nom_expediteur': forms.TextInput(attrs={'class': 'form-control'}),
+            'telephone_expediteur': forms.TextInput(attrs={'class': 'form-control'}),
+            'description_colis': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
+            'poids_kg': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'placeholder': 'Optionnel'}),
+            'valeur_declaree': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'placeholder': 'Optionnel'}),
+            'adresse_collecte': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
+            'ville_collecte': forms.Select(attrs={'class': 'form-select'}),
+            'zone_collecte': forms.Select(attrs={'class': 'form-select'}),
+            'nom_destinataire': forms.TextInput(attrs={'class': 'form-control'}),
+            'telephone_destinataire': forms.TextInput(attrs={'class': 'form-control'}),
+            'adresse_livraison': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
+            'ville_livraison': forms.Select(attrs={'class': 'form-select'}),
+            'zone_livraison': forms.Select(attrs={'class': 'form-select'}),
+            'type_tarification': forms.Select(attrs={'class': 'form-select'}),
+            'vehicule_requis': forms.Select(attrs={'class': 'form-select'}),
+            'distance_km': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'placeholder': 'Optionnel'}),
+        }
+ 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        from apps_core.models import Ville, Zone
+ 
+        villes_actives = Ville.objects.filter(est_active=True).order_by('nom')
+        self.fields['ville_collecte'].queryset = villes_actives
+        self.fields['ville_livraison'].queryset = villes_actives
+ 
+        zones_actives = Zone.objects.filter(est_active=True).select_related('ville').order_by('ville__nom', 'nom')
+        self.fields['zone_collecte'].queryset = zones_actives
+        self.fields['zone_collecte'].required = False
+        self.fields['zone_collecte'].empty_label = 'Zone inconnue / à préciser'
+        self.fields['zone_livraison'].queryset = zones_actives
+        self.fields['zone_livraison'].required = False
+        self.fields['zone_livraison'].empty_label = 'Zone inconnue / à préciser'
+ 
+        # Exclut NEGOCIE des choix publics (voir docstring de la classe)
+        self.fields['type_tarification'].choices = [
+            choix for choix in LivraisonDirecte.TypeTarification.choices
+            if choix[0] != LivraisonDirecte.TypeTarification.NEGOCIE
+        ]
+ 
+    def clean(self):
+        cleaned = super().clean()
+        type_tarif = cleaned.get('type_tarification')
+ 
+        if type_tarif == LivraisonDirecte.TypeTarification.INTRA_ZONE and not cleaned.get('zone_livraison'):
+            raise ValidationError("Merci de choisir la zone de livraison pour une tarification intra-zone.")
+        if type_tarif == LivraisonDirecte.TypeTarification.AU_KM and not cleaned.get('distance_km'):
+            raise ValidationError("Merci d'indiquer une distance estimée pour un calcul au kilomètre.")
+        if (type_tarif == LivraisonDirecte.TypeTarification.INTER_VILLE
+                and cleaned.get('ville_collecte') == cleaned.get('ville_livraison')):
+            raise ValidationError("Les villes de collecte et de livraison doivent être différentes pour une tarification inter-villes.")
+        return cleaned
+ 
+ 
+class LivraisonDirecteAdminForm(LivraisonDirecteForm):
+    """
+    Variante ADMIN du formulaire ci-dessus : autorise en plus le tarif
+    NÉGOCIÉ et son montant, ainsi que le rattachement à une entreprise
+    inscrite (cf. `livraison_par_entreprise`, renseigné quand une
+    entreprise initie une course directe sans passer par le circuit
+    produits/stock).
+    """
+    class Meta(LivraisonDirecteForm.Meta):
+        fields = LivraisonDirecteForm.Meta.fields + ['prix_negocie', 'tarif_par_km', 'livraison_par_entreprise']
+        widgets = {
+            **LivraisonDirecteForm.Meta.widgets,
+            'prix_negocie': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+            'tarif_par_km': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+            'livraison_par_entreprise': forms.Select(attrs={'class': 'form-select'}),
+        }
+ 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        from apps_entreprise.models import Entreprise
+ 
+        # L'admin a accès au tarif NÉGOCIÉ, contrairement au formulaire public
+        self.fields['type_tarification'].choices = LivraisonDirecte.TypeTarification.choices
+        self.fields['prix_negocie'].required = False
+        self.fields['livraison_par_entreprise'].queryset = (
+            Entreprise.objects.filter(statut=Entreprise.Statut.VALIDE).order_by('raison_sociale')
+        )
+        self.fields['livraison_par_entreprise'].required = False
+        self.fields['livraison_par_entreprise'].empty_label = 'Aucune (particulier)'
+ 
+    def clean(self):
+        # On saute la validation stricte de LivraisonDirecteForm.clean() sur
+        # INTRA_ZONE/AU_KM/INTER_VILLE si le type choisi est NEGOCIE.
+        cleaned = forms.ModelForm.clean(self)
+        type_tarif = cleaned.get('type_tarification')
+ 
+        if type_tarif == LivraisonDirecte.TypeTarification.NEGOCIE and not cleaned.get('prix_negocie'):
+            raise ValidationError("Merci d'indiquer le prix négocié avec le client.")
+        if type_tarif == LivraisonDirecte.TypeTarification.INTRA_ZONE and not cleaned.get('zone_livraison'):
+            raise ValidationError("Merci de choisir la zone de livraison pour une tarification intra-zone.")
+        if type_tarif == LivraisonDirecte.TypeTarification.AU_KM and not cleaned.get('distance_km'):
+            raise ValidationError("Merci d'indiquer une distance estimée pour un calcul au kilomètre.")
+        return cleaned
+ 
+ 
+class AttributionLivreurDirecteForm(forms.Form):
+    """
+    Même principe que AttributionLivreurForm (apps_livraison, Livraison
+    B2B) : priorité aux livreurs travaillant dans la zone de collecte,
+    sans exclure les autres livreurs actifs si aucun n'est disponible.
+    """
+    livreur = forms.ModelChoiceField(
+        label='Livreur', queryset=Livreur.objects.none(),
+        widget=forms.Select(attrs={'class': 'form-select'})
+    )
+ 
+    def __init__(self, *args, livraison_directe=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        base = Livreur.objects.filter(statut=Livreur.Statut.ACTIF).select_related('utilisateur')
+        queryset = base
+        if livraison_directe is not None and livraison_directe.zone_collecte_id:
+            compatibles = base.filter(zones_travail=livraison_directe.zone_collecte)
+            if compatibles.exists():
+                queryset = compatibles
+        self.fields['livreur'].queryset = queryset.distinct().order_by('utilisateur__nom')

@@ -1,0 +1,149 @@
+{% extends 'navigateur/base_dashboard.html' %}
+
+{% block title %}{{ livraison.numero }} – Administration SwiftDrop{% endblock %}
+{% block page_title %}Course directe {{ livraison.numero }}{% endblock %}
+{% block user_initiales %}AD{% endblock %}
+{% block user_nom %}Administration{% endblock %}
+{% block user_role %}Administrateur{% endblock %}
+
+{% block sidebar_menu %}
+    <div class="sd-nav-section">Général</div>
+    <a href="{% url 'apps_core:dashboard_admin' %}" class="sd-nav-link"><i class="bi bi-grid-1x2"></i>Tableau de bord</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-chat-dots"></i>Messagerie</a>
+
+    <div class="sd-nav-section">Acteurs</div>
+    <a href="{% url 'apps_entreprise:admin_liste_entreprises' %}" class="sd-nav-link"><i class="bi bi-building"></i>Entreprises</a>
+    <a href="{% url 'apps_livreur:admin_liste_livreurs' %}" class="sd-nav-link"><i class="bi bi-bicycle"></i>Livreurs</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-person-heart"></i>Clients</a>
+
+    <div class="sd-nav-section">Opérations</div>
+    <a href="{% url 'apps_livraison:admin_liste_livraisons' %}" class="sd-nav-link"><i class="bi bi-box-seam"></i>Livraisons B2B</a>
+    <a href="{% url 'apps_livraison:admin_liste_livraisons_directes' %}" class="sd-nav-link active"><i class="bi bi-signpost-2"></i>Livraisons directes</a>
+    <a href="{% url 'apps_entreprise:admin_liste_entrepots' %}" class="sd-nav-link"><i class="bi bi-building-gear"></i>Entrepôts</a>
+    <a href="{% url 'apps_catalogue:admin_liste_produits' %}" class="sd-nav-link"><i class="bi bi-boxes"></i>Produits</a>
+
+    <div class="sd-nav-section">Stocks</div>
+    <a href="{% url 'apps_catalogue:admin_liste_alertes_stock' %}" class="sd-nav-link"><i class="bi bi-exclamation-triangle"></i>Alertes stock</a>
+    <a href="{% url 'apps_catalogue:admin_liste_retours_stock' %}" class="sd-nav-link"><i class="bi bi-arrow-return-left"></i>Retours de stock</a>
+
+    <div class="sd-nav-section">Système</div>
+    <a href="{% url 'apps_core:configuration_geographie' %}" class="sd-nav-link"><i class="bi bi-geo"></i>Zones géographiques</a>
+    <a href="{% url 'apps_core:gerer_coefficients_vehicule' %}" class="sd-nav-link"><i class="bi bi-truck-front"></i>Coefficients véhicule</a>
+{% endblock %}
+
+{% block dashboard_content %}
+
+{% if messages %}
+    {% for message in messages %}
+        <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    {% endfor %}
+{% endif %}
+
+<!-- ═══════════════════ En-tête ═══════════════════ -->
+<div class="sd-panel mb-3">
+    <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+        <div>
+            <div class="sd-panel-title mb-1">Course directe {{ livraison.numero }}</div>
+            <p class="text-muted small mb-1">
+                <i class="bi bi-person me-1"></i>{{ livraison.nom_expediteur }} ({{ livraison.telephone_expediteur }})
+                → {{ livraison.nom_destinataire }} ({{ livraison.telephone_destinataire }})
+            </p>
+            <p class="text-muted small mb-0">
+                <i class="bi bi-geo-alt me-1"></i>{{ livraison.adresse_collecte }} ({{ livraison.ville_collecte.nom }})
+                <i class="bi bi-arrow-right mx-1"></i>
+                {{ livraison.adresse_livraison }} ({{ livraison.ville_livraison.nom }})
+            </p>
+            {% if livraison.livraison_par_entreprise %}
+                <p class="text-muted small mb-0 mt-1"><i class="bi bi-building me-1"></i>Initiée par {{ livraison.livraison_par_entreprise.nom_affichage }}</p>
+            {% endif %}
+            {% if livraison.livreur %}
+                <p class="text-muted small mb-0 mt-1"><i class="bi bi-bicycle me-1"></i>Livreur : {{ livraison.livreur.utilisateur.nom }}</p>
+            {% endif %}
+        </div>
+        <div class="text-end">
+            {% if livraison.statut == 'LIVREE' %}
+                <span class="sd-badge-statut succes">Livrée</span>
+            {% elif livraison.statut == 'EN_COURS' %}
+                <span class="sd-badge-statut cours">En cours</span>
+            {% elif livraison.statut == 'ECHEC' or livraison.statut == 'ANNULEE' %}
+                <span class="sd-badge-statut echec">{{ livraison.get_statut_display }}</span>
+            {% else %}
+                <span class="sd-badge-statut attente">{{ livraison.get_statut_display }}</span>
+            {% endif %}
+            <div class="fw-bold fs-5 mt-2" style="color: var(--sd-navy);">{{ livraison.prix_total|default:"—" }} FCFA</div>
+        </div>
+    </div>
+
+    <!-- Actions admin selon statut -->
+    <div class="d-flex gap-2 flex-wrap mt-3">
+        {% if livraison.statut == 'EN_ATTENTE' %}
+            <form method="post" action="{% url 'apps_livraison:admin_confirmer_livraison_directe' pk=livraison.pk %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-sm btn-sd-primary"><i class="bi bi-check2 me-1"></i>Confirmer</button>
+            </form>
+        {% endif %}
+        {% if livraison.statut != 'LIVREE' and livraison.statut != 'ANNULEE' %}
+            <form method="post" action="{% url 'apps_livraison:admin_annuler_livraison_directe' pk=livraison.pk %}"
+                  onsubmit="return confirm('Annuler cette course ?');">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-sm btn-sd-outline text-danger"><i class="bi bi-x-lg me-1"></i>Annuler</button>
+            </form>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row g-3">
+    <!-- Attribution livreur -->
+    <div class="col-lg-6">
+        {% if livraison.statut == 'CONFIRMEE' and not livraison.livreur %}
+            <div class="sd-panel mb-3">
+                <div class="sd-panel-title mb-3"><i class="bi bi-bicycle me-2"></i>Attribuer un livreur</div>
+                <form method="post" action="{% url 'apps_livraison:admin_attribuer_livreur_directe' pk=livraison.pk %}" class="d-flex gap-2">
+                    {% csrf_token %}
+                    <div class="flex-grow-1">
+                        {{ attribution_form.livreur }}
+                        {% if attribution_form.livreur.errors %}
+                            <div class="text-danger small mt-1">{{ attribution_form.livreur.errors|join:", " }}</div>
+                        {% endif %}
+                    </div>
+                    <button type="submit" class="btn btn-sd-primary">Attribuer</button>
+                </form>
+            </div>
+        {% endif %}
+
+        <div class="sd-panel">
+            <div class="sd-panel-title mb-3"><i class="bi bi-box-seam me-2"></i>Colis</div>
+            <ul class="list-unstyled small text-muted mb-0">
+                <li class="mb-2">{{ livraison.description_colis }}</li>
+                {% if livraison.poids_kg %}<li class="mb-2"><i class="bi bi-speedometer2 me-1"></i>{{ livraison.poids_kg }} kg</li>{% endif %}
+                {% if livraison.valeur_declaree %}<li class="mb-0"><i class="bi bi-cash-coin me-1"></i>Valeur déclarée : {{ livraison.valeur_declaree }} FCFA</li>{% endif %}
+            </ul>
+        </div>
+    </div>
+
+    <!-- Édition tarif -->
+    <div class="col-lg-6">
+        <div class="sd-panel">
+            <div class="sd-panel-title mb-3"><i class="bi bi-cash-coin me-2"></i>Tarification</div>
+            <form method="post" action="{% url 'apps_livraison:admin_modifier_prix_directe' pk=livraison.pk %}">
+                {% csrf_token %}
+                {% for field in prix_form %}
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.errors %}<div class="text-danger small mt-1">{{ field.errors|join:", " }}</div>{% endif %}
+                    </div>
+                {% endfor %}
+                {% if prix_form.non_field_errors %}
+                    <div class="text-danger small mb-3">{{ prix_form.non_field_errors|join:", " }}</div>
+                {% endif %}
+                <button type="submit" class="btn btn-sd-primary w-100">Enregistrer</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

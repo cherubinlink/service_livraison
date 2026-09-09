@@ -1,0 +1,115 @@
+{% extends 'navigateur/base_dashboard.html' %}
+
+{% block title %}{{ livraison.numero }} – SwiftDrop{% endblock %}
+{% block page_title %}Course directe {{ livraison.numero }}{% endblock %}
+{% block user_initiales %}{{ livreur.utilisateur.nom|default:"LI"|slice:":2"|upper }}{% endblock %}
+{% block user_nom %}{{ livraison.livreur.utilisateur.nom|default:"Livreur" }}{% endblock %}
+{% block user_role %}Livreur{% endblock %}
+
+{% block sidebar_menu %}
+    <div class="sd-nav-section">Général</div>
+    <a href="{% url 'apps_livreur:dashboard_livreur' %}" class="sd-nav-link"><i class="bi bi-grid-1x2"></i>Tableau de bord</a>
+
+    <div class="sd-nav-section">Courses</div>
+    <a href="{% url 'apps_livraison:livreur_mes_livraisons' %}" class="sd-nav-link"><i class="bi bi-truck"></i>Mes courses B2B</a>
+    <a href="{% url 'apps_livraison:livreur_livraisons_directes' %}" class="sd-nav-link active"><i class="bi bi-signpost-2"></i>Courses directes</a>
+
+    <div class="sd-nav-section">Compte</div>
+    <a href="{% url 'apps_livreur:modifier_profil_livreur' %}" class="sd-nav-link"><i class="bi bi-person-gear"></i>Mon profil</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-chat-dots"></i>Messagerie</a>
+{% endblock %}
+
+{% block dashboard_content %}
+
+{% if messages %}
+    {% for message in messages %}
+        <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    {% endfor %}
+{% endif %}
+
+<div class="sd-panel mb-3">
+    <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+        <div>
+            <div class="sd-panel-title mb-1">Course directe {{ livraison.numero }}</div>
+            <p class="text-muted small mb-1">
+                <i class="bi bi-person me-1"></i>Collecte chez {{ livraison.nom_expediteur }} — {{ livraison.telephone_expediteur }}
+            </p>
+            <p class="text-muted small mb-1">
+                <i class="bi bi-geo-alt me-1"></i>{{ livraison.adresse_collecte }} ({{ livraison.ville_collecte.nom }})
+            </p>
+            <p class="text-muted small mb-1">
+                <i class="bi bi-person-check me-1"></i>Livraison à {{ livraison.nom_destinataire }} — {{ livraison.telephone_destinataire }}
+            </p>
+            <p class="text-muted small mb-0">
+                <i class="bi bi-geo-alt-fill me-1"></i>{{ livraison.adresse_livraison }} ({{ livraison.ville_livraison.nom }})
+            </p>
+        </div>
+        <div class="text-end">
+            {% if livraison.statut == 'LIVREE' %}
+                <span class="sd-badge-statut succes">Livrée</span>
+            {% elif livraison.statut == 'EN_COURS' %}
+                <span class="sd-badge-statut cours">En cours</span>
+            {% elif livraison.statut == 'ECHEC' %}
+                <span class="sd-badge-statut echec">Échec</span>
+            {% else %}
+                <span class="sd-badge-statut attente">{{ livraison.get_statut_display }}</span>
+            {% endif %}
+            <div class="fw-bold fs-5 mt-2" style="color: var(--sd-navy);">{{ livraison.prix_total|default:"—" }} FCFA</div>
+        </div>
+    </div>
+
+    <!-- Actions selon statut -->
+    <div class="d-flex gap-2 flex-wrap mt-3">
+        {% if livraison.statut == 'CONFIRMEE' %}
+            <form method="post" action="{% url 'apps_livraison:livreur_prendre_en_charge_directe' pk=livraison.pk %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-sm btn-sd-primary"><i class="bi bi-play-fill me-1"></i>Prendre en charge</button>
+            </form>
+        {% endif %}
+        {% if livraison.statut == 'EN_COURS' %}
+            <form method="post" action="{% url 'apps_livraison:livreur_terminer_livraison_directe' pk=livraison.pk %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-sm btn-sd-primary"><i class="bi bi-check2-circle me-1"></i>Marquer comme livrée</button>
+            </form>
+            <button type="button" class="btn btn-sm btn-sd-outline text-danger" data-bs-toggle="modal" data-bs-target="#modalEchec">
+                <i class="bi bi-x-lg me-1"></i>Signaler un échec
+            </button>
+        {% endif %}
+    </div>
+</div>
+
+<div class="sd-panel">
+    <div class="sd-panel-title mb-3"><i class="bi bi-box-seam me-2"></i>Colis</div>
+    <ul class="list-unstyled small text-muted mb-0">
+        <li class="mb-2">{{ livraison.description_colis }}</li>
+        {% if livraison.poids_kg %}<li class="mb-0"><i class="bi bi-speedometer2 me-1"></i>{{ livraison.poids_kg }} kg</li>{% endif %}
+    </ul>
+</div>
+
+<!-- Modal échec -->
+<div class="modal fade" id="modalEchec" tabindex="-1" aria-labelledby="modalEchecLabel">
+    <div class="modal-dialog">
+        <form method="post" action="{% url 'apps_livraison:livreur_signaler_echec_directe' pk=livraison.pk %}" class="modal-content">
+            {% csrf_token %}
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalEchecLabel">Signaler un échec de livraison</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted small mb-0">
+                    Cette action marquera la course comme échouée. Aucun motif n'est enregistré en base pour
+                    les courses directes actuellement — contacte l'administration si besoin de détailler la raison.
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-sd-outline" data-bs-dismiss="modal">Annuler</button>
+                <button type="submit" class="btn btn-sd-primary">Confirmer l'échec</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}

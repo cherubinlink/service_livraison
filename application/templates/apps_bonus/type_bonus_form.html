@@ -1,0 +1,107 @@
+{% extends 'navigateur/base_dashboard.html' %}
+
+{% block title %}{% if object %}Modifier{% else %}Nouveau{% endif %} type de bonus – Administration SwiftDrop{% endblock %}
+{% block page_title %}Types de bonus{% endblock %}
+{% block user_initiales %}AD{% endblock %}
+{% block user_nom %}Administration{% endblock %}
+{% block user_role %}Administrateur{% endblock %}
+
+{% block sidebar_menu %}
+    <div class="sd-nav-section">Général</div>
+    <a href="{% url 'apps_core:dashboard_admin' %}" class="sd-nav-link"><i class="bi bi-grid-1x2"></i>Tableau de bord</a>
+    <a href="{% url 'apps_messagerie:conversation_liste' %}" class="sd-nav-link"><i class="bi bi-chat-dots"></i>Messagerie</a>
+
+    <div class="sd-nav-section">Acteurs</div>
+    <a href="{% url 'apps_entreprise:admin_liste_entreprises' %}" class="sd-nav-link"><i class="bi bi-building"></i>Entreprises</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-bicycle"></i>Livreurs</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-person-heart"></i>Clients</a>
+
+    <div class="sd-nav-section">Catalogue</div>
+    <a href="{% url 'apps_catalogue:admin_liste_produits' %}" class="sd-nav-link"><i class="bi bi-boxes"></i>Produits</a>
+    <a href="{% url 'apps_catalogue:admin_liste_categories' %}" class="sd-nav-link"><i class="bi bi-tags"></i>Catégories</a>
+    <a href="{% url 'apps_entreprise:admin_liste_entrepots' %}" class="sd-nav-link"><i class="bi bi-building-gear"></i>Entrepôts</a>
+
+    <div class="sd-nav-section">Fidélité</div>
+    <a href="{% url 'apps_bonus:bonus_liste' %}" class="sd-nav-link"><i class="bi bi-gift"></i>Bonus entreprises</a>
+    <a href="{% url 'apps_bonus:type_bonus_liste' %}" class="sd-nav-link active"><i class="bi bi-stars"></i>Types de bonus</a>
+
+    <div class="sd-nav-section">Opérations</div>
+    <a href="#" class="sd-nav-link"><i class="bi bi-box-seam"></i>Livraisons B2B</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-signpost-2"></i>Livraisons directes</a>
+
+    <div class="sd-nav-section">Système</div>
+    <a href="{% url 'apps_core:configuration_geographie' %}" class="sd-nav-link"><i class="bi bi-geo"></i>Zones géographiques</a>
+    <a href="{% url 'apps_core:gerer_coefficients_vehicule' %}" class="sd-nav-link"><i class="bi bi-truck-front"></i>Coefficients véhicule</a>
+{% endblock %}
+
+{% block extra_css %}
+    .sd-form-panel { background: #fff; border: 1px solid #EDEFF4; border-radius: 14px; padding: 1.5rem; max-width: 680px; }
+    .sd-form-panel .form-control, .sd-form-panel .form-select, .sd-form-panel textarea { border-radius: 10px; border: 1.5px solid #EDEFF4; }
+    .sd-form-panel label { font-weight: 600; font-size: .85rem; margin-bottom: .3rem; }
+    .sd-form-panel .text-danger { font-size: .78rem; }
+    .sd-form-panel .form-text { font-size: .78rem; }
+    .sd-form-check { display: flex; align-items: center; gap: .5rem; }
+{% endblock %}
+
+{% block dashboard_content %}
+
+<div class="mb-3">
+    <a href="{% url 'apps_bonus:type_bonus_liste' %}" class="btn btn-sd-outline btn-sm">
+        <i class="bi bi-arrow-left me-1"></i>Retour aux types de bonus
+    </a>
+</div>
+
+<div class="sd-form-panel">
+    <h6 class="fw-bold mb-3">
+        <i class="bi bi-stars me-2"></i>
+        {% if object %}Modifier le type de bonus{% else %}Nouveau type de bonus{% endif %}
+    </h6>
+
+    <form method="post">
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+            <div class="alert alert-danger py-2 small">{{ form.non_field_errors }}</div>
+        {% endif %}
+
+        <div class="mb-3">
+            <label for="{{ form.nom.id_for_label }}">Nom</label>
+            {{ form.nom }}
+            {% if form.nom.errors %}<div class="text-danger mt-1">{{ form.nom.errors }}</div>{% endif %}
+        </div>
+
+        <div class="row">
+            <div class="col-md-7 mb-3">
+                <label for="{{ form.categorie.id_for_label }}">Catégorie</label>
+                {{ form.categorie }}
+                {% if form.categorie.errors %}<div class="text-danger mt-1">{{ form.categorie.errors }}</div>{% endif %}
+            </div>
+            <div class="col-md-5 mb-3">
+                <label for="{{ form.valeur.id_for_label }}">Valeur</label>
+                {{ form.valeur }}
+                <div class="form-text">Montant fixe (FCFA) ou pourcentage selon la catégorie choisie.</div>
+                {% if form.valeur.errors %}<div class="text-danger mt-1">{{ form.valeur.errors }}</div>{% endif %}
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <label for="{{ form.description.id_for_label }}">Description</label>
+            {{ form.description }}
+            {% if form.description.errors %}<div class="text-danger mt-1">{{ form.description.errors }}</div>{% endif %}
+        </div>
+
+        <div class="mb-4 sd-form-check">
+            {{ form.est_actif }}
+            <label for="{{ form.est_actif.id_for_label }}" class="mb-0">Type de bonus actif (peut être attribué)</label>
+        </div>
+
+        <div class="d-flex justify-content-end gap-2">
+            <a href="{% url 'apps_bonus:type_bonus_liste' %}" class="btn btn-sd-outline btn-sm">Annuler</a>
+            <button type="submit" class="btn btn-sd-primary btn-sm">
+                <i class="bi bi-check-lg me-1"></i>{% if object %}Enregistrer{% else %}Créer{% endif %}
+            </button>
+        </div>
+    </form>
+</div>
+
+{% endblock %}
