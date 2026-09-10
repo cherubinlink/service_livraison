@@ -67,9 +67,9 @@
             {% endif %}
         </div>
         <div class="text-end">
-            {% if lot.statut == 'CONFIRME' %}
+            {% if lot.statut == STATUT.CONFIRME_ENTREPRISE %}
                 <span class="sd-badge-statut succes">Confirmé</span>
-            {% elif lot.statut == 'ENVOYE' %}
+            {% elif lot.statut == STATUT.ENVOYE %}
                 <span class="sd-badge-statut cours">Envoyé</span>
             {% else %}
                 <span class="sd-badge-statut attente">{{ lot.get_statut_display }}</span>
@@ -86,7 +86,7 @@
 
     <!-- Actions selon statut -->
     <div class="d-flex gap-2 flex-wrap mt-3">
-        {% if lot.statut == 'ENVOYE' %}
+        {% if lot.statut == STATUT.ENVOYE %}
             <form method="post" action="{% url 'apps_transaction:confirmer_reception_lot' pk=lot.pk %}">
                 {% csrf_token %}
                 <button type="submit" class="btn btn-sm btn-sd-primary"><i class="bi bi-check2-circle me-1"></i>Confirmer la réception</button>

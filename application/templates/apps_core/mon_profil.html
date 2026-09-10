@@ -1,0 +1,36 @@
+{% extends 'navigateur/base_dashboard.html' %}
+
+{% block title %}Mon profil – SwiftDrop{% endblock %}
+{% block page_title %}Mon profil{% endblock %}
+{% block user_initiales %}{{ request.user.nom|default:"U"|slice:":2"|upper }}{% endblock %}
+{% block user_nom %}{{ request.user.nom|default:"Utilisateur" }}{% endblock %}
+{% block user_role %}{{ request.user.get_role_display|default:"—" }}{% endblock %}
+
+{% block sidebar_menu %}
+    <a href="javascript:history.back()" class="sd-nav-link"><i class="bi bi-arrow-left"></i>Retour</a>
+{% endblock %}
+
+{% block dashboard_content %}
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="sd-panel">
+            <div class="sd-panel-title mb-3"><i class="bi bi-person me-2"></i>Mon profil</div>
+
+            <form method="post">
+                {% csrf_token %}
+                {% for field in form %}
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.errors %}<div class="text-danger small mt-1">{{ field.errors|join:", " }}</div>{% endif %}
+                    </div>
+                {% endfor %}
+                {% if form.non_field_errors %}
+                    <div class="text-danger small mb-3">{{ form.non_field_errors|join:", " }}</div>
+                {% endif %}
+                <button type="submit" class="btn btn-sd-primary w-100">Enregistrer les modifications</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

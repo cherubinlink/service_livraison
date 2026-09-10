@@ -24,6 +24,8 @@ urlpatterns = [
     path('renvoyer-otp/', views.renvoyer_otp, name='renvoyer_otp'),
     path('mot-de-passe-oublie/', views.mot_de_passe_oublie, name='mot_de_passe_oublie'),
     path('reinitialiser-mot-de-passe/<str:token>/', views.reinitialiser_mot_de_passe, name='reinitialiser_mot_de_passe'),
+    path('mon-profil/', views.mon_profil, name='mon_profil'),
+    path('parametres/', views.parametres, name='parametres'),
 
     # confuguration pays zone
     path('gestion/geographie/', views.configuration_geographie, name='configuration_geographie'),

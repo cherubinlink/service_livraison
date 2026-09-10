@@ -1,0 +1,98 @@
+{% extends 'navigateur/base_dashboard.html' %}
+
+{% block title %}Évaluation {{ evaluation.livraison.numero }} – Administration SwiftDrop{% endblock %}
+{% block page_title %}Détail de l'évaluation{% endblock %}
+{% block user_initiales %}AD{% endblock %}
+{% block user_nom %}Administration{% endblock %}
+{% block user_role %}Administrateur{% endblock %}
+
+{% block sidebar_menu %}
+    <div class="sd-nav-section">Général</div>
+    <a href="{% url 'apps_core:dashboard_admin' %}" class="sd-nav-link"><i class="bi bi-grid-1x2"></i>Tableau de bord</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-chat-dots"></i>Messagerie</a>
+
+    <div class="sd-nav-section">Acteurs</div>
+    <a href="{% url 'apps_entreprise:admin_liste_entreprises' %}" class="sd-nav-link"><i class="bi bi-building"></i>Entreprises</a>
+    <a href="{% url 'apps_livreur:admin_liste_livreurs' %}" class="sd-nav-link"><i class="bi bi-bicycle"></i>Livreurs</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-person-heart"></i>Clients</a>
+    <a href="{% url 'apps_evaluation:admin_liste_evaluations' %}" class="sd-nav-link active"><i class="bi bi-star"></i>Évaluations</a>
+
+    <div class="sd-nav-section">Opérations</div>
+    <a href="{% url 'apps_livraison:admin_liste_livraisons' %}" class="sd-nav-link"><i class="bi bi-box-seam"></i>Livraisons B2B</a>
+    <a href="{% url 'apps_livraison:admin_liste_livraisons_directes' %}" class="sd-nav-link"><i class="bi bi-signpost-2"></i>Livraisons directes</a>
+    <a href="{% url 'apps_entreprise:admin_liste_entrepots' %}" class="sd-nav-link"><i class="bi bi-building-gear"></i>Entrepôts</a>
+    <a href="{% url 'apps_catalogue:admin_liste_produits' %}" class="sd-nav-link"><i class="bi bi-boxes"></i>Produits</a>
+
+    <div class="sd-nav-section">Finance</div>
+    <a href="{% url 'apps_transaction:admin_liste_lots_paiement' %}" class="sd-nav-link"><i class="bi bi-cash-stack"></i>Lots de paiement</a>
+    <a href="{% url 'apps_transaction:admin_liste_transactions' %}" class="sd-nav-link"><i class="bi bi-journal-text"></i>Transactions</a>
+
+    <div class="sd-nav-section">Système</div>
+    <a href="{% url 'apps_core:configuration_geographie' %}" class="sd-nav-link"><i class="bi bi-geo"></i>Zones géographiques</a>
+    <a href="{% url 'apps_core:gerer_coefficients_vehicule' %}" class="sd-nav-link"><i class="bi bi-truck-front"></i>Coefficients véhicule</a>
+{% endblock %}
+
+{% block dashboard_content %}
+
+<a href="{% url 'apps_evaluation:admin_liste_evaluations' %}" class="d-inline-flex align-items-center gap-1 mb-3 small" style="color: var(--sd-gris);">
+    <i class="bi bi-arrow-left"></i> Retour aux évaluations
+</a>
+
+<div class="row g-3">
+    <div class="col-lg-7">
+        <div class="sd-panel">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <div>
+                    <div class="sd-panel-title mb-1">Livraison {{ evaluation.livraison.numero }}</div>
+                    <p class="text-muted small mb-0">{{ evaluation.livraison.entreprise.nom_affichage|default:"—" }}</p>
+                </div>
+                <div class="text-end">
+                    <div class="fw-bold fs-3" style="color: var(--sd-navy);">
+                        <i class="bi bi-star-fill text-warning me-1"></i>{{ evaluation.note_globale }}/5
+                    </div>
+                    {% if evaluation.recommande %}
+                        <span class="badge bg-light text-dark border"><i class="bi bi-check2 text-success"></i> Recommande</span>
+                    {% else %}
+                        <span class="badge bg-light text-dark border text-danger">Ne recommande pas</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            {% if evaluation.commentaire %}
+                <div class="p-3 rounded-3 mb-3" style="background: var(--sd-fond);">
+                    <p class="mb-0 fst-italic">« {{ evaluation.commentaire }} »</p>
+                </div>
+            {% else %}
+                <p class="text-muted small mb-3">Aucun commentaire laissé.</p>
+            {% endif %}
+
+            <div class="row g-3 text-center">
+                <div class="col-4">
+                    <div class="text-muted small mb-1">Rapidité</div>
+                    <div class="fw-semibold">{% if evaluation.note_rapidite %}{{ evaluation.note_rapidite }}/5{% else %}—{% endif %}</div>
+                </div>
+                <div class="col-4">
+                    <div class="text-muted small mb-1">État du colis</div>
+                    <div class="fw-semibold">{% if evaluation.note_etat_colis %}{{ evaluation.note_etat_colis }}/5{% else %}—{% endif %}</div>
+                </div>
+                <div class="col-4">
+                    <div class="text-muted small mb-1">Livreur</div>
+                    <div class="fw-semibold">{% if evaluation.note_livreur %}{{ evaluation.note_livreur }}/5{% else %}—{% endif %}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="sd-panel">
+            <div class="sd-panel-title mb-3"><i class="bi bi-info-circle me-2"></i>Contexte</div>
+            <ul class="list-unstyled small text-muted mb-0">
+                <li class="mb-2"><i class="bi bi-building me-2"></i>{{ evaluation.livraison.entreprise.nom_affichage|default:"—" }}</li>
+                <li class="mb-2"><i class="bi bi-bicycle me-2"></i>{{ evaluation.livraison.livreur.utilisateur.nom|default:"—" }}</li>
+                <li class="mb-0"><i class="bi bi-calendar me-2"></i>Déposée le {{ evaluation.date|date:"d/m/Y H:i" }}</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

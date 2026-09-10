@@ -65,6 +65,37 @@ def admin_creer_lot_paiement(request):
         form = LotPaiementForm()
  
     return render(request, 'apps_transaction/admin_creer_lot_paiement.html', {'form': form})
+
+@login_required
+def admin_recalculer_lot_paiement(request, pk):
+    """
+    Ré-exécute construire_depuis_livraisons_eligibles() sur un lot
+    existant — utile quand des livraisons ont été validées côté
+    entreprise APRÈS la création initiale du lot (cf. bug des lots à 0
+    FCFA créés avant la validation de réception).
+    Refusé si le lot a déjà été envoyé, pour ne pas modifier un montant
+    déjà communiqué à l'entreprise.
+    """
+    from apps_transaction.models import LotPaiementEntreprise
+
+    lot = get_object_or_404(LotPaiementEntreprise, pk=pk)
+
+    if not lot.peut_etre_recalcule:
+        messages.error(request, "Ce lot a déjà été envoyé, il ne peut plus être recalculé.")
+        return redirect('apps_transaction:admin_detail_lot_paiement', pk=pk)
+
+    ancien_montant = lot.montant_net_a_payer
+    lot.construire_depuis_livraisons_eligibles()
+
+    if lot.livraisons.count() == 0:
+        messages.info(request, f"Lot {lot.reference} recalculé — toujours aucune livraison éligible.")
+    else:
+        messages.success(
+            request,
+            f"Lot {lot.reference} recalculé — {lot.livraisons.count()} livraison(s), "
+            f"{lot.montant_net_a_payer} FCFA net (ancien montant : {ancien_montant} FCFA)."
+        )
+    return redirect('apps_transaction:admin_detail_lot_paiement', pk=pk)
  
  
 @login_required
@@ -148,14 +179,16 @@ def mes_lots_paiement(request):
 @login_required
 def detail_lot_paiement(request, pk):
     from apps_transaction.models import LotPaiementEntreprise
- 
+    from apps_core.choices import StatutLotPaiement
+
     entreprise = getattr(request.user, 'entreprise', None)
     lot = get_object_or_404(LotPaiementEntreprise, pk=pk, entreprise=entreprise)
     livraisons = lot.livraisons.order_by('-date_livraison_effective')
- 
-    return render(request, 'apps_transaction/detail_lot_paiement.html', {'lot': lot, 'livraisons': livraisons})
- 
- 
+
+    return render(request, 'apps_transaction/detail_lot_paiement.html', {
+        'lot': lot, 'livraisons': livraisons, 'STATUT': StatutLotPaiement,
+    })
+    
 @login_required
 def confirmer_reception_lot(request, pk):
     """

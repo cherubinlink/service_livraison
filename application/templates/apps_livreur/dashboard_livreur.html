@@ -19,7 +19,11 @@
 
     <div class="sd-nav-section">Compte</div>
     <a href="#" class="sd-nav-link"><i class="bi bi-cash-coin"></i>Mes revenus</a>
+        <a href="{% url 'apps_evaluation:livreur_mes_evaluations' %}" class="sd-nav-link"><i class="bi bi-star-half"></i>Mes avis clients</a>
     <a href="{% url 'apps_messagerie:conversation_liste' %}" class="sd-nav-link"><i class="bi bi-chat-dots"></i>Messagerie</a>
+    <a href="{% url 'apps_notification:mes_notifications' %}" class="sd-nav-link"><i class="bi bi-bell"></i>Notifications
+        {% if nb_notifications_non_lues %}<span class="sd-nav-badge">{{ nb_notifications_non_lues }}</span>{% endif %}
+    </a>
     <a href="{% url 'apps_livreur:modifier_profil' %}" class="sd-nav-link"><i class="bi bi-person"></i>Mon profil</a>
 {% endblock %}
 

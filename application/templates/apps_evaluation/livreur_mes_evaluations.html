@@ -1,0 +1,64 @@
+{% extends 'navigateur/base_dashboard.html' %}
+
+{% block title %}Mes évaluations – SwiftDrop{% endblock %}
+{% block page_title %}Mes évaluations{% endblock %}
+{% block user_initiales %}{{ livreur.utilisateur.nom|default:"LI"|slice:":2"|upper }}{% endblock %}
+{% block user_nom %}{{ livreur.utilisateur.nom|default:"Livreur" }}{% endblock %}
+{% block user_role %}Livreur{% endblock %}
+
+{% block sidebar_menu %}
+    <div class="sd-nav-section">Général</div>
+    <a href="{% url 'apps_livreur:dashboard_livreur' %}" class="sd-nav-link"><i class="bi bi-grid-1x2"></i>Tableau de bord</a>
+
+    <div class="sd-nav-section">Courses</div>
+    <a href="{% url 'apps_livraison:livreur_mes_livraisons' %}" class="sd-nav-link"><i class="bi bi-truck"></i>Mes courses B2B</a>
+    <a href="{% url 'apps_livraison:livreur_livraisons_directes' %}" class="sd-nav-link"><i class="bi bi-signpost-2"></i>Courses directes</a>
+    <a href="{% url 'apps_evaluation:livreur_mes_evaluations' %}" class="sd-nav-link active"><i class="bi bi-star"></i>Mes évaluations</a>
+
+    <div class="sd-nav-section">Compte</div>
+    <a href="{% url 'apps_livreur:modifier_profil' %}" class="sd-nav-link"><i class="bi bi-person-gear"></i>Mon profil</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-chat-dots"></i>Messagerie</a>
+{% endblock %}
+
+{% block dashboard_content %}
+
+<div class="sd-panel">
+    {% if evaluations %}
+        <div class="table-responsive">
+            <table class="table sd-table align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Livraison</th>
+                        <th>Note globale</th>
+                        <th>Note livreur</th>
+                        <th>Commentaire</th>
+                        <th>Recommande</th>
+                        <th class="text-end">Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for evaluation in evaluations %}
+                        <tr>
+                            <td class="fw-semibold">{{ evaluation.livraison.numero }}</td>
+                            <td><i class="bi bi-star-fill text-warning me-1" style="font-size:.75rem;"></i>{{ evaluation.note_globale }}/5</td>
+                            <td>{% if evaluation.note_livreur %}{{ evaluation.note_livreur }}/5{% else %}<span class="text-muted">—</span>{% endif %}</td>
+                            <td class="text-muted small" style="max-width: 280px;">{{ evaluation.commentaire|default:"—"|truncatechars:80 }}</td>
+                            <td>
+                                {% if evaluation.recommande %}
+                                    <span class="badge bg-light text-dark border"><i class="bi bi-check2 text-success"></i> Oui</span>
+                                {% else %}
+                                    <span class="badge bg-light text-dark border text-danger">Non</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end text-muted small">{{ evaluation.date|date:"d/m/Y" }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p class="text-muted small mb-0">Aucune évaluation reçue pour le moment.</p>
+    {% endif %}
+</div>
+
+{% endblock %}

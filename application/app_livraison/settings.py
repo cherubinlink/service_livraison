@@ -42,6 +42,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
+    'django.contrib.humanize',
+
     # applications
     'apps_core.apps.AppsCoreConfig',
     'apps_bonus.apps.AppsBonusConfig',
@@ -77,6 +79,8 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+
+                'apps_notification.context_processors.notifications_utilisateur',
             ],
         },
     },

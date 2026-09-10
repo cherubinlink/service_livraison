@@ -1,0 +1,107 @@
+{% extends 'navigateur/base_dashboard.html' %}
+
+{% block title %}Envoyer une notification – Administration SwiftDrop{% endblock %}
+{% block page_title %}Notifications{% endblock %}
+{% block user_initiales %}AD{% endblock %}
+{% block user_nom %}Administration{% endblock %}
+{% block user_role %}Administrateur{% endblock %}
+
+{% block sidebar_menu %}
+    <div class="sd-nav-section">Général</div>
+    <a href="{% url 'apps_core:dashboard_admin' %}" class="sd-nav-link"><i class="bi bi-grid-1x2"></i>Tableau de bord</a>
+    <a href="{% url 'apps_messagerie:conversation_liste' %}" class="sd-nav-link"><i class="bi bi-chat-dots"></i>Messagerie</a>
+    <a href="{% url 'apps_notification:notification_liste' %}" class="sd-nav-link active"><i class="bi bi-bell"></i>Notifications</a>
+
+    <div class="sd-nav-section">Acteurs</div>
+    <a href="{% url 'apps_entreprise:admin_liste_entreprises' %}" class="sd-nav-link"><i class="bi bi-building"></i>Entreprises</a>
+    <a href="{% url 'apps_livreur:admin_liste_livreurs' %}" class="sd-nav-link"><i class="bi bi-bicycle"></i>Livreurs</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-person-heart"></i>Clients</a>
+
+    <div class="sd-nav-section">Opérations</div>
+    <a href="{% url 'apps_livraison:admin_liste_livraisons' %}" class="sd-nav-link"><i class="bi bi-box-seam"></i>Livraisons B2B</a>
+    <a href="{% url 'apps_entreprise:admin_liste_entrepots' %}" class="sd-nav-link"><i class="bi bi-building-gear"></i>Entrepôts</a>
+    <a href="{% url 'apps_catalogue:admin_liste_produits' %}" class="sd-nav-link"><i class="bi bi-boxes"></i>Produits</a>
+
+    <div class="sd-nav-section">Finance</div>
+    <a href="{% url 'apps_transaction:admin_liste_lots_paiement' %}" class="sd-nav-link"><i class="bi bi-cash-stack"></i>Lots de paiement</a>
+    <a href="{% url 'apps_bonus:bonus_liste' %}" class="sd-nav-link"><i class="bi bi-gift"></i>Bonus</a>
+
+    <div class="sd-nav-section">Système</div>
+    <a href="{% url 'apps_core:configuration_geographie' %}" class="sd-nav-link"><i class="bi bi-geo-alt"></i>Configuration pays</a>
+    <a href="{% url 'apps_core:gerer_parametres_systeme' %}" class="sd-nav-link"><i class="bi bi-sliders"></i>Paramètres</a>
+{% endblock %}
+
+{% block extra_css %}
+    .sd-form-panel { background: #fff; border: 1px solid #EDEFF4; border-radius: 14px; padding: 1.5rem; max-width: 720px; }
+    .sd-form-panel .form-control, .sd-form-panel .form-select, .sd-form-panel textarea { border-radius: 10px; border: 1.5px solid #EDEFF4; }
+    .sd-form-panel label { font-weight: 600; font-size: .85rem; margin-bottom: .3rem; }
+    .sd-form-panel .text-danger { font-size: .78rem; }
+    .sd-form-panel .form-text { font-size: .78rem; }
+{% endblock %}
+
+{% block dashboard_content %}
+
+<div class="mb-3">
+    <a href="{% url 'apps_notification:notification_liste' %}" class="btn btn-sd-outline btn-sm">
+        <i class="bi bi-arrow-left me-1"></i>Retour aux notifications
+    </a>
+</div>
+
+<div class="sd-form-panel">
+    <h6 class="fw-bold mb-3"><i class="bi bi-bell me-2"></i>Envoyer une notification manuelle</h6>
+
+    <form method="post">
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+            <div class="alert alert-danger py-2 small">{{ form.non_field_errors }}</div>
+        {% endif %}
+
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label for="{{ form.destinataire.id_for_label }}">Destinataire</label>
+                {{ form.destinataire }}
+                {% if form.destinataire.errors %}<div class="text-danger mt-1">{{ form.destinataire.errors }}</div>{% endif %}
+            </div>
+            <div class="col-md-6 mb-3">
+                <label for="{{ form.canal.id_for_label }}">Canal</label>
+                {{ form.canal }}
+                {% if form.canal.errors %}<div class="text-danger mt-1">{{ form.canal.errors }}</div>{% endif %}
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label for="{{ form.evenement.id_for_label }}">Événement</label>
+                {{ form.evenement }}
+                {% if form.evenement.errors %}<div class="text-danger mt-1">{{ form.evenement.errors }}</div>{% endif %}
+            </div>
+            <div class="col-md-6 mb-3">
+                <label for="{{ form.livraison.id_for_label }}">Livraison liée <span class="text-muted fw-normal">(optionnel)</span></label>
+                {{ form.livraison }}
+                {% if form.livraison.errors %}<div class="text-danger mt-1">{{ form.livraison.errors }}</div>{% endif %}
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <label for="{{ form.sujet.id_for_label }}">Sujet <span class="text-muted fw-normal">(optionnel, surtout utile pour l'email)</span></label>
+            {{ form.sujet }}
+            {% if form.sujet.errors %}<div class="text-danger mt-1">{{ form.sujet.errors }}</div>{% endif %}
+        </div>
+
+        <div class="mb-4">
+            <label for="{{ form.message.id_for_label }}">Message</label>
+            {{ form.message }}
+            {% if form.message.errors %}<div class="text-danger mt-1">{{ form.message.errors }}</div>{% endif %}
+        </div>
+
+        <div class="d-flex justify-content-end gap-2">
+            <a href="{% url 'apps_notification:notification_liste' %}" class="btn btn-sd-outline btn-sm">Annuler</a>
+            <button type="submit" class="btn btn-sd-primary btn-sm">
+                <i class="bi bi-send me-1"></i>Envoyer
+            </button>
+        </div>
+    </form>
+</div>
+
+{% endblock %}

@@ -124,25 +124,36 @@ class LotPaiementEntreprise(models.Model):
         if not self.reference:
             self.reference = f'LOT-{secrets.token_hex(5).upper()}'
         super().save(*args, **kwargs)
+    
+    @property
+    def peut_etre_recalcule(self):
+        """Recalcul autorisé tant que le lot n'a pas encore été envoyé à l'entreprise."""
+        return self.statut in (StatutLotPaiement.EN_PREPARATION, StatutLotPaiement.PRET_A_ENVOYER)
 
     def construire_depuis_livraisons_eligibles(self):
         """
         Récupère toutes les livraisons de l'entreprise dont la réception
         est validée mais pas encore payées, sur la période demandée.
         """
+        import datetime
+        from django.utils import timezone
         from apps_core.choices import StatutReceptionLivraison
+
+        debut_dt = timezone.make_aware(datetime.datetime.combine(self.periode_debut, datetime.time.min))
+        fin_dt = timezone.make_aware(datetime.datetime.combine(self.periode_fin, datetime.time.max))
+
         livraisons = Livraison.objects.filter(
             entreprise=self.entreprise,
             statut_reception=StatutReceptionLivraison.RECEPTION_VALIDEE,
-            date_livraison_effective__date__gte=self.periode_debut,
-            date_livraison_effective__date__lte=self.periode_fin,
+            date_livraison_effective__gte=debut_dt,
+            date_livraison_effective__lte=fin_dt,
         )
         self.livraisons.set(livraisons)
 
         self.montant_brut_produits = sum((l.montant_total_produits for l in livraisons), Decimal('0.00'))
         self.montant_frais_livraison_deduits = sum(
             (l.frais_livraison_applique - l.frais_livraison_paye_par_client if not l.frais_livraison_paye_integralement
-             else Decimal('0.00') for l in livraisons), Decimal('0.00')
+            else Decimal('0.00') for l in livraisons), Decimal('0.00')
         )
         self.montant_commission_yopishop_deduite = sum((l.commission_yopishop_montant for l in livraisons), Decimal('0.00'))
         self.montant_net_a_payer = (

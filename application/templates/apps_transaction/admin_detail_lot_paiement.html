@@ -87,11 +87,20 @@
         </div>
     {% endif %}
 
-    <div class="d-flex gap-2 flex-wrap mt-3">
-        {% if lot.statut == 'PRET_A_ENVOYER' %}
+        <div class="d-flex gap-2 flex-wrap mt-3">
+        {% if lot.statut == 'PRET' %}
             <button type="button" class="btn btn-sm btn-sd-primary" data-bs-toggle="modal" data-bs-target="#modalEnvoye">
                 <i class="bi bi-send me-1"></i>Marquer comme envoyé
             </button>
+        {% endif %}
+
+        {% if lot.statut == 'PREPARATION' or lot.statut == 'PRET' %}
+            <form method="post" action="{% url 'apps_transaction:admin_recalculer_lot_paiement' pk=lot.pk %}" class="d-inline">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-sm btn-sd-outline">
+                    <i class="bi bi-arrow-clockwise me-1"></i>Recalculer le lot
+                </button>
+            </form>
         {% endif %}
     </div>
 </div>

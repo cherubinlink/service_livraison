@@ -1,0 +1,34 @@
+{% extends 'navigateur/base_dashboard.html' %}
+
+{% block title %}Paramètres – SwiftDrop{% endblock %}
+{% block page_title %}Paramètres{% endblock %}
+{% block user_initiales %}{{ request.user.nom|default:"U"|slice:":2"|upper }}{% endblock %}
+{% block user_nom %}{{ request.user.nom|default:"Utilisateur" }}{% endblock %}
+{% block user_role %}{{ request.user.get_role_display|default:"—" }}{% endblock %}
+
+{% block sidebar_menu %}
+    <a href="javascript:history.back()" class="sd-nav-link"><i class="bi bi-arrow-left"></i>Retour</a>
+{% endblock %}
+
+{% block dashboard_content %}
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="sd-panel">
+            <div class="sd-panel-title mb-3"><i class="bi bi-shield-lock me-2"></i>Changer mon mot de passe</div>
+
+            <form method="post">
+                {% csrf_token %}
+                {% for field in form %}
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.help_text %}<div class="form-text small">{{ field.help_text|safe }}</div>{% endif %}
+                        {% if field.errors %}<div class="text-danger small mt-1">{{ field.errors|join:", " }}</div>{% endif %}
+                    </div>
+                {% endfor %}
+                <button type="submit" class="btn btn-sd-primary w-100">Mettre à jour le mot de passe</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

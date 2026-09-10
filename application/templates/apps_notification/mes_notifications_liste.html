@@ -1,0 +1,133 @@
+{% extends 'navigateur/base_dashboard.html' %}
+{# Template partagé entre les rôles (livreur, entreprise, client) : la sidebar #}
+{# s'adapte au rôle connecté ci-dessous. #}
+
+{% block title %}Mes notifications – SwiftDrop{% endblock %}
+{% block page_title %}Notifications{% endblock %}
+{% block user_initiales %}{{ request.user.nom|default:"US"|slice:":2"|upper }}{% endblock %}
+{% block user_nom %}{{ request.user.nom }}{% endblock %}
+{% block user_role %}{{ request.user.get_role_display }}{% endblock %}
+
+{% block sidebar_menu %}
+    {% if request.user.est_livreur_user %}
+        <div class="sd-nav-section">Général</div>
+        <a href="{% url 'apps_livreur:dashboard_livreur' %}" class="sd-nav-link"><i class="bi bi-grid-1x2"></i>Tableau de bord</a>
+
+        <div class="sd-nav-section">Courses</div>
+        <a href="{% url 'apps_livraison:livreur_mes_livraisons' %}" class="sd-nav-link"><i class="bi bi-truck"></i>Mes courses</a>
+
+        <div class="sd-nav-section">Compte</div>
+        <a href="{% url 'apps_messagerie:conversation_liste' %}" class="sd-nav-link"><i class="bi bi-chat-dots"></i>Messagerie</a>
+        <a href="{% url 'apps_notification:mes_notifications' %}" class="sd-nav-link active"><i class="bi bi-bell"></i>Notifications</a>
+        <a href="{% url 'apps_livreur:modifier_profil' %}" class="sd-nav-link"><i class="bi bi-person"></i>Mon profil</a>
+
+    {% elif request.user.est_entreprise_user %}
+        <div class="sd-nav-section">Général</div>
+        <a href="{% url 'apps_entreprise:dashboard' %}" class="sd-nav-link"><i class="bi bi-grid-1x2"></i>Tableau de bord</a>
+
+        <div class="sd-nav-section">Livraisons</div>
+        <a href="{% url 'apps_livraison:mes_livraisons' %}" class="sd-nav-link"><i class="bi bi-truck"></i>Mes livraisons</a>
+
+        <div class="sd-nav-section">Finance</div>
+        <a href="{% url 'apps_bonus:mes_bonus' %}" class="sd-nav-link"><i class="bi bi-gift"></i>Mes bonus</a>
+
+        <div class="sd-nav-section">Compte</div>
+        <a href="{% url 'apps_messagerie:conversation_liste' %}" class="sd-nav-link"><i class="bi bi-chat-dots"></i>Messagerie</a>
+        <a href="{% url 'apps_notification:mes_notifications' %}" class="sd-nav-link active"><i class="bi bi-bell"></i>Notifications</a>
+
+    {% else %}
+        <div class="sd-nav-section">Général</div>
+        <a href="{% url 'apps_messagerie:conversation_liste' %}" class="sd-nav-link"><i class="bi bi-chat-dots"></i>Messagerie</a>
+        <a href="{% url 'apps_notification:mes_notifications' %}" class="sd-nav-link active"><i class="bi bi-bell"></i>Notifications</a>
+    {% endif %}
+{% endblock %}
+
+{% block extra_css %}
+    .sd-filtre-bar { background: #fff; border: 1px solid #EDEFF4; border-radius: 14px; padding: 1rem 1.25rem; }
+    .sd-filtre-bar .form-select { border-radius: 10px; border: 1.5px solid #EDEFF4; }
+    .sd-badge-statut { font-size: .72rem; font-weight: 700; padding: .25rem .65rem; border-radius: 50px; }
+    .sd-badge-statut.en_attente { background: #FFF4E5; color: #E88A00; }
+    .sd-badge-statut.envoye     { background: #EEF2FF; color: #2E5CFF; }
+    .sd-badge-statut.livre      { background: #E5F7EC; color: #1FAA59; }
+    .sd-badge-statut.echec      { background: #FDEBEA; color: #E23D32; }
+    .sd-canal-pill { background: #F1F2F6; color: var(--sd-gris); font-size: .72rem; font-weight: 600;
+                      padding: .25rem .6rem; border-radius: 50px; white-space: nowrap; }
+    .sd-notif-card { background: #fff; border: 1px solid #EDEFF4; border-radius: 14px; padding: 1rem 1.25rem;
+                      transition: box-shadow .15s ease; }
+    .sd-notif-card.non-lue { border-left: 3px solid var(--sd-primary, #2E5CFF); }
+    .sd-notif-card:hover { box-shadow: 0 4px 14px rgba(20, 25, 40, .06); }
+    .sd-notif-titre { font-weight: 600; color: #1B1D28; }
+    .sd-notif-card.non-lue .sd-notif-titre { font-weight: 700; }
+{% endblock %}
+
+{% block dashboard_content %}
+
+<div class="sd-filtre-bar mb-3">
+    <form method="get" class="row g-2 align-items-end">
+        <div class="col-md-4">
+            <label class="form-label small fw-semibold mb-1">Canal</label>
+            <select name="canal" class="form-select form-select-sm" onchange="this.form.submit()">
+                <option value="">Tous les canaux</option>
+                {% for valeur, libelle in canaux %}
+                    <option value="{{ valeur }}" {% if canal_actif == valeur %}selected{% endif %}>{{ libelle }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        {% if canal_actif %}
+            <div class="col-md-2">
+                <a href="{% url 'apps_notification:mes_notifications' %}" class="btn btn-sd-outline btn-sm">
+                    <i class="bi bi-x-lg me-1"></i>Réinitialiser
+                </a>
+            </div>
+        {% endif %}
+    </form>
+</div>
+
+{% if notifications %}
+    <div class="d-flex flex-column gap-2">
+        {% for notif in notifications %}
+            <div class="sd-notif-card {% if notif.statut_envoi != 'LIVRE' %}non-lue{% endif %} d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <div>
+                    <div class="sd-notif-titre">{{ notif.get_evenement_display }}</div>
+                    <div class="text-muted small mt-1">{{ notif.message|truncatechars:90 }}</div>
+                    <div class="d-flex align-items-center gap-2 mt-2">
+                        <span class="sd-canal-pill">{{ notif.get_canal_display }}</span>
+                        <span class="text-muted small">{{ notif.date_envoi|date:"d/m/Y H:i" }}</span>
+                    </div>
+                </div>
+                <div class="d-flex flex-column align-items-end gap-2">
+                    <span class="sd-badge-statut {{ notif.statut_envoi|lower }}">{{ notif.get_statut_envoi_display }}</span>
+                    {% if notif.statut_envoi != 'LIVRE' %}
+                        <form method="post" action="{% url 'apps_notification:notification_marquer_livree' notif.pk %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-sd-outline">
+                                <i class="bi bi-check2 me-1"></i>Marquer comme lue
+                            </button>
+                        </form>
+                    {% endif %}
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+    {% if is_paginated %}
+        <nav class="d-flex justify-content-center py-3">
+            <ul class="pagination pagination-sm mb-0">
+                {% if page_obj.has_previous %}
+                    <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if canal_actif %}&canal={{ canal_actif }}{% endif %}">Précédent</a></li>
+                {% endif %}
+                <li class="page-item disabled"><span class="page-link">Page {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span></li>
+                {% if page_obj.has_next %}
+                    <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}{% if canal_actif %}&canal={{ canal_actif }}{% endif %}">Suivant</a></li>
+                {% endif %}
+            </ul>
+        </nav>
+    {% endif %}
+{% else %}
+    <div class="sd-panel text-center py-5">
+        <i class="bi bi-bell fs-1 text-muted"></i>
+        <p class="text-muted small mb-0 mt-2">Aucune notification pour le moment.</p>
+    </div>
+{% endif %}
+
+{% endblock %}

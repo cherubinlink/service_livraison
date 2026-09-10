@@ -22,6 +22,7 @@
     <div class="sd-nav-section">Livraisons</div>
     <a href="{% url 'apps_livraison:mes_livraisons' %}" class="sd-nav-link"><i class="bi bi-truck"></i>Mes livraisons</a>
     <a href="{% url 'apps_entreprise:zones_livraisons' %}" class="sd-nav-link"><i class="bi bi-truck"></i>Zones livraisons</a>
+     <a href="{% url 'apps_evaluation:entreprise_mes_evaluations' %}" class="sd-nav-link"><i class="bi bi-star-half"></i>Avis clients</a>
 
     <div class="sd-nav-section">Finance</div>
     <a href="{% url 'apps_transaction:mes_lots_paiement' %}" class="sd-nav-link"><i class="bi bi-cash-stack"></i>Paiements & lots</a>
@@ -35,6 +36,9 @@
 
     <div class="sd-nav-section">Compte</div>
     <a href="{% url 'apps_messagerie:conversation_liste' %}" class="sd-nav-link"><i class="bi bi-chat-dots"></i>Messagerie</a>
+    <a href="{% url 'apps_notification:mes_notifications' %}" class="sd-nav-link"><i class="bi bi-bell"></i>Notifications
+        {% if nb_notifications_non_lues %}<span class="sd-nav-badge">{{ nb_notifications_non_lues }}</span>{% endif %}
+    </a>
 {% endblock %}
 
 {% block dashboard_content %}

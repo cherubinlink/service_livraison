@@ -395,6 +395,51 @@ def reinitialiser_mot_de_passe(request, token):
  
     return render(request, 'apps_core/reinitialiser_mot_de_passe.html', {'form': form})
 
+@login_required
+def mon_profil(request):
+    """
+    Modification des informations de base du compte connecté (tous
+    rôles confondus). Ne touche jamais au mot de passe — cf. parametres()
+    pour ça — ni aux champs de vérification (compte_bloque, otp, etc.)
+    qui restent gérés par le système.
+    """
+    from apps_core.forms import ModifierProfilForm
+
+    if request.method == 'POST':
+        form = ModifierProfilForm(request.POST, instance=request.user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Votre profil a été mis à jour.")
+            return redirect('apps_core:mon_profil')
+    else:
+        form = ModifierProfilForm(instance=request.user)
+
+    return render(request, 'apps_core/mon_profil.html', {'form': form})
+
+
+@login_required
+def parametres(request):
+    """
+    Changement de mot de passe pour un utilisateur déjà connecté
+    (distinct du flux mot_de_passe_oublie, qui lui ne nécessite pas
+    d'être connecté et repose sur un token par email).
+    """
+    from django.contrib.auth import update_session_auth_hash
+    from apps_core.forms import ChangerMotDePasseForm
+
+    if request.method == 'POST':
+        form = ChangerMotDePasseForm(request.user, request.POST)
+        if form.is_valid():
+            user = form.save()
+            update_session_auth_hash(request, user)  # évite la déconnexion après changement
+            messages.success(request, "Votre mot de passe a été modifié avec succès.")
+            return redirect('apps_core:parametres')
+        messages.error(request, "Merci de corriger les erreurs du formulaire.")
+    else:
+        form = ChangerMotDePasseForm(request.user)
+
+    return render(request, 'apps_core/parametres.html', {'form': form})
+
 
 
 def configuration_geographie(request):

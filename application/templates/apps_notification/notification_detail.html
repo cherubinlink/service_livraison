@@ -1,0 +1,138 @@
+{% extends 'navigateur/base_dashboard.html' %}
+
+{% block title %}Notification – {{ notification.destinataire.nom }}{% endblock %}
+{% block page_title %}Notifications{% endblock %}
+{% block user_initiales %}AD{% endblock %}
+{% block user_nom %}Administration{% endblock %}
+{% block user_role %}Administrateur{% endblock %}
+
+{% block sidebar_menu %}
+    <div class="sd-nav-section">Général</div>
+    <a href="{% url 'apps_core:dashboard_admin' %}" class="sd-nav-link"><i class="bi bi-grid-1x2"></i>Tableau de bord</a>
+    <a href="{% url 'apps_messagerie:conversation_liste' %}" class="sd-nav-link"><i class="bi bi-chat-dots"></i>Messagerie</a>
+    <a href="{% url 'apps_notification:notification_liste' %}" class="sd-nav-link active"><i class="bi bi-bell"></i>Notifications</a>
+
+    <div class="sd-nav-section">Acteurs</div>
+    <a href="{% url 'apps_entreprise:admin_liste_entreprises' %}" class="sd-nav-link"><i class="bi bi-building"></i>Entreprises</a>
+    <a href="{% url 'apps_livreur:admin_liste_livreurs' %}" class="sd-nav-link"><i class="bi bi-bicycle"></i>Livreurs</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-person-heart"></i>Clients</a>
+
+    <div class="sd-nav-section">Opérations</div>
+    <a href="{% url 'apps_livraison:admin_liste_livraisons' %}" class="sd-nav-link"><i class="bi bi-box-seam"></i>Livraisons B2B</a>
+    <a href="{% url 'apps_entreprise:admin_liste_entrepots' %}" class="sd-nav-link"><i class="bi bi-building-gear"></i>Entrepôts</a>
+    <a href="{% url 'apps_catalogue:admin_liste_produits' %}" class="sd-nav-link"><i class="bi bi-boxes"></i>Produits</a>
+
+    <div class="sd-nav-section">Finance</div>
+    <a href="{% url 'apps_transaction:admin_liste_lots_paiement' %}" class="sd-nav-link"><i class="bi bi-cash-stack"></i>Lots de paiement</a>
+    <a href="{% url 'apps_bonus:bonus_liste' %}" class="sd-nav-link"><i class="bi bi-gift"></i>Bonus</a>
+
+    <div class="sd-nav-section">Système</div>
+    <a href="{% url 'apps_core:configuration_geographie' %}" class="sd-nav-link"><i class="bi bi-geo-alt"></i>Configuration pays</a>
+    <a href="{% url 'apps_core:gerer_parametres_systeme' %}" class="sd-nav-link"><i class="bi bi-sliders"></i>Paramètres</a>
+{% endblock %}
+
+{% block extra_css %}
+    .sd-badge-statut { font-size: .74rem; font-weight: 700; padding: .3rem .75rem; border-radius: 50px; }
+    .sd-badge-statut.en_attente { background: #FFF4E5; color: #E88A00; }
+    .sd-badge-statut.envoye     { background: #EEF2FF; color: #2E5CFF; }
+    .sd-badge-statut.livre      { background: #E5F7EC; color: #1FAA59; }
+    .sd-badge-statut.echec      { background: #FDEBEA; color: #E23D32; }
+    .sd-detail-panel { background: #fff; border: 1px solid #EDEFF4; border-radius: 14px; padding: 1.5rem; }
+    .sd-detail-label { font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em;
+                        color: var(--sd-gris); margin-bottom: .25rem; }
+    .sd-detail-value { font-size: .95rem; color: #1B1D28; margin-bottom: 1.1rem; }
+    .sd-message-box { background: var(--sd-fond, #F7F8FB); border-radius: 12px; padding: 1rem 1.1rem; font-size: .9rem; white-space: pre-wrap; }
+    .sd-erreur-box { background: #FDEBEA; color: #E23D32; border-radius: 12px; padding: .9rem 1.1rem; font-size: .85rem; }
+{% endblock %}
+
+{% block dashboard_content %}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <a href="{% url 'apps_notification:notification_liste' %}" class="btn btn-sd-outline btn-sm">
+        <i class="bi bi-arrow-left me-1"></i>Retour aux notifications
+    </a>
+    {% if notification.statut_envoi == 'ECHEC' or notification.statut_envoi == 'EN_ATTENTE' %}
+        <form method="post" action="{% url 'apps_notification:notification_renvoyer' notification.pk %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-sd-primary btn-sm">
+                <i class="bi bi-arrow-repeat me-1"></i>Renvoyer
+            </button>
+        </form>
+    {% endif %}
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-8">
+        <div class="sd-detail-panel">
+            <div class="d-flex justify-content-between align-items-start mb-4">
+                <div>
+                    <h5 class="fw-bold mb-1">{{ notification.get_evenement_display }}</h5>
+                    <div class="text-muted small">{{ notification.get_canal_display }}</div>
+                </div>
+                <span class="sd-badge-statut {{ notification.statut_envoi|lower }}">{{ notification.get_statut_envoi_display }}</span>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="sd-detail-label">Destinataire</div>
+                    <div class="sd-detail-value">{{ notification.destinataire.nom|default:"—" }}</div>
+                </div>
+                <div class="col-md-6">
+                    <div class="sd-detail-label">Téléphone</div>
+                    <div class="sd-detail-value">{{ notification.telephone|default:"—" }}</div>
+                </div>
+                <div class="col-md-6">
+                    <div class="sd-detail-label">Envoyée le</div>
+                    <div class="sd-detail-value">{{ notification.date_envoi|date:"d/m/Y H:i" }}</div>
+                </div>
+                <div class="col-md-6">
+                    <div class="sd-detail-label">Accusé réception</div>
+                    <div class="sd-detail-value">{{ notification.date_livraison_notif|date:"d/m/Y H:i"|default:"—" }}</div>
+                </div>
+                <div class="col-md-6">
+                    <div class="sd-detail-label">Tentatives d'envoi</div>
+                    <div class="sd-detail-value">{{ notification.nb_tentatives }}</div>
+                </div>
+                <div class="col-md-6">
+                    <div class="sd-detail-label">Référence externe</div>
+                    <div class="sd-detail-value">{{ notification.ref_externe|default:"—" }}</div>
+                </div>
+                {% if notification.livraison %}
+                    <div class="col-md-6">
+                        <div class="sd-detail-label">Livraison liée</div>
+                        <div class="sd-detail-value">{{ notification.livraison.numero|default:notification.livraison.pk }}</div>
+                    </div>
+                {% endif %}
+            </div>
+
+            {% if notification.sujet %}
+                <div class="sd-detail-label">Sujet</div>
+                <div class="sd-detail-value">{{ notification.sujet }}</div>
+            {% endif %}
+
+            <div class="sd-detail-label">Message</div>
+            <div class="sd-message-box">{{ notification.message }}</div>
+
+            {% if notification.erreur %}
+                <div class="sd-detail-label mt-3">Erreur d'envoi</div>
+                <div class="sd-erreur-box">{{ notification.erreur }}</div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="sd-detail-panel">
+            <div class="sd-detail-label">Historique</div>
+            <p class="small text-muted mb-1">Statut actuel : <strong>{{ notification.get_statut_envoi_display }}</strong></p>
+            <p class="small text-muted mb-0">
+                {% if notification.nb_tentatives > 1 %}
+                    Cette notification a nécessité {{ notification.nb_tentatives }} tentatives d'envoi.
+                {% else %}
+                    Envoyée dès la première tentative.
+                {% endif %}
+            </p>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

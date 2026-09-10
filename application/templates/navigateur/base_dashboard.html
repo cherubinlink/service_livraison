@@ -1,4 +1,4 @@
-{% load static %}
+{% load static humanize %}
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -135,12 +135,55 @@
             display: flex; align-items: center; justify-content: center;
             color: var(--sd-navy); font-size: 1.1rem;
         }
+        .sd-notif-btn:hover { background: #EDEFF4; }
         .sd-notif-dot {
             position: absolute; top: 6px; right: 8px;
             width: 8px; height: 8px; border-radius: 50%;
             background: var(--sd-orange);
+            border: 2px solid #fff;
         }
         .sd-content { padding: 1.6rem; flex: 1; }
+
+        /* ── Dropdown notifications ──────────────────────────────── */
+        .sd-notif-dropdown {
+            width: 350px; max-width: 90vw; padding: 0;
+            border: 1px solid #EDEFF4; border-radius: 14px;
+            box-shadow: 0 10px 28px rgba(22,33,62,.12);
+            overflow: hidden;
+        }
+        .sd-notif-dropdown-header {
+            padding: .8rem 1rem; border-bottom: 1px solid #EDEFF4;
+        }
+        .sd-notif-count {
+            background: var(--sd-orange); color: #fff; font-size: .68rem; font-weight: 700;
+            min-width: 20px; height: 20px; border-radius: 50px; display: inline-flex;
+            align-items: center; justify-content: center; padding: 0 .4rem;
+        }
+        .sd-notif-list { max-height: 360px; overflow-y: auto; }
+        .sd-notif-item {
+            display: block; padding: .75rem 1rem; color: inherit;
+            border-bottom: 1px solid #F1F2F6; transition: background .12s ease;
+        }
+        .sd-notif-item:last-child { border-bottom: none; }
+        .sd-notif-item:hover { background: var(--sd-fond); color: inherit; }
+        .sd-notif-item.non-lue { background: rgba(255,107,53,0.06); }
+        .sd-notif-titre { font-weight: 600; font-size: .85rem; color: var(--sd-navy); }
+        .sd-notif-item.non-lue .sd-notif-titre { font-weight: 700; }
+        .sd-notif-puce {
+            width: 7px; height: 7px; border-radius: 50%; background: var(--sd-orange);
+            flex-shrink: 0; margin-top: .35rem;
+        }
+        .sd-notif-msg {
+            font-size: .78rem; color: var(--sd-gris); margin-top: .15rem;
+            display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+        }
+        .sd-notif-temps { font-size: .7rem; color: var(--sd-gris); margin-top: .3rem; }
+        .sd-notif-voir-tout {
+            display: block; text-align: center; padding: .7rem; font-size: .82rem;
+            font-weight: 700; color: var(--sd-orange); border-top: 1px solid #EDEFF4; background: #fff;
+        }
+        .sd-notif-voir-tout:hover { background: var(--sd-fond); color: var(--sd-orange-dark); }
+        .sd-notif-vide { text-align: center; color: var(--sd-gris); padding: 2rem 1rem; }
 
         /* ── Composants réutilisables ───────────────────────────── */
         .sd-kpi-card {
@@ -218,7 +261,52 @@
             <span class="sd-topbar-title">{% block page_title %}Tableau de bord{% endblock %}</span>
         </div>
         <div class="d-flex align-items-center gap-3">
-            <button class="sd-notif-btn"><i class="bi bi-bell"></i><span class="sd-notif-dot"></span></button>
+
+            <!-- ═══════ Notifications ═══════ -->
+            <div class="dropdown">
+                <button class="sd-notif-btn" type="button" id="sdNotifToggle"
+                        data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+                    <i class="bi bi-bell"></i>
+                    {% if mes_notifications_non_lues %}
+                        <span class="sd-notif-dot" id="sdNotifDot"></span>
+                    {% endif %}
+                </button>
+                <div class="dropdown-menu dropdown-menu-end sd-notif-dropdown" aria-labelledby="sdNotifToggle">
+                    <div class="sd-notif-dropdown-header d-flex justify-content-between align-items-center">
+                        <span class="fw-semibold small">Notifications</span>
+                        {% if mes_notifications_non_lues %}
+                            <span class="sd-notif-count" id="sdNotifCount">{{ mes_notifications_non_lues }}</span>
+                        {% endif %}
+                    </div>
+
+                    <div class="sd-notif-list" id="sdNotifList">
+                        {% for notif in mes_notifications_recentes %}
+                            <a href="{% url 'apps_notification:mes_notifications' %}"
+                               class="sd-notif-item {% if notif.statut_envoi != 'LIVRE' %}non-lue{% endif %}"
+                               data-notif-id="{{ notif.pk }}"
+                               data-marquer-url="{% url 'apps_notification:notification_marquer_livree' notif.pk %}">
+                                <div class="d-flex justify-content-between align-items-start gap-2">
+                                    <div class="sd-notif-titre">{{ notif.get_evenement_display }}</div>
+                                    {% if notif.statut_envoi != 'LIVRE' %}<span class="sd-notif-puce"></span>{% endif %}
+                                </div>
+                                <div class="sd-notif-msg">{{ notif.message|truncatechars:70 }}</div>
+                                <div class="sd-notif-temps">{{ notif.date_envoi|naturaltime }}</div>
+                            </a>
+                        {% empty %}
+                            <div class="sd-notif-vide">
+                                <i class="bi bi-bell-slash fs-4 d-block mb-1"></i>
+                                Aucune notification pour le moment.
+                            </div>
+                        {% endfor %}
+                    </div>
+
+                    <a href="{% url 'apps_notification:mes_notifications' %}" class="sd-notif-voir-tout">
+                        Voir toutes mes notifications
+                    </a>
+                </div>
+            </div>
+
+            <!-- ═══════ Menu utilisateur ═══════ -->
             <div class="dropdown">
                 <a href="#" class="d-flex align-items-center gap-2" data-bs-toggle="dropdown">
                     <div class="sd-avatar">{% block user_initiales %}U{% endblock %}</div>
@@ -229,10 +317,10 @@
                     <i class="bi bi-chevron-down small text-muted"></i>
                 </a>
                 <ul class="dropdown-menu dropdown-menu-end">
-                    <li><a class="dropdown-item" href="#"><i class="bi bi-person me-2"></i>Mon profil</a></li>
-                    <li><a class="dropdown-item" href="#"><i class="bi bi-gear me-2"></i>Paramètres</a></li>
+                    <li><a class="dropdown-item" href="{% url 'apps_core:mon_profil' %}"><i class="bi bi-person me-2"></i>Mon profil</a></li>
+                    <li><a class="dropdown-item" href="{% url 'apps_core:parametres' %}"><i class="bi bi-gear me-2"></i>Paramètres</a></li>
                     <li><hr class="dropdown-divider"></li>
-                    <li><a class="dropdown-item text-danger" href="#"><i class="bi bi-box-arrow-right me-2"></i>Déconnexion</a></li>
+                    <li><a class="dropdown-item text-danger" href="{% url 'apps_core:deconnexion' %}"><i class="bi bi-box-arrow-right me-2"></i>Déconnexion</a></li>
                 </ul>
             </div>
         </div>
@@ -259,6 +347,53 @@
     document.getElementById('sdSidebarToggle')?.addEventListener('click', function () {
         document.getElementById('sdSidebar').classList.toggle('show');
     });
+
+    // ═══════ Notifications : marquer comme lue + badge à jour ═══════
+    (function () {
+        var POLL_MS = 20000; // rafraîchit juste le badge toutes les 20s (pas du temps réel instantané)
+        var compteurUrl = "{% url 'apps_notification:compteur_non_livrees' %}";
+        var dot = document.getElementById('sdNotifDot');
+        var compteur = document.getElementById('sdNotifCount');
+        var btn = document.getElementById('sdNotifToggle');
+
+        function getCsrfCookie() {
+            var match = document.cookie.match(/(^|;\s*)csrftoken=([^;]+)/);
+            return match ? decodeURIComponent(match[2]) : '';
+        }
+
+        // Marque une notification comme lue en AJAX avant de suivre le lien
+        document.querySelectorAll('.sd-notif-item[data-marquer-url]').forEach(function (item) {
+            item.addEventListener('click', function () {
+                if (!item.classList.contains('non-lue')) { return; }
+                fetch(item.dataset.marquerUrl, {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRFToken': getCsrfCookie(),
+                    },
+                }).catch(function () { /* silencieux : la navigation continue quand même */ });
+            });
+        });
+
+        // Actualise périodiquement le badge de la cloche
+        setInterval(function () {
+            fetch(compteurUrl, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                .then(function (r) { return r.json(); })
+                .then(function (data) {
+                    var n = data.non_livrees || 0;
+                    if (compteur) { compteur.textContent = n; compteur.style.display = n ? 'inline-flex' : 'none'; }
+                    if (dot) { dot.style.display = n ? 'block' : 'none'; }
+                    if (!dot && n && btn) {
+                        var span = document.createElement('span');
+                        span.className = 'sd-notif-dot';
+                        span.id = 'sdNotifDot';
+                        btn.appendChild(span);
+                        dot = span;
+                    }
+                })
+                .catch(function () { /* silencieux */ });
+        }, POLL_MS);
+    })();
 </script>
 {% block extra_js %}{% endblock %}
 </body>

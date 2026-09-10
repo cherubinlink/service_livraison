@@ -1,0 +1,116 @@
+{% extends 'navigateur/base_dashboard.html' %}
+
+{% block title %}Évaluations – Administration SwiftDrop{% endblock %}
+{% block page_title %}Évaluations{% endblock %}
+{% block user_initiales %}AD{% endblock %}
+{% block user_nom %}Administration{% endblock %}
+{% block user_role %}Administrateur{% endblock %}
+
+{% block sidebar_menu %}
+    <div class="sd-nav-section">Général</div>
+    <a href="{% url 'apps_core:dashboard_admin' %}" class="sd-nav-link"><i class="bi bi-grid-1x2"></i>Tableau de bord</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-chat-dots"></i>Messagerie</a>
+
+    <div class="sd-nav-section">Acteurs</div>
+    <a href="{% url 'apps_entreprise:admin_liste_entreprises' %}" class="sd-nav-link"><i class="bi bi-building"></i>Entreprises</a>
+    <a href="{% url 'apps_livreur:admin_liste_livreurs' %}" class="sd-nav-link"><i class="bi bi-bicycle"></i>Livreurs</a>
+    <a href="#" class="sd-nav-link"><i class="bi bi-person-heart"></i>Clients</a>
+    <a href="{% url 'apps_evaluation:admin_liste_evaluations' %}" class="sd-nav-link active"><i class="bi bi-star"></i>Évaluations</a>
+
+    <div class="sd-nav-section">Opérations</div>
+    <a href="{% url 'apps_livraison:admin_liste_livraisons' %}" class="sd-nav-link"><i class="bi bi-box-seam"></i>Livraisons B2B</a>
+    <a href="{% url 'apps_livraison:admin_liste_livraisons_directes' %}" class="sd-nav-link"><i class="bi bi-signpost-2"></i>Livraisons directes</a>
+    <a href="{% url 'apps_entreprise:admin_liste_entrepots' %}" class="sd-nav-link"><i class="bi bi-building-gear"></i>Entrepôts</a>
+    <a href="{% url 'apps_catalogue:admin_liste_produits' %}" class="sd-nav-link"><i class="bi bi-boxes"></i>Produits</a>
+
+    <div class="sd-nav-section">Finance</div>
+    <a href="{% url 'apps_transaction:admin_liste_lots_paiement' %}" class="sd-nav-link"><i class="bi bi-cash-stack"></i>Lots de paiement</a>
+    <a href="{% url 'apps_transaction:admin_liste_transactions' %}" class="sd-nav-link"><i class="bi bi-journal-text"></i>Transactions</a>
+
+    <div class="sd-nav-section">Système</div>
+    <a href="{% url 'apps_core:configuration_geographie' %}" class="sd-nav-link"><i class="bi bi-geo"></i>Zones géographiques</a>
+    <a href="{% url 'apps_core:gerer_coefficients_vehicule' %}" class="sd-nav-link"><i class="bi bi-truck-front"></i>Coefficients véhicule</a>
+{% endblock %}
+
+{% block extra_css %}
+    .sd-filtre-bar { background: #fff; border: 1px solid #EDEFF4; border-radius: 14px; padding: 1rem 1.25rem; }
+    .sd-filtre-bar .form-select { border-radius: 10px; border: 1.5px solid #EDEFF4; }
+{% endblock %}
+
+{% block dashboard_content %}
+
+<div class="sd-filtre-bar mb-3">
+    <form method="get" class="row g-2 align-items-end">
+        <div class="col-md-3">
+            <label class="form-label small fw-semibold mb-1">Note globale</label>
+            <select name="note" class="form-select form-select-sm">
+                <option value="">Toutes les notes</option>
+                {% for i in "12345" %}
+                    <option value="{{ i }}" {% if filtre_note == i %}selected{% endif %}>{{ i }} / 5</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-4">
+            <div class="form-check mt-4">
+                <input type="checkbox" name="non_recommande" value="1" class="form-check-input" id="filtreNonRecommande"
+                       {% if filtre_non_recommande == '1' %}checked{% endif %} onchange="this.form.submit()">
+                <label class="form-check-label small fw-semibold" for="filtreNonRecommande">
+                    Uniquement les avis "ne recommande pas"
+                </label>
+            </div>
+        </div>
+        <div class="col-md-2 d-flex gap-2">
+            <button type="submit" class="btn btn-sd-primary btn-sm flex-grow-1"><i class="bi bi-search"></i></button>
+            <a href="{% url 'apps_evaluation:admin_liste_evaluations' %}" class="btn btn-sd-outline btn-sm" title="Réinitialiser"><i class="bi bi-x-lg"></i></a>
+        </div>
+    </form>
+</div>
+
+<div class="sd-panel">
+    {% if evaluations %}
+        <div class="table-responsive">
+            <table class="table sd-table align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Livraison</th>
+                        <th>Entreprise</th>
+                        <th>Livreur</th>
+                        <th>Note globale</th>
+                        <th>Recommande</th>
+                        <th>Date</th>
+                        <th class="text-end">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for evaluation in evaluations %}
+                        <tr>
+                            <td class="fw-semibold">{{ evaluation.livraison.numero }}</td>
+                            <td>{{ evaluation.livraison.entreprise.nom_affichage|default:"—" }}</td>
+                            <td>{{ evaluation.livraison.livreur.utilisateur.nom|default:"—" }}</td>
+                            <td>
+                                <i class="bi bi-star-fill text-warning me-1" style="font-size:.75rem;"></i>{{ evaluation.note_globale }}/5
+                            </td>
+                            <td>
+                                {% if evaluation.recommande %}
+                                    <span class="badge bg-light text-dark border"><i class="bi bi-check2 text-success"></i> Oui</span>
+                                {% else %}
+                                    <span class="badge bg-light text-dark border text-danger">Non</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-muted small">{{ evaluation.date|date:"d/m/Y" }}</td>
+                            <td class="text-end">
+                                <a href="{% url 'apps_evaluation:admin_detail_evaluation' pk=evaluation.pk %}" class="btn btn-sm btn-sd-outline">
+                                    <i class="bi bi-eye me-1"></i>Voir
+                                </a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p class="text-muted small mb-0">Aucune évaluation ne correspond à ces critères.</p>
+    {% endif %}
+</div>
+
+{% endblock %}

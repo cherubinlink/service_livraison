@@ -1,0 +1,88 @@
+{% extends 'navigateur/base.html' %}
+
+{% block title %}Votre avis sur la livraison {{ livraison.numero }} – SwiftDrop{% endblock %}
+
+{% block extra_css %}
+    .sd-eval-hero {
+        background: linear-gradient(135deg, var(--sd-navy) 0%, var(--sd-navy-light) 100%);
+        color: #fff;
+    }
+    .sd-eval-card {
+        border: 1px solid #EDEFF4;
+        border-radius: 18px;
+        background: #fff;
+        margin-top: -60px;
+        position: relative;
+        z-index: 2;
+    }
+{% endblock %}
+
+{% block content %}
+
+<section class="sd-eval-hero py-5">
+    <div class="container py-4 text-center">
+        <span class="hero-badge mb-2"><i class="bi bi-star-fill me-1"></i>Votre avis compte</span>
+        <h1 class="display-6 fw-brand mt-3 mb-0">Comment s'est passée votre livraison ?</h1>
+        <p class="mt-2" style="color:#C9CFDD;">Commande {{ livraison.numero }}</p>
+    </div>
+</section>
+
+<div class="container">
+    <div class="sd-eval-card p-4 p-lg-5 mb-5 mx-auto" style="max-width: 640px;">
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <form method="post">
+            {% csrf_token %}
+
+            <div class="mb-3">
+                <label class="form-label small fw-semibold" for="{{ form.note_globale.id_for_label }}">
+                    {{ form.note_globale.label }} <span class="text-danger">*</span>
+                </label>
+                {{ form.note_globale }}
+                {% if form.note_globale.errors %}<div class="text-danger small mt-1">{{ form.note_globale.errors|join:", " }}</div>{% endif %}
+            </div>
+
+            <div class="row g-3 mb-3">
+                <div class="col-md-4">
+                    <label class="form-label small fw-semibold" for="{{ form.note_rapidite.id_for_label }}">{{ form.note_rapidite.label }}</label>
+                    {{ form.note_rapidite }}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small fw-semibold" for="{{ form.note_etat_colis.id_for_label }}">{{ form.note_etat_colis.label }}</label>
+                    {{ form.note_etat_colis }}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small fw-semibold" for="{{ form.note_livreur.id_for_label }}">{{ form.note_livreur.label }}</label>
+                    {{ form.note_livreur }}
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label small fw-semibold" for="{{ form.commentaire.id_for_label }}">{{ form.commentaire.label }}</label>
+                {{ form.commentaire }}
+                {% if form.commentaire.errors %}<div class="text-danger small mt-1">{{ form.commentaire.errors|join:", " }}</div>{% endif %}
+            </div>
+
+            <div class="form-check mb-4">
+                {{ form.recommande }}
+                <label class="form-check-label small" for="{{ form.recommande.id_for_label }}">{{ form.recommande.label|default:"Je recommande SwiftDrop" }}</label>
+            </div>
+
+            {% if form.non_field_errors %}
+                <div class="text-danger small mb-3">{{ form.non_field_errors|join:", " }}</div>
+            {% endif %}
+
+            <button type="submit" class="btn btn-sd-primary w-100">Envoyer mon avis</button>
+        </form>
+    </div>
+</div>
+
+{% endblock %}

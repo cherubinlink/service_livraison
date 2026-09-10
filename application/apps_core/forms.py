@@ -3,6 +3,7 @@ from django.utils.translation import gettext_lazy as _
 from django.contrib.auth import password_validation
 from django.core.exceptions import ValidationError
 from decimal import Decimal
+from django.contrib.auth.forms import PasswordChangeForm
  
 from apps_core.models import Utilisateur, Pays, Ville, Zone, Quartier, CoefficientVehicule, TarifInterVille, ParametreSysteme
 
@@ -159,6 +160,31 @@ class VerificationOtpForm(forms.Form):
             'class': 'form-control sd-otp-input', 'placeholder': '••••••',
             'inputmode': 'numeric', 'autocomplete': 'one-time-code', 'autofocus': True,
         })
+    )
+
+class ModifierProfilForm(forms.ModelForm):
+    class Meta:
+        model = Utilisateur
+        fields = ['nom', 'email', 'telephone']
+        widgets = {
+            'nom': forms.TextInput(attrs={'class': 'form-control'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control'}),
+            'telephone': forms.TextInput(attrs={'class': 'form-control'}),
+        }
+
+
+class ChangerMotDePasseForm(PasswordChangeForm):
+    old_password = forms.CharField(
+        label='Mot de passe actuel',
+        widget=forms.PasswordInput(attrs={'class': 'form-control'})
+    )
+    new_password1 = forms.CharField(
+        label='Nouveau mot de passe',
+        widget=forms.PasswordInput(attrs={'class': 'form-control'})
+    )
+    new_password2 = forms.CharField(
+        label='Confirmer le nouveau mot de passe',
+        widget=forms.PasswordInput(attrs={'class': 'form-control'})
     )
 
 

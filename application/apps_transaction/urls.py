@@ -10,6 +10,7 @@ urlpatterns = [
     # ── Administration ───────────────────────────────────────────────
     path('gestion/lots-paiement/', views.admin_liste_lots_paiement, name='admin_liste_lots_paiement'),
     path('gestion/lots-paiement/nouveau/', views.admin_creer_lot_paiement, name='admin_creer_lot_paiement'),
+    path('gestion/lots/<uuid:pk>/recalculer/', views.admin_recalculer_lot_paiement, name='admin_recalculer_lot_paiement'),
     path('gestion/lots-paiement/<uuid:pk>/', views.admin_detail_lot_paiement, name='admin_detail_lot_paiement'),
     path('gestion/lots-paiement/<uuid:pk>/marquer-envoye/', views.admin_marquer_lot_envoye, name='admin_marquer_lot_envoye'),
     path('gestion/transactions/', views.admin_liste_transactions, name='admin_liste_transactions'),

@@ -607,7 +607,7 @@ def soumettre_livraison(request, pk):
         else:
             livraison.changer_statut(Livraison.Statut.EN_ATTENTE, request.user)
             messages.success(request, f"Commande {livraison.numero} soumise pour validation.")
-    return redirect('apps_livraison:detail_livraison_direct', pk=pk)
+    return redirect('apps_livraison:detail_livraison', pk=pk)
  
  
 @login_required
@@ -641,7 +641,8 @@ def valider_reception_livraison(request, pk):
             messages.success(request, "Réception validée — cette livraison entrera dans votre prochain lot de paiement.")
         except ValueError as exc:
             messages.error(request, str(exc))
-    return redirect('apps_livraison:detail_livraison_direct', pk=pk)
+    return redirect('apps_livraison:detail_livraison', pk=pk)
+
 
 
 
