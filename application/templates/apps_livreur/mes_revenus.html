@@ -1,0 +1,109 @@
+{% extends 'navigateur/base_dashboard.html' %}
+
+{% block title %}Mes revenus – SwiftDrop{% endblock %}
+{% block page_title %}Mes revenus{% endblock %}
+{% block user_initiales %}{{ request.user.nom|default:"LV"|slice:":2"|upper }}{% endblock %}
+{% block user_nom %}{{ request.user.nom|default:"Livreur" }}{% endblock %}
+{% block user_role %}Livreur{% if livreur %} · {{ livreur.get_type_vehicule_display }}{% endif %}{% endblock %}
+
+{% block sidebar_menu %}
+    <div class="sd-nav-section">Général</div>
+    <a href="{% url 'apps_livreur:dashboard_livreur' %}" class="sd-nav-link"><i class="bi bi-grid-1x2"></i>Tableau de bord</a>
+
+    <div class="sd-nav-section">Courses</div>
+    <a href="{% url 'apps_livraison:livreur_mes_livraisons' %}" class="sd-nav-link"><i class="bi bi-truck"></i>Mes courses</a>
+    <a href="{% url 'apps_livreur:historique_livraisons' %}" class="sd-nav-link"><i class="bi bi-clock-history"></i>Historique</a>
+    <a href="{% url 'apps_livreur:historique_position' %}" class="sd-nav-link"><i class="bi bi-geo-alt"></i>Ma position</a>
+
+    <div class="sd-nav-section">Compte</div>
+    <a href="{% url 'apps_livreur:mes_revenus' %}" class="sd-nav-link active"><i class="bi bi-cash-coin"></i>Mes revenus</a>
+    <a href="{% url 'apps_evaluation:livreur_mes_evaluations' %}" class="sd-nav-link"><i class="bi bi-star-half"></i>Mes avis clients</a>
+    <a href="{% url 'apps_messagerie:conversation_liste' %}" class="sd-nav-link"><i class="bi bi-chat-dots"></i>Messagerie</a>
+    <a href="{% url 'apps_notification:mes_notifications' %}" class="sd-nav-link"><i class="bi bi-bell"></i>Notifications</a>
+    <a href="{% url 'apps_livreur:modifier_profil' %}" class="sd-nav-link"><i class="bi bi-person"></i>Mon profil</a>
+{% endblock %}
+
+{% block extra_css %}
+    .sd-badge-statut { font-size: .74rem; font-weight: 700; padding: .3rem .65rem; border-radius: 50px; }
+    .sd-badge-statut.succes { background: #E5F7EC; color: #1FAA59; }
+{% endblock %}
+
+{% block dashboard_content %}
+
+<!-- ═══════════════════ KPIs ═══════════════════ -->
+<div class="row g-3 mb-4">
+    <div class="col-6 col-lg-3">
+        <div class="sd-kpi-card">
+            <div class="sd-kpi-icon" style="background:#E5F7EC; color:#1FAA59;"><i class="bi bi-wallet2"></i></div>
+            <div class="sd-kpi-value">{{ total_revenu }} F</div>
+            <div class="sd-kpi-label">Revenu total</div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="sd-kpi-card">
+            <div class="sd-kpi-icon" style="background:#E8F0FF; color:#2D6CDF;"><i class="bi bi-calendar-week"></i></div>
+            <div class="sd-kpi-value">{{ revenu_semaine }} F</div>
+            <div class="sd-kpi-label">Cette semaine</div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="sd-kpi-card">
+            <div class="sd-kpi-icon" style="background:#FFF4E5; color:#E88A00;"><i class="bi bi-calendar-month"></i></div>
+            <div class="sd-kpi-value">{{ revenu_mois }} F</div>
+            <div class="sd-kpi-label">Ce mois-ci</div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="sd-kpi-card">
+            <div class="sd-kpi-icon" style="background:#FDEBEA; color:#E23D32;"><i class="bi bi-truck"></i></div>
+            <div class="sd-kpi-value">{{ nb_livraisons_payees }}</div>
+            <div class="sd-kpi-label">Courses payées</div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════ Détail des courses payées ═══════════════════ -->
+<div class="sd-panel">
+    <div class="sd-panel-title">Détail des revenus par course</div>
+
+    {% if livraisons %}
+        <div class="table-responsive">
+            <table class="table sd-table align-middle mb-0">
+                <thead>
+                    <tr><th>Numéro</th><th>Client</th><th>Zone</th><th>Livrée le</th><th class="text-end">Gain</th></tr>
+                </thead>
+                <tbody>
+                    {% for course in livraisons %}
+                        <tr>
+                            <td class="fw-semibold">{{ course.numero }}</td>
+                            <td>{{ course.nom_client }}</td>
+                            <td class="text-muted">{{ course.zone_livraison }}</td>
+                            <td class="text-muted small">{{ course.date_livraison_effective|date:"d/m/Y H:i" }}</td>
+                            <td class="text-end fw-semibold">
+                                <span class="sd-badge-statut succes">{{ course.frais_livraison_applique }} F</span>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if page_obj.has_other_pages %}
+            <nav class="d-flex justify-content-center py-3">
+                <ul class="pagination pagination-sm mb-0">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">Précédent</a></li>
+                    {% endif %}
+                    <li class="page-item disabled"><span class="page-link">Page {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span></li>
+                    {% if page_obj.has_next %}
+                        <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">Suivant</a></li>
+                    {% endif %}
+                </ul>
+            </nav>
+        {% endif %}
+    {% else %}
+        <p class="text-muted small mb-0">Aucune course livrée pour le moment — vos revenus s'afficheront ici dès votre première livraison confirmée.</p>
+    {% endif %}
+</div>
+
+{% endblock %}

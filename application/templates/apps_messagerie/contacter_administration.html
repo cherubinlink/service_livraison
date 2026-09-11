@@ -1,0 +1,80 @@
+{% extends 'navigateur/base_dashboard.html' %}
+{# Template partagé entreprise/livreur : la sidebar s'adapte au rôle connecté. #}
+
+{% block title %}Contacter l'administration – SwiftDrop{% endblock %}
+{% block page_title %}Messagerie{% endblock %}
+{% block user_initiales %}{{ request.user.nom|default:"US"|slice:":2"|upper }}{% endblock %}
+{% block user_nom %}{{ request.user.nom }}{% endblock %}
+{% block user_role %}{{ request.user.get_role_display }}{% endblock %}
+
+{% block sidebar_menu %}
+    {% if request.user.est_livreur_user %}
+        <div class="sd-nav-section">Général</div>
+        <a href="{% url 'apps_livreur:dashboard_livreur' %}" class="sd-nav-link"><i class="bi bi-grid-1x2"></i>Tableau de bord</a>
+
+        <div class="sd-nav-section">Compte</div>
+        <a href="{% url 'apps_messagerie:conversation_liste' %}" class="sd-nav-link active"><i class="bi bi-chat-dots"></i>Messagerie</a>
+        <a href="{% url 'apps_notification:mes_notifications' %}" class="sd-nav-link"><i class="bi bi-bell"></i>Notifications</a>
+
+    {% elif request.user.est_entreprise_user %}
+        <div class="sd-nav-section">Général</div>
+        <a href="{% url 'apps_entreprise:dashboard' %}" class="sd-nav-link"><i class="bi bi-grid-1x2"></i>Tableau de bord</a>
+
+        <div class="sd-nav-section">Compte</div>
+        <a href="{% url 'apps_messagerie:conversation_liste' %}" class="sd-nav-link active"><i class="bi bi-chat-dots"></i>Messagerie</a>
+        <a href="{% url 'apps_notification:mes_notifications' %}" class="sd-nav-link"><i class="bi bi-bell"></i>Notifications</a>
+
+    {% else %}
+        <div class="sd-nav-section">Général</div>
+        <a href="{% url 'apps_messagerie:conversation_liste' %}" class="sd-nav-link active"><i class="bi bi-chat-dots"></i>Messagerie</a>
+    {% endif %}
+{% endblock %}
+
+{% block extra_css %}
+    .sd-form-panel { background: #fff; border: 1px solid #EDEFF4; border-radius: 14px; padding: 1.5rem; max-width: 640px; }
+    .sd-form-panel .form-control { border-radius: 10px; border: 1.5px solid #EDEFF4; }
+    .sd-form-panel label { font-weight: 600; font-size: .85rem; margin-bottom: .3rem; }
+    .sd-form-panel .text-danger { font-size: .78rem; }
+{% endblock %}
+
+{% block dashboard_content %}
+
+<div class="mb-3">
+   
+</div>
+
+<div class="sd-form-panel">
+    <h6 class="fw-bold mb-1"><i class="bi bi-headset me-2"></i>Contacter l'administration</h6>
+    <p class="text-muted small mb-3">
+        Décrivez votre demande — l'équipe SwiftDrop vous répondra directement dans la messagerie.
+    </p>
+
+    <form method="post">
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+            <div class="alert alert-danger py-2 small">{{ form.non_field_errors }}</div>
+        {% endif %}
+
+        <div class="mb-3">
+            <label for="{{ form.sujet.id_for_label }}">Sujet <span class="text-muted fw-normal">(optionnel)</span></label>
+            {{ form.sujet }}
+            {% if form.sujet.errors %}<div class="text-danger mt-1">{{ form.sujet.errors }}</div>{% endif %}
+        </div>
+
+        <div class="mb-4">
+            <label for="{{ form.message.id_for_label }}">Votre message</label>
+            {{ form.message }}
+            {% if form.message.errors %}<div class="text-danger mt-1">{{ form.message.errors }}</div>{% endif %}
+        </div>
+
+        <div class="d-flex justify-content-end gap-2">
+            <a href="{% url 'apps_messagerie:conversation_liste' %}" class="btn btn-sd-outline btn-sm">Annuler</a>
+            <button type="submit" class="btn btn-sd-primary btn-sm">
+                <i class="bi bi-send me-1"></i>Envoyer à l'administration
+            </button>
+        </div>
+    </form>
+</div>
+
+{% endblock %}

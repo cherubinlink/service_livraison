@@ -9,7 +9,7 @@
 {% block sidebar_menu %}
     <div class="sd-nav-section">Général</div>
     <a href="{% url 'apps_core:dashboard_admin' %}" class="sd-nav-link"><i class="bi bi-grid-1x2"></i>Tableau de bord</a>
-    <a href="#" class="sd-nav-link"><i class="bi bi-chat-dots"></i>Messagerie</a>
+    <a href="{% url 'apps_messagerie:conversation_liste' %}" class="sd-nav-link"><i class="bi bi-chat-dots"></i>Messagerie</a>
 
     <div class="sd-nav-section">Acteurs</div>
     <a href="{% url 'apps_entreprise:admin_liste_entreprises' %}" class="sd-nav-link"><i class="bi bi-building"></i>Entreprises</a>
@@ -17,14 +17,14 @@
     <a href="#" class="sd-nav-link"><i class="bi bi-person-heart"></i>Clients</a>
 
     <div class="sd-nav-section">Opérations</div>
-    <a href="#" class="sd-nav-link"><i class="bi bi-box-seam"></i>Livraisons B2B</a>
+    <a href="{% url 'apps_livreur:admin_liste_livreurs' %}" class="sd-nav-link"><i class="bi bi-box-seam"></i>Livraisons B2B</a>
     <a href="#" class="sd-nav-link"><i class="bi bi-signpost-2"></i>Livraisons directes</a>
     <a href="{% url 'apps_entreprise:admin_liste_entrepots' %}" class="sd-nav-link"><i class="bi bi-building-gear"></i>Entrepôts</a>
-    <a href="#" class="sd-nav-link"><i class="bi bi-boxes"></i>Produits</a>
+    <a href="{% url 'apps_catalogue:admin_liste_produits' %}" class="sd-nav-link"><i class="bi bi-boxes"></i>Produits</a>
 
     <div class="sd-nav-section">Finance</div>
-    <a href="#" class="sd-nav-link"><i class="bi bi-cash-stack"></i>Lots de paiement</a>
-    <a href="#" class="sd-nav-link"><i class="bi bi-gift"></i>Bonus</a>
+    <a href="{% url 'apps_transaction:admin_liste_lots_paiement' %}" class="sd-nav-link"><i class="bi bi-cash-stack"></i>Lots de paiement</a>
+    <a href="{% url 'apps_bonus:bonus_liste' %}" class="sd-nav-link"><i class="bi bi-gift"></i>Bonus</a>
 
     <div class="sd-nav-section">Système</div>
     <a href="{% url 'apps_core:configuration_geographie' %}" class="sd-nav-link"><i class="bi bi-geo"></i>Zones géographiques</a>

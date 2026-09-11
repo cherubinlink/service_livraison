@@ -1,0 +1,110 @@
+{% extends 'navigateur/base_dashboard.html' %}
+
+{% block title %}Historique des courses – SwiftDrop{% endblock %}
+{% block page_title %}Historique{% endblock %}
+{% block user_initiales %}{{ request.user.nom|default:"LV"|slice:":2"|upper }}{% endblock %}
+{% block user_nom %}{{ request.user.nom|default:"Livreur" }}{% endblock %}
+{% block user_role %}Livreur{% if livreur %} · {{ livreur.get_type_vehicule_display }}{% endif %}{% endblock %}
+
+{% block sidebar_menu %}
+    <div class="sd-nav-section">Général</div>
+    <a href="{% url 'apps_livreur:dashboard_livreur' %}" class="sd-nav-link"><i class="bi bi-grid-1x2"></i>Tableau de bord</a>
+
+    <div class="sd-nav-section">Courses</div>
+    <a href="{% url 'apps_livraison:livreur_mes_livraisons' %}" class="sd-nav-link"><i class="bi bi-truck"></i>Mes courses</a>
+    <a href="{% url 'apps_livreur:historique_livraisons' %}" class="sd-nav-link active"><i class="bi bi-clock-history"></i>Historique</a>
+    <a href="{% url 'apps_livreur:historique_position' %}" class="sd-nav-link"><i class="bi bi-geo-alt"></i>Ma position</a>
+
+    <div class="sd-nav-section">Compte</div>
+    <a href="{% url 'apps_livreur:mes_revenus' %}" class="sd-nav-link"><i class="bi bi-cash-coin"></i>Mes revenus</a>
+    <a href="{% url 'apps_evaluation:livreur_mes_evaluations' %}" class="sd-nav-link"><i class="bi bi-star-half"></i>Mes avis clients</a>
+    <a href="{% url 'apps_messagerie:conversation_liste' %}" class="sd-nav-link"><i class="bi bi-chat-dots"></i>Messagerie</a>
+    <a href="{% url 'apps_notification:mes_notifications' %}" class="sd-nav-link"><i class="bi bi-bell"></i>Notifications</a>
+    <a href="{% url 'apps_livreur:modifier_profil' %}" class="sd-nav-link"><i class="bi bi-person"></i>Mon profil</a>
+{% endblock %}
+
+{% block extra_css %}
+    .sd-filtre-bar { background: #fff; border: 1px solid #EDEFF4; border-radius: 14px; padding: 1rem 1.25rem; }
+    .sd-filtre-bar .form-select, .sd-filtre-bar .form-control { border-radius: 10px; border: 1.5px solid #EDEFF4; }
+    .sd-badge-statut.succes { background: #E5F7EC; color: #1FAA59; }
+{% endblock %}
+
+{% block dashboard_content %}
+
+<div class="sd-filtre-bar mb-3">
+    <form method="get" class="row g-2 align-items-end">
+        <div class="col-md-3">
+            <label class="form-label small fw-semibold mb-1">Statut</label>
+            <select name="statut" class="form-select form-select-sm">
+                <option value="">Tous les statuts</option>
+                {% for valeur, libelle in statuts %}
+                    <option value="{{ valeur }}" {% if filtre_statut == valeur %}selected{% endif %}>{{ libelle }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label small fw-semibold mb-1">Du</label>
+            <input type="date" name="date_debut" value="{{ date_debut }}" class="form-control form-control-sm">
+        </div>
+        <div class="col-md-3">
+            <label class="form-label small fw-semibold mb-1">Au</label>
+            <input type="date" name="date_fin" value="{{ date_fin }}" class="form-control form-control-sm">
+        </div>
+        <div class="col-md-3 d-flex gap-2">
+            <button type="submit" class="btn btn-sd-primary btn-sm flex-grow-1"><i class="bi bi-search"></i></button>
+            <a href="{% url 'apps_livreur:historique_livraisons' %}" class="btn btn-sd-outline btn-sm" title="Réinitialiser"><i class="bi bi-x-lg"></i></a>
+        </div>
+    </form>
+</div>
+
+<div class="sd-panel">
+    {% if livraisons %}
+        <div class="table-responsive">
+            <table class="table sd-table align-middle mb-0">
+                <thead>
+                    <tr><th>Numéro</th><th>Client</th><th>Zone</th><th>Statut</th><th>Date</th><th class="text-end">Frais</th></tr>
+                </thead>
+                <tbody>
+                    {% for course in livraisons %}
+                        <tr>
+                            <td class="fw-semibold">{{ course.numero }}</td>
+                            <td>{{ course.nom_client }}</td>
+                            <td class="text-muted">{{ course.zone_livraison }}</td>
+                            <td>
+                                {% if course.statut == 'LIVREE' %}
+                                    <span class="sd-badge-statut succes">Livrée</span>
+                                {% elif course.statut == 'ECHEC' %}
+                                    <span class="sd-badge-statut echec">Échec</span>
+                                {% elif course.statut == 'REFUSEE' %}
+                                    <span class="sd-badge-statut echec">Refusée</span>
+                                {% else %}
+                                    <span class="sd-badge-statut attente">{{ course.get_statut_display }}</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-muted small">{{ course.date_livraison_effective|date:"d/m/Y H:i"|default:"—" }}</td>
+                            <td class="text-end">{{ course.frais_livraison_applique }} F</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if page_obj.has_other_pages %}
+            <nav class="d-flex justify-content-center py-3">
+                <ul class="pagination pagination-sm mb-0">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if filtre_statut %}&statut={{ filtre_statut }}{% endif %}{% if date_debut %}&date_debut={{ date_debut }}{% endif %}{% if date_fin %}&date_fin={{ date_fin }}{% endif %}">Précédent</a></li>
+                    {% endif %}
+                    <li class="page-item disabled"><span class="page-link">Page {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span></li>
+                    {% if page_obj.has_next %}
+                        <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}{% if filtre_statut %}&statut={{ filtre_statut }}{% endif %}{% if date_debut %}&date_debut={{ date_debut }}{% endif %}{% if date_fin %}&date_fin={{ date_fin }}{% endif %}">Suivant</a></li>
+                    {% endif %}
+                </ul>
+            </nav>
+        {% endif %}
+    {% else %}
+        <p class="text-muted small mb-0">Aucune course dans votre historique pour ces critères.</p>
+    {% endif %}
+</div>
+
+{% endblock %}

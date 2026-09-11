@@ -11,13 +11,13 @@
     <a href="{% url 'apps_livreur:dashboard_livreur' %}" class="sd-nav-link"><i class="bi bi-grid-1x2"></i>Tableau de bord</a>
 
     <div class="sd-nav-section">Courses</div>
-    <a href="#" class="sd-nav-link"><i class="bi bi-truck"></i>Mes courses</a>
+    <a href="{% url 'apps_livraison:livreur_mes_livraisons' %}" class="sd-nav-link"><i class="bi bi-truck"></i>Mes courses</a>
     <a href="#" class="sd-nav-link"><i class="bi bi-clock-history"></i>Historique</a>
     <a href="#" class="sd-nav-link"><i class="bi bi-geo-alt"></i>Ma position</a>
 
     <div class="sd-nav-section">Compte</div>
     <a href="#" class="sd-nav-link"><i class="bi bi-cash-coin"></i>Mes revenus</a>
-    <a href="#" class="sd-nav-link"><i class="bi bi-chat-dots"></i>Messagerie</a>
+    <a href="{% url 'apps_messagerie:contacter_administration' %}" class="sd-nav-link"><i class="bi bi-chat-dots"></i>Messagerie</a>
     <a href="{% url 'apps_livreur:modifier_profil' %}" class="sd-nav-link active"><i class="bi bi-person"></i>Mon profil</a>
 {% endblock %}
 

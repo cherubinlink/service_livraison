@@ -12,6 +12,8 @@ urlpatterns = [
  
     # Démarrer une nouvelle conversation (par email destinataire)
     path('nouvelle/', views.demarrer_conversation, name='conversation_nouvelle'),
+
+    path('contacter-admin/', views.contacter_administration, name='contacter_administration'),
  
     # Détail d'une conversation (historique + envoi de message)
     path('conversation/<uuid:pk>/', views.ConversationDetailView.as_view(), name='conversation_detail'),

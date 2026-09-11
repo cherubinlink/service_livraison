@@ -13,7 +13,7 @@
 <a href="{% url 'apps_core:dashboard_admin' %}" class="sd-nav-link">
     <i class="bi bi-grid-1x2"></i>Tableau de bord
 </a>
-<a href="#" class="sd-nav-link">
+<a href="{% url 'apps_messagerie:conversation_liste' %}" class="sd-nav-link">
     <i class="bi bi-chat-dots"></i>Messagerie
 </a>
 
@@ -29,7 +29,7 @@
 </a>
 
 <div class="sd-nav-section">Opérations</div>
-<a href="#" class="sd-nav-link">
+<a href="{% url 'apps_livraison:admin_liste_livraisons' %}" class="sd-nav-link">
     <i class="bi bi-box-seam"></i>Livraisons B2B
 </a>
 <a href="#" class="sd-nav-link">
@@ -38,15 +38,15 @@
 <a href="{% url 'apps_entreprise:admin_liste_entrepots' %}" class="sd-nav-link">
     <i class="bi bi-building-gear"></i>Entrepôts
 </a>
-<a href="#" class="sd-nav-link">
+<a href="{% url 'apps_catalogue:admin_liste_produits' %}" class="sd-nav-link">
     <i class="bi bi-boxes"></i>Produits
 </a>
 
 <div class="sd-nav-section">Finance</div>
-<a href="#" class="sd-nav-link">
+<a href="{% url 'apps_transaction:admin_liste_lots_paiement' %}" class="sd-nav-link">
     <i class="bi bi-cash-stack"></i>Lots de paiement
 </a>
-<a href="#" class="sd-nav-link">
+<a href="{% url 'apps_bonus:bonus_liste' %}" class="sd-nav-link">
     <i class="bi bi-gift"></i>Bonus
 </a>
 
@@ -57,7 +57,7 @@
 <a href="{% url 'apps_core:gerer_coefficients_vehicule' %}" class="sd-nav-link">
     <i class="bi bi-truck-front"></i>Coefficients véhicule
 </a>
-<a href="#" class="sd-nav-link">
+<a href="{% url 'apps_core:gerer_parametres_systeme' %}" class="sd-nav-link">
     <i class="bi bi-sliders"></i>Paramètres
 </a>
 ```

@@ -1,0 +1,115 @@
+{% extends 'navigateur/base_dashboard.html' %}
+
+{% block title %}Ma position – SwiftDrop{% endblock %}
+{% block page_title %}Ma position{% endblock %}
+{% block user_initiales %}{{ request.user.nom|default:"LV"|slice:":2"|upper }}{% endblock %}
+{% block user_nom %}{{ request.user.nom|default:"Livreur" }}{% endblock %}
+{% block user_role %}Livreur{% if livreur %} · {{ livreur.get_type_vehicule_display }}{% endif %}{% endblock %}
+
+{% block sidebar_menu %}
+    <div class="sd-nav-section">Général</div>
+    <a href="{% url 'apps_livreur:dashboard_livreur' %}" class="sd-nav-link"><i class="bi bi-grid-1x2"></i>Tableau de bord</a>
+
+    <div class="sd-nav-section">Courses</div>
+    <a href="{% url 'apps_livraison:livreur_mes_livraisons' %}" class="sd-nav-link"><i class="bi bi-truck"></i>Mes courses</a>
+    <a href="{% url 'apps_livreur:historique_livraisons' %}" class="sd-nav-link"><i class="bi bi-clock-history"></i>Historique</a>
+    <a href="{% url 'apps_livreur:historique_position' %}" class="sd-nav-link active"><i class="bi bi-geo-alt"></i>Ma position</a>
+
+    <div class="sd-nav-section">Compte</div>
+    <a href="{% url 'apps_livreur:mes_revenus' %}" class="sd-nav-link"><i class="bi bi-cash-coin"></i>Mes revenus</a>
+    <a href="{% url 'apps_evaluation:livreur_mes_evaluations' %}" class="sd-nav-link"><i class="bi bi-star-half"></i>Mes avis clients</a>
+    <a href="{% url 'apps_messagerie:conversation_liste' %}" class="sd-nav-link"><i class="bi bi-chat-dots"></i>Messagerie</a>
+    <a href="{% url 'apps_notification:mes_notifications' %}" class="sd-nav-link"><i class="bi bi-bell"></i>Notifications</a>
+    <a href="{% url 'apps_livreur:modifier_profil' %}" class="sd-nav-link"><i class="bi bi-person"></i>Mon profil</a>
+{% endblock %}
+
+{% block extra_css %}
+    .sd-position-actuelle { background: #fff; border: 1px solid #EDEFF4; border-radius: 14px; padding: 1.2rem 1.4rem;
+                             display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; }
+    .sd-position-coords { font-family: monospace; font-size: .85rem; color: var(--sd-gris); }
+{% endblock %}
+
+{% block dashboard_content %}
+
+<!-- ═══════════════════ Position actuelle ═══════════════════ -->
+<div class="sd-position-actuelle mb-4">
+    <div class="d-flex align-items-center gap-3">
+        <div class="sd-kpi-icon" style="background:#E8F0FF; color:#2D6CDF;"><i class="bi bi-geo-alt-fill"></i></div>
+        <div>
+            <div class="fw-semibold">Dernière position enregistrée</div>
+            {% if derniere_position %}
+                <div class="sd-position-coords">{{ derniere_position.latitude }}, {{ derniere_position.longitude }}</div>
+                <div class="text-muted small">{{ derniere_position.horodatage|date:"d/m/Y H:i:s" }}</div>
+            {% else %}
+                <div class="text-muted small">Aucune position enregistrée pour le moment.</div>
+            {% endif %}
+        </div>
+    </div>
+    {% if derniere_position %}
+        <a href="https://www.google.com/maps?q={{ derniere_position.latitude }},{{ derniere_position.longitude }}"
+           target="_blank" class="btn btn-sd-outline btn-sm">
+            <i class="bi bi-map me-1"></i>Ouvrir dans Google Maps
+        </a>
+    {% endif %}
+</div>
+
+<!-- ═══════════════════ Historique des positions ═══════════════════ -->
+<div class="sd-panel">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div class="sd-panel-title mb-0">Historique des positions</div>
+        {% if filtre_livraison %}
+            <a href="{% url 'apps_livreur:historique_position' %}" class="small">
+                <i class="bi bi-x-lg me-1"></i>Retirer le filtre course
+            </a>
+        {% endif %}
+    </div>
+
+    {% if positions %}
+        <div class="table-responsive">
+            <table class="table sd-table align-middle mb-0">
+                <thead>
+                    <tr><th>Horodatage</th><th>Coordonnées</th><th>Course liée</th><th class="text-end"></th></tr>
+                </thead>
+                <tbody>
+                    {% for position in positions %}
+                        <tr>
+                            <td class="text-muted small">{{ position.horodatage|date:"d/m/Y H:i:s" }}</td>
+                            <td class="sd-position-coords">{{ position.latitude }}, {{ position.longitude }}</td>
+                            <td>
+                                {% if position.livraison_en_cours %}
+                                    <span class="fw-semibold small">{{ position.livraison_en_cours.numero }}</span>
+                                {% else %}
+                                    <span class="text-muted small">—</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end">
+                                <a href="https://www.google.com/maps?q={{ position.latitude }},{{ position.longitude }}"
+                                   target="_blank" class="btn btn-sm btn-sd-outline">
+                                    <i class="bi bi-map"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if page_obj.has_other_pages %}
+            <nav class="d-flex justify-content-center py-3">
+                <ul class="pagination pagination-sm mb-0">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if filtre_livraison %}&livraison={{ filtre_livraison }}{% endif %}">Précédent</a></li>
+                    {% endif %}
+                    <li class="page-item disabled"><span class="page-link">Page {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span></li>
+                    {% if page_obj.has_next %}
+                        <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}{% if filtre_livraison %}&livraison={{ filtre_livraison }}{% endif %}">Suivant</a></li>
+                    {% endif %}
+                </ul>
+            </nav>
+        {% endif %}
+    {% else %}
+        <p class="text-muted small mb-0">Aucune position enregistrée. Votre position est journalisée automatiquement lorsque vous êtes actif ou en mission.</p>
+    {% endif %}
+</div>
+
+{% endblock %}

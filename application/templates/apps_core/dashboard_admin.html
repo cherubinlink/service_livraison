@@ -117,7 +117,7 @@
         <div class="sd-panel h-100">
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <div class="sd-panel-title mb-0">Livraisons récentes</div>
-                <a href="#" class="small">Tout voir</a>
+                <a href="{% url 'apps_livraison:admin_liste_livraisons' %}" class="small">Tout voir</a>
             </div>
             <div class="table-responsive">
                 <table class="table sd-table mb-0">
@@ -220,7 +220,7 @@
                                 <tr>
                                     <td class="fw-semibold">{{ e.raison_sociale }}</td>
                                     <td class="text-muted">{{ e.derniere_activite_livraison|date:"d/m/Y" }}</td>
-                                    <td class="text-end"><a href="#" class="btn btn-sm btn-sd-outline">Voir</a></td>
+                                    <td class="text-end"><a href="{% url 'apps_entreprise:admin_detail_entreprise' e.pk %}" class="btn btn-sm btn-sd-outline">Voir</a></td>
                                 </tr>
                             {% endfor %}
                         </tbody>

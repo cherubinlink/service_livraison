@@ -35,7 +35,7 @@
     <a href="{% url 'apps_entreprise:mes_frais_gardiennage' %}" class="sd-nav-link"><i class="bi bi-shield-lock"></i>Frais de gardiennage</a>
 
     <div class="sd-nav-section">Compte</div>
-    <a href="{% url 'apps_messagerie:conversation_liste' %}" class="sd-nav-link"><i class="bi bi-chat-dots"></i>Messagerie</a>
+    <a href="{% url 'apps_messagerie:contacter_administration' %}" class="sd-nav-link"><i class="bi bi-chat-dots"></i>Messagerie</a>
     <a href="{% url 'apps_notification:mes_notifications' %}" class="sd-nav-link"><i class="bi bi-bell"></i>Notifications
         {% if nb_notifications_non_lues %}<span class="sd-nav-badge">{{ nb_notifications_non_lues }}</span>{% endif %}
     </a>

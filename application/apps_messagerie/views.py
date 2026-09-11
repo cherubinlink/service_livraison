@@ -259,3 +259,82 @@ def compteur_non_lus(request):
         .count()
     )
     return JsonResponse({'non_lus': total})
+
+
+ 
+def _obtenir_admin_disponible():
+    """
+    Choisit un administrateur à qui adresser les messages "Contacter
+    l'administration". Prend le plus ancien compte ADMIN actif — à
+    adapter si tu as une logique de répartition/rotation entre plusieurs
+    admins, ou un admin "support" dédié.
+    """
+    from apps_core.models import Utilisateur
+    return Utilisateur.objects.filter(
+        role=Utilisateur.Role.ADMIN, est_actif=True
+    ).order_by('date_creation').first()
+ 
+ 
+@login_required
+def contacter_administration(request):
+    """
+    Point d'entrée générique pour qu'une entreprise, un livreur (ou tout
+    utilisateur non-admin) écrive à l'administration SANS avoir à
+    connaître l'email d'un admin — contrairement à demarrer_conversation()
+    qui exige un destinataire précis.
+ 
+    - Si une conversation avec un admin existe déjà pour cet utilisateur,
+      on y redirige directement : il continue une conversation existante
+      (Conversation est unique par paire de participants, cf.
+      unique_together sur le modèle).
+    - Sinon, on affiche un petit formulaire pour le tout premier message,
+      la conversation est créée à la soumission.
+ 
+    Une fois la conversation créée, tout le reste (répondre, pièces
+    jointes, polling temps réel...) passe par ConversationDetailView —
+    cette vue-ci ne sert qu'à démarrer l'échange.
+    """
+    from apps_core.models import Utilisateur
+    from .forms import ContacterAdminForm
+ 
+    if getattr(request.user, 'role', None) == Utilisateur.Role.ADMIN:
+        django_messages.info(request, "Vous êtes déjà administrateur — utilisez la messagerie standard.")
+        return redirect('apps_messagerie:conversation_liste')
+ 
+    admin = _obtenir_admin_disponible()
+    if admin is None:
+        django_messages.error(request, "Aucun administrateur n'est disponible pour le moment. Réessayez plus tard.")
+        return redirect('apps_messagerie:conversation_liste')
+ 
+    conversation_existante = (
+        Conversation.objects.filter(participant_1=request.user, participant_2=admin).first()
+        or Conversation.objects.filter(participant_1=admin, participant_2=request.user).first()
+    )
+    if conversation_existante:
+        return redirect('apps_messagerie:conversation_detail', pk=conversation_existante.pk)
+ 
+    if request.method == 'POST':
+        form = ContacterAdminForm(request.POST)
+        if form.is_valid():
+            conv = Conversation.get_ou_creer(request.user, admin)
+ 
+            if form.cleaned_data.get('sujet'):
+                conv.sujet = form.cleaned_data['sujet']
+                conv.save(update_fields=['sujet'])
+ 
+            Message.objects.create(
+                conversation=conv,
+                expediteur=request.user,
+                contenu=form.cleaned_data['message'],
+                type_contenu=Message.TypeContenu.TEXTE,
+            )
+            conv.date_dernier_msg = timezone.now()
+            conv.save(update_fields=['date_dernier_msg'])
+ 
+            django_messages.success(request, "Votre message a été envoyé à l'administration.")
+            return redirect('apps_messagerie:conversation_detail', pk=conv.pk)
+        django_messages.error(request, "Merci de corriger les erreurs du formulaire.")
+    else:
+        form = ContacterAdminForm()
+ 
+    return render(request, 'apps_messagerie/contacter_administration.html', {'form': form})

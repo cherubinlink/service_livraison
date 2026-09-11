@@ -311,4 +311,155 @@ def admin_reactiver_livreur(request, pk):
         livreur.save(update_fields=['statut'])
         messages.success(request, f"Livreur « {livreur.utilisateur.nom} » réactivé (hors ligne).")
     return redirect('apps_livreur:admin_detail_livreur', pk=pk)
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# apps_livreur/views.py — AJOUTS (à coller après changer_statut_livreur,
+# avant la section ADMINISTRATION DES LIVREURS)
+# ═══════════════════════════════════════════════════════════════════════
+ 
+@login_required
+def historique_livraisons(request):
+    """
+    Historique des courses TERMINÉES du livreur connecté (livrées,
+    échouées, refusées).
+ 
+    Distinct de `apps_livraison:livreur_mes_livraisons` (déjà existante
+    dans le sidebar) qui affiche les courses ACTIVES/assignées — cette
+    vue-ci est l'archive en lecture seule.
+    """
+    from apps_livraison.models import Livraison
+    from django.core.paginator import Paginator
+ 
+    livreur = getattr(request.user, 'profil_livreur', None)
+    if livreur is None:
+        messages.error(request, "Aucun profil livreur associé à ce compte.")
+        return redirect('apps_livreur:dashboard_livreur')
+ 
+    statuts_historique = [Livraison.Statut.LIVREE, Livraison.Statut.ECHEC, Livraison.Statut.REFUSEE]
+    livraisons = Livraison.objects.filter(
+        livreur=livreur, statut__in=statuts_historique
+    ).order_by('-date_livraison_effective')
+ 
+    statut = request.GET.get('statut')
+    if statut and statut in [s.value for s in statuts_historique]:
+        livraisons = livraisons.filter(statut=statut)
+ 
+    date_debut = request.GET.get('date_debut')
+    date_fin = request.GET.get('date_fin')
+    if date_debut:
+        livraisons = livraisons.filter(date_livraison_effective__date__gte=date_debut)
+    if date_fin:
+        livraisons = livraisons.filter(date_livraison_effective__date__lte=date_fin)
+ 
+    paginator = Paginator(livraisons, 20)
+    page_obj = paginator.get_page(request.GET.get('page'))
+ 
+    return render(request, 'apps_livreur/historique_livraisons.html', {
+        'livreur': livreur,
+        'page_obj': page_obj,
+        'livraisons': page_obj.object_list,
+        'statuts': [(s.value, s.label) for s in statuts_historique],
+        'filtre_statut': statut or '',
+        'date_debut': date_debut or '',
+        'date_fin': date_fin or '',
+    })
+ 
+ 
+@login_required
+def historique_position(request):
+    """
+    Historique des positions GPS journalisées pour le livreur connecté
+    (alimenté par `mettre_a_jour_position()` ci-dessus, table
+    PositionLivreurHistorique).
+ 
+    Filtrable par livraison (`?livraison=<uuid>`) pour rejouer le trajet
+    d'une course précise.
+    """
+    from apps_livreur.models import PositionLivreurHistorique
+    from django.core.paginator import Paginator
+ 
+    livreur = getattr(request.user, 'profil_livreur', None)
+    if livreur is None:
+        messages.error(request, "Aucun profil livreur associé à ce compte.")
+        return redirect('apps_livreur:dashboard_livreur')
+ 
+    positions = PositionLivreurHistorique.objects.filter(
+        livreur=livreur
+    ).select_related('livraison_en_cours')
+ 
+    livraison_id = request.GET.get('livraison')
+    if livraison_id:
+        positions = positions.filter(livraison_en_cours_id=livraison_id)
+ 
+    paginator = Paginator(positions, 50)
+    page_obj = paginator.get_page(request.GET.get('page'))
+ 
+    return render(request, 'apps_livreur/historique_position.html', {
+        'livreur': livreur,
+        'page_obj': page_obj,
+        'positions': page_obj.object_list,
+        'derniere_position': positions.first(),
+        'filtre_livraison': livraison_id or '',
+    })
+ 
+ 
+@login_required
+def mes_revenus(request):
+    """
+    Revenus du livreur connecté.
+ 
+    ⚠️ apps_transaction (Transaction / LotPaiementEntreprise) ne couvre
+    que les flux entreprise ↔ plateforme — il n'existe aucune Transaction
+    dédiée au paiement des livreurs dans le modèle actuel. Cette vue
+    calcule donc le revenu directement depuis `frais_livraison_applique`
+    des courses livrées. Si un jour un vrai flux de paiement livreur est
+    mis en place (virement, Mobile Money...), remplace ce calcul par une
+    somme sur les enregistrements de paiement réels plutôt que par une
+    estimation à partir des livraisons.
+    """
+    from apps_livraison.models import Livraison
+    from django.core.paginator import Paginator
+    from django.db.models import Sum
+    from django.utils import timezone
+    from decimal import Decimal
+ 
+    livreur = getattr(request.user, 'profil_livreur', None)
+    if livreur is None:
+        messages.error(request, "Aucun profil livreur associé à ce compte.")
+        return redirect('apps_livreur:dashboard_livreur')
+ 
+    livraisons_livrees = Livraison.objects.filter(
+        livreur=livreur, statut=Livraison.Statut.LIVREE
+    ).order_by('-date_livraison_effective')
+ 
+    aujourdhui = timezone.now().date()
+    debut_semaine = aujourdhui - timezone.timedelta(days=aujourdhui.weekday())
+    debut_mois = aujourdhui.replace(day=1)
+ 
+    total_revenu = livraisons_livrees.aggregate(
+        total=Sum('frais_livraison_applique')
+    )['total'] or Decimal('0.00')
+ 
+    revenu_semaine = livraisons_livrees.filter(
+        date_livraison_effective__date__gte=debut_semaine
+    ).aggregate(total=Sum('frais_livraison_applique'))['total'] or Decimal('0.00')
+ 
+    revenu_mois = livraisons_livrees.filter(
+        date_livraison_effective__date__gte=debut_mois
+    ).aggregate(total=Sum('frais_livraison_applique'))['total'] or Decimal('0.00')
+ 
+    paginator = Paginator(livraisons_livrees, 20)
+    page_obj = paginator.get_page(request.GET.get('page'))
+ 
+    return render(request, 'apps_livreur/mes_revenus.html', {
+        'livreur': livreur,
+        'page_obj': page_obj,
+        'livraisons': page_obj.object_list,
+        'total_revenu': total_revenu,
+        'revenu_semaine': revenu_semaine,
+        'revenu_mois': revenu_mois,
+        'nb_livraisons_payees': livraisons_livrees.count(),
+    })
+ 
  

@@ -8,19 +8,37 @@
 
 {% block sidebar_menu %}
     <div class="sd-nav-section">Général</div>
-    <a href="{% url 'apps_entreprise:dashboard' %}" class="sd-nav-link"><i class="bi bi-grid-1x2"></i>Tableau de bord</a>
+    <a href="{% url 'apps_entreprise:dashboard' %}" class="sd-nav-link active"><i class="bi bi-grid-1x2"></i>Tableau de bord</a>
 
     <div class="sd-nav-section">Catalogue</div>
     <a href="{% url 'apps_catalogue:mes_produits' %}" class="sd-nav-link"><i class="bi bi-boxes"></i>Mes produits</a>
-    <a href="{% url 'apps_catalogue:mes_stocks' %}" class="sd-nav-link active"><i class="bi bi-archive"></i>Mes stocks</a>
-    <a href="{% url 'apps_catalogue:mes_alertes_stock' %}" class="sd-nav-link"><i class="bi bi-exclamation-triangle"></i>Mes alertes stock</a>
+    <a href="{% url 'apps_catalogue:mes_stocks' %}" class="sd-nav-link"><i class="bi bi-archive"></i>Mes stocks</a>
+    <a href="{% url 'apps_catalogue:mes_alertes_stock' %}" class="sd-nav-link"><i class="bi bi-exclamation-triangle"></i>Mes alertes stock
+        {% if nb_produits_stock_bas %}<span class="sd-nav-badge">{{ nb_produits_stock_bas }}</span>{% endif %}
+    </a>
     <a href="{% url 'apps_catalogue:mes_retours_stock' %}" class="sd-nav-link"><i class="bi bi-arrow-return-left"></i>Mes retours de stock</a>
     <a href="{% url 'apps_entreprise:mes_entrepots' %}" class="sd-nav-link"><i class="bi bi-building-gear"></i>Mes entrepôts</a>
+
+    <div class="sd-nav-section">Livraisons</div>
+    <a href="{% url 'apps_livraison:mes_livraisons' %}" class="sd-nav-link"><i class="bi bi-truck"></i>Mes livraisons</a>
+    <a href="{% url 'apps_entreprise:zones_livraisons' %}" class="sd-nav-link"><i class="bi bi-truck"></i>Zones livraisons</a>
+     <a href="{% url 'apps_evaluation:entreprise_mes_evaluations' %}" class="sd-nav-link"><i class="bi bi-star-half"></i>Avis clients</a>
+
+    <div class="sd-nav-section">Finance</div>
+    <a href="{% url 'apps_transaction:mes_lots_paiement' %}" class="sd-nav-link"><i class="bi bi-cash-stack"></i>Paiements & lots</a>
+    <a href="{% url 'apps_bonus:mes_bonus' %}" class="sd-nav-link"><i class="bi bi-gift"></i>Mes bonus</a>
 
     <div class="sd-nav-section">Entreprise</div>
     <a href="{% url 'apps_entreprise:modifier_profil' %}" class="sd-nav-link"><i class="bi bi-building"></i>Modifier le profil</a>
     <a href="{% url 'apps_entreprise:mes_documents' %}" class="sd-nav-link"><i class="bi bi-file-earmark-text"></i>Mes documents</a>
     <a href="{% url 'apps_entreprise:mes_contacts' %}" class="sd-nav-link"><i class="bi bi-person-lines-fill"></i>Mes contacts</a>
+    <a href="{% url 'apps_entreprise:mes_frais_gardiennage' %}" class="sd-nav-link"><i class="bi bi-shield-lock"></i>Frais de gardiennage</a>
+
+    <div class="sd-nav-section">Compte</div>
+    <a href="{% url 'apps_messagerie:contacter_administration' %}" class="sd-nav-link"><i class="bi bi-chat-dots"></i>Messagerie</a>
+    <a href="{% url 'apps_notification:mes_notifications' %}" class="sd-nav-link"><i class="bi bi-bell"></i>Notifications
+        {% if nb_notifications_non_lues %}<span class="sd-nav-badge">{{ nb_notifications_non_lues }}</span>{% endif %}
+    </a>
 {% endblock %}
 
 {% block extra_css %}

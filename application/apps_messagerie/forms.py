@@ -114,3 +114,29 @@ class RechercheConversationForm(forms.Form):
         required=False,
         widget=forms.CheckboxInput(attrs={'class': 'form-check-input'}),
     )
+
+
+class ContacterAdminForm(forms.Form):
+    """
+    Premier message d'une entreprise/livreur vers l'administration —
+    contrairement à NouvelleConversationForm, pas besoin de saisir un
+    email destinataire : l'admin est choisi automatiquement côté vue.
+    """
+    sujet = forms.CharField(
+        label="Sujet",
+        max_length=200,
+        required=False,
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': "Ex : Question sur un paiement"}),
+    )
+    message = forms.CharField(
+        label="Votre message",
+        widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 5,
+                                      'placeholder': "Décrivez votre demande à l'administration…"}),
+    )
+ 
+    def clean_message(self):
+        message = self.cleaned_data['message'].strip()
+        if not message:
+            raise forms.ValidationError("Le message ne peut pas être vide.")
+        return message
+ 

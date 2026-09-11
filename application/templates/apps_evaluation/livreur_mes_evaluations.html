@@ -8,16 +8,23 @@
 
 {% block sidebar_menu %}
     <div class="sd-nav-section">Général</div>
-    <a href="{% url 'apps_livreur:dashboard_livreur' %}" class="sd-nav-link"><i class="bi bi-grid-1x2"></i>Tableau de bord</a>
+    <a href="{% url 'apps_livreur:dashboard_livreur' %}" class="sd-nav-link active"><i class="bi bi-grid-1x2"></i>Tableau de bord</a>
 
     <div class="sd-nav-section">Courses</div>
-    <a href="{% url 'apps_livraison:livreur_mes_livraisons' %}" class="sd-nav-link"><i class="bi bi-truck"></i>Mes courses B2B</a>
-    <a href="{% url 'apps_livraison:livreur_livraisons_directes' %}" class="sd-nav-link"><i class="bi bi-signpost-2"></i>Courses directes</a>
-    <a href="{% url 'apps_evaluation:livreur_mes_evaluations' %}" class="sd-nav-link active"><i class="bi bi-star"></i>Mes évaluations</a>
+    <a href="{% url 'apps_livraison:livreur_mes_livraisons' %}" class="sd-nav-link"><i class="bi bi-truck"></i>Mes courses
+        {% if nb_courses_jour %}<span class="sd-nav-badge">{{ nb_courses_jour }}</span>{% endif %}
+    </a>
+    <a href="{% url 'apps_livreur:historique_livraisons' %}" class="sd-nav-link"><i class="bi bi-clock-history"></i>Historique</a>
+    <a href="{% url 'apps_livreur:historique_position' %}" class="sd-nav-link"><i class="bi bi-geo-alt"></i>Ma position</a>
 
     <div class="sd-nav-section">Compte</div>
-    <a href="{% url 'apps_livreur:modifier_profil' %}" class="sd-nav-link"><i class="bi bi-person-gear"></i>Mon profil</a>
-    <a href="#" class="sd-nav-link"><i class="bi bi-chat-dots"></i>Messagerie</a>
+    <a href="{% url 'apps_livreur:mes_revenus' %}" class="sd-nav-link"><i class="bi bi-cash-coin"></i>Mes revenus</a>
+    <a href="{% url 'apps_evaluation:livreur_mes_evaluations' %}" class="sd-nav-link"><i class="bi bi-star-half"></i>Mes avis clients</a>
+    <a href="{% url 'apps_messagerie:contacter_administration' %}" class="sd-nav-link"><i class="bi bi-chat-dots"></i>Messagerie</a>
+    <a href="{% url 'apps_notification:mes_notifications' %}" class="sd-nav-link"><i class="bi bi-bell"></i>Notifications
+        {% if nb_notifications_non_lues %}<span class="sd-nav-badge">{{ nb_notifications_non_lues }}</span>{% endif %}
+    </a>
+    <a href="{% url 'apps_livreur:modifier_profil' %}" class="sd-nav-link"><i class="bi bi-person"></i>Mon profil</a>
 {% endblock %}
 
 {% block dashboard_content %}
